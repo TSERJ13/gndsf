@@ -1,0 +1,297 @@
+// GNDSF — National Federation of Sports Dances of Georgia
+// Core principle: results attach to immutable "participations" (Entry),
+// never directly to mutable people/couples. History can never break.
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Enums ───────────────────────────
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AgeCategory {
+  JUVENILE_I
+  JUVENILE_II
+  JUNIOR_I
+  JUNIOR_II
+  YOUTH
+  ADULT
+}
+
+enum Discipline {
+  STANDARD
+  LATIN
+}
+
+enum Format {
+  SOLO
+  COUPLE
+}
+
+enum CompetitionType {
+  NATIONAL
+  REGIONAL
+  INTERNATIONAL
+}
+
+enum Role {
+  SUPER_ADMIN
+  PRESIDENT
+  VICE_PRESIDENT
+  GENERAL_SECRETARY
+  REGIONAL_REP
+  CLUB_MANAGER
+}
+
+// ─────────────────────── Identity & clubs ───────────────────────
+
+model Athlete {
+  id        String   @id @default(uuid())
+  minNumber String   @unique // federation MIN registration number
+  firstName String
+  lastName  String
+  firstNameEn String?
+  lastNameEn  String?
+  birthDate DateTime
+  gender    Gender
+  photoUrl  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clubMemberships  ClubMembership[]
+  asLeader         Partnership[]    @relation("leader")
+  asFollower       Partnership[]    @relation("follower")
+  soloEntries      Entry[]
+  rankingPoints    RankingPoint[]
+  rankingEntries   RankingEntry[]
+
+  @@index([lastName, firstName])
+}
+
+model Club {
+  id        String   @id @default(uuid())
+  name      String
+  nameEn    String?
+  city      String
+  address   String?
+  phone     String?
+  email     String?
+  logoUrl   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  memberships ClubMembership[]
+  entries     Entry[]          @relation("entryClubSnapshot")
+  managers    User[]
+}
+
+// Dated history — transfers never overwrite the past.
+model ClubMembership {
+  id        String    @id @default(uuid())
+  athleteId String
+  clubId    String
+  startDate DateTime
+  endDate   DateTime? // null = current club
+
+  athlete Athlete @relation(fields: [athleteId], references: [id])
+  club    Club    @relation(fields: [clubId], references: [id])
+
+  @@index([athleteId, endDate])
+  @@index([clubId, endDate])
+}
+
+// A couple is a time-bounded relationship. Splitting sets endDate;
+// re-pairing creates a NEW row. Old results stay attached forever.
+model Partnership {
+  id         String    @id @default(uuid())
+  leaderId   String
+  followerId String
+  startDate  DateTime
+  endDate    DateTime? // null = active couple
+
+  leader   Athlete @relation("leader", fields: [leaderId], references: [id])
+  follower Athlete @relation("follower", fields: [followerId], references: [id])
+  entries  Entry[]
+  rankingEntries RankingEntry[]
+
+  @@index([leaderId, endDate])
+  @@index([followerId, endDate])
+}
+
+// ─────────────────────── Competitions ───────────────────────
+
+model Competition {
+  id        String          @id @default(uuid())
+  name      String
+  nameEn    String?
+  type      CompetitionType
+  city      String
+  venue     String?
+  startDate DateTime
+  endDate   DateTime?
+  // points multiplier by competition tier (e.g. NATIONAL 1.0, INTERNATIONAL 1.5)
+  pointsCoefficient Float   @default(1.0)
+  isPublished       Boolean @default(false)
+  createdAt DateTime        @default(now())
+
+  events CompEvent[]
+}
+
+// One judged category inside a competition: "Junior II · Latin · Couples"
+model CompEvent {
+  id            String      @id @default(uuid())
+  competitionId String
+  ageCategory   AgeCategory
+  discipline    Discipline
+  format        Format
+
+  competition Competition @relation(fields: [competitionId], references: [id])
+  entries     Entry[]
+
+  @@unique([competitionId, ageCategory, discipline, format])
+}
+
+// Frozen snapshot: who competed, as what, for which club, on that day.
+// Exactly one of athleteId / partnershipId is set (enforced by a DB
+// check constraint added in the first migration — see prisma/migrations).
+model Entry {
+  id                  String      @id @default(uuid())
+  eventId             String
+  athleteId           String? // SOLO entries
+  partnershipId       String? // COUPLE entries
+  clubIdSnapshot      String? // club affiliation as of competition day
+  ageCategorySnapshot AgeCategory
+  startNumber         Int?
+
+  event       CompEvent    @relation(fields: [eventId], references: [id])
+  athlete     Athlete?     @relation(fields: [athleteId], references: [id])
+  partnership Partnership? @relation(fields: [partnershipId], references: [id])
+  club        Club?        @relation("entryClubSnapshot", fields: [clubIdSnapshot], references: [id])
+  result      Result?
+
+  @@index([eventId])
+  @@index([athleteId])
+  @@index([partnershipId])
+}
+
+model Result {
+  id            String  @id @default(uuid())
+  entryId       String  @unique
+  placement     Int
+  roundsReached Int?
+
+  entry  Entry          @relation(fields: [entryId], references: [id])
+  points RankingPoint[]
+}
+
+// Points always belong to an individual athlete (WDSF model) —
+// couples produce TWO rows, so points travel through partner changes.
+// validUntil implements the rolling 12-month window.
+model RankingPoint {
+  id         String   @id @default(uuid())
+  resultId   String
+  athleteId  String
+  points     Int
+  earnedAt   DateTime
+  validUntil DateTime
+
+  result  Result  @relation(fields: [resultId], references: [id])
+  athlete Athlete @relation(fields: [athleteId], references: [id])
+
+  @@index([athleteId, validUntil])
+}
+
+// Derived leaderboard — fully recomputed by the ranking job after every
+// result commit. Safe to truncate and rebuild at any time.
+model RankingEntry {
+  id            String      @id @default(uuid())
+  ageCategory   AgeCategory
+  discipline    Discipline
+  format        Format
+  athleteId     String?     // solo leaderboards
+  partnershipId String?     // couple leaderboards (rank shown per active couple)
+  totalPoints   Int
+  position      Int
+  prevPosition  Int?
+  computedAt    DateTime    @default(now())
+
+  athlete     Athlete?     @relation(fields: [athleteId], references: [id])
+  partnership Partnership? @relation(fields: [partnershipId], references: [id])
+
+  @@index([ageCategory, discipline, format, position])
+}
+
+// ───────────────────── Users, CMS, misc ─────────────────────
+
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  passwordHash String
+  name         String
+  role         Role
+  clubId       String? // CLUB_MANAGER scope
+  region       String? // REGIONAL_REP scope
+  isActive     Boolean @default(true)
+
+  club Club? @relation(fields: [clubId], references: [id])
+  auditLogs AuditLog[]
+  news      News[]
+}
+
+model News {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  title       String
+  titleEn     String?
+  excerpt     String?
+  body        String
+  bodyEn      String?
+  coverUrl    String?
+  publishedAt DateTime?
+  authorId    String?
+
+  author User? @relation(fields: [authorId], references: [id])
+
+  @@index([publishedAt])
+}
+
+model CalendarEvent {
+  id       String   @id @default(uuid())
+  title    String
+  titleEn  String?
+  city     String
+  date     DateTime
+  isIntl   Boolean  @default(false)
+  link     String?
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  title     String
+  category  String // e.g. "Rules", "Regulations", "Forms"
+  fileUrl   String
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String // e.g. "PARTNERSHIP_SPLIT", "RESULT_COMMIT"
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}

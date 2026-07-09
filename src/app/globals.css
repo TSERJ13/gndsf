@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* ── GNDSF design tokens — derived from the federation logo ──
+   wine   #8B1520  the red dancer (accents, CTAs, live data)
+   flame  #C41E2C  hover / emphasis step of wine
+   ink    #0C0B0D  page background (graphite, not pure black)
+   coal   #16141A  raised surfaces (cards)
+   line   #2A2731  hairline borders
+   silver #E8E6EC  the white dancer (primary text)
+   smoke  #9B96A6  secondary text
+*/
+@theme {
+  --color-wine: #8b1520;
+  --color-flame: #c41e2c;
+  --color-ink: #0c0b0d;
+  --color-coal: #16141a;
+  --color-line: #2a2731;
+  --color-silver: #e8e6ec;
+  --color-smoke: #9b96a6;
+
+  --font-sans: "Noto Sans Georgian", "Helvetica Neue", Arial, system-ui,
+    sans-serif;
+}
+
+html {
+  background: var(--color-ink);
+  color: var(--color-silver);
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* tabular figures everywhere numbers carry meaning */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* the signature: a diagonal cut echoing the dancers' extended lines */
+.diag {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3.5rem), 0 100%);
+}
+
+::selection {
+  background: var(--color-wine);
+  color: var(--color-silver);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .rise-1 { animation-delay: 0.08s; }
+  .rise-2 { animation-delay: 0.16s; }
+  .rise-3 { animation-delay: 0.24s; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+}
