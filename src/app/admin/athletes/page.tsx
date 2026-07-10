@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
 import { CATEGORY_LABELS, categoryFor, fmtDate } from "@/lib/labels";
-import { createAthlete } from "./actions";
+import { createAthlete, createPortalAccount } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "სპორტსმენები · ადმინი" };
@@ -16,6 +16,10 @@ export default async function AdminAthletes({
   const { created, error } = await searchParams;
   const canCreate = REGISTRY_ADMINS.includes(user.role) || user.role === "CLUB_MANAGER";
 
+  const withoutPortal = await db.athlete.findMany({
+    where: { isActive: true, user: null },
+    orderBy: { lastName: "asc" },
+  });
   const [athletes, clubs] = await Promise.all([
     db.athlete.findMany({
       where: {
@@ -27,7 +31,7 @@ export default async function AdminAthletes({
       include: {
         clubMemberships: { where: { endDate: null }, include: { club: true } },
       },
-      orderBy: { minNumber: "asc" },
+      orderBy: { gid: "asc" },
     }),
     db.club.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
   ]);
@@ -44,14 +48,25 @@ export default async function AdminAthletes({
           თქვენ ხედავთ და არეგისტრირებთ მხოლოდ თქვენი კლუბის სპორტსმენებს.
         </p>
       )}
-      {created && (
+      {created === "portal" && (
         <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
-          სპორტსმენი დარეგისტრირდა — MIN ნომერი: <b className="tabular-nums">{created}</b>
+          კაბინეტის ანგარიში შეიქმნა — სპორტსმენი უკვე შევა /cabinet-ზე.
+        </p>
+      )}
+      {created && created !== "portal" && (
+        <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          სპორტსმენი დარეგისტრირდა — GID ნომერი: <b className="tabular-nums">{created}</b>
         </p>
       )}
       {error && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {error === "club" ? "აირჩიეთ კლუბი." : "შეავსეთ ყველა სავალდებულო ველი."}
+          {error === "club"
+            ? "აირჩიეთ კლუბი."
+            : error === "portal"
+              ? "შეავსეთ ველები — პაროლი მინიმუმ 8 სიმბოლო."
+              : error === "portalexists"
+                ? "ამ ელფოსტით ან სპორტსმენზე ანგარიში უკვე არსებობს."
+                : "შეავსეთ ყველა სავალდებულო ველი."}
         </p>
       )}
 
@@ -60,7 +75,7 @@ export default async function AdminAthletes({
           <table className="w-full text-sm">
             <thead className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500">
               <tr>
-                <th className="px-4 py-3">MIN</th>
+                <th className="px-4 py-3">GID</th>
                 <th className="px-4 py-3">სახელი</th>
                 <th className="px-4 py-3">კატეგორია</th>
                 <th className="px-4 py-3">კლუბი</th>
@@ -69,7 +84,7 @@ export default async function AdminAthletes({
             <tbody className="divide-y divide-neutral-100">
               {athletes.map((a) => (
                 <tr key={a.id}>
-                  <td className="px-4 py-3 tabular-nums text-neutral-500">{a.minNumber}</td>
+                  <td className="px-4 py-3 tabular-nums text-neutral-500">{a.gid}</td>
                   <td className="px-4 py-3 font-medium">
                     {a.firstName} {a.lastName}
                   </td>
@@ -86,13 +101,14 @@ export default async function AdminAthletes({
         </div>
 
         {canCreate && (
+          <div className="space-y-6">
           <form
             action={createAthlete}
             className="h-fit rounded-lg border border-neutral-200 bg-white p-5"
           >
             <h2 className="font-semibold">ახალი სპორტსმენი</h2>
             <p className="mt-1 text-xs text-neutral-500">
-              MIN ნომერი მიენიჭება ავტომატურად.
+              GID ნომერი მიენიჭება ავტომატურად.
             </p>
             <div className="mt-4 space-y-3">
               <div>
@@ -129,6 +145,37 @@ export default async function AdminAthletes({
               </button>
             </div>
           </form>
+
+          <form action={createPortalAccount} className="rounded-lg border border-neutral-200 bg-white p-5">
+            <h2 className="font-semibold">კაბინეტის ანგარიში</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              სპორტსმენს ეძლევა წვდომა პორტალზე (/cabinet).
+            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className={label} htmlFor="pa-athlete">სპორტსმენი</label>
+                <select id="pa-athlete" name="athleteId" required className={input}>
+                  {withoutPortal.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.firstName} {a.lastName} ({a.gid})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={label} htmlFor="pa-email">ელფოსტა</label>
+                <input id="pa-email" name="email" type="email" required className={input} />
+              </div>
+              <div>
+                <label className={label} htmlFor="pa-pass">დროებითი პაროლი</label>
+                <input id="pa-pass" name="password" type="text" minLength={8} required className={input} />
+              </div>
+              <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
+                ანგარიშის შექმნა
+              </button>
+            </div>
+          </form>
+          </div>
         )}
       </div>
       <p className="mt-4 text-xs text-neutral-400">

@@ -30,9 +30,9 @@ async function main() {
   await db.clubMembership.deleteMany();
   await db.news.deleteMany();
   await db.calendarEvent.deleteMany();
-  await db.athlete.deleteMany();
   await db.auditLog.deleteMany();
   await db.user.deleteMany();
+  await db.athlete.deleteMany();
   await db.club.deleteMany();
 
   const [tbilisi, batumi, kutaisi] = await Promise.all([
@@ -44,19 +44,19 @@ async function main() {
   const mk = (min: string, fn: string, ln: string, fnEn: string, lnEn: string, birthYear: number, g: "MALE" | "FEMALE") =>
     db.athlete.create({
       data: {
-        minNumber: min, firstName: fn, lastName: ln, firstNameEn: fnEn, lastNameEn: lnEn,
+        gid: min, firstName: fn, lastName: ln, firstNameEn: fnEn, lastNameEn: lnEn,
         birthDate: new Date(birthYear, 4, 10), gender: g,
       },
     });
 
-  const giorgi = await mk("GEO-1001", "გიორგი", "ბერიძე", "Giorgi", "Beridze", 2009, "MALE");
-  const nino = await mk("GEO-1002", "ნინო", "კაპანაძე", "Nino", "Kapanadze", 2010, "FEMALE");
-  const mariam = await mk("GEO-1003", "მარიამ", "გელაშვილი", "Mariam", "Gelashvili", 2009, "FEMALE");
-  const luka = await mk("GEO-1004", "ლუკა", "წიკლაური", "Luka", "Tsiklauri", 2003, "MALE");
-  const ana = await mk("GEO-1005", "ანა", "მაისურაძე", "Ana", "Maisuradze", 2004, "FEMALE");
-  const saba = await mk("GEO-1006", "საბა", "ხარაძე", "Saba", "Kharadze", 2014, "MALE");
-  const elene = await mk("GEO-1007", "ელენე", "ჯაფარიძე", "Elene", "Japaridze", 2015, "FEMALE");
-  const tamar = await mk("GEO-1008", "თამარ", "ლომიძე", "Tamar", "Lomidze", 2012, "FEMALE");
+  const giorgi = await mk("GID-1001", "გიორგი", "ბერიძე", "Giorgi", "Beridze", 2009, "MALE");
+  const nino = await mk("GID-1002", "ნინო", "კაპანაძე", "Nino", "Kapanadze", 2010, "FEMALE");
+  const mariam = await mk("GID-1003", "მარიამ", "გელაშვილი", "Mariam", "Gelashvili", 2009, "FEMALE");
+  const luka = await mk("GID-1004", "ლუკა", "წიკლაური", "Luka", "Tsiklauri", 2003, "MALE");
+  const ana = await mk("GID-1005", "ანა", "მაისურაძე", "Ana", "Maisuradze", 2004, "FEMALE");
+  const saba = await mk("GID-1006", "საბა", "ხარაძე", "Saba", "Kharadze", 2014, "MALE");
+  const elene = await mk("GID-1007", "ელენე", "ჯაფარიძე", "Elene", "Japaridze", 2015, "FEMALE");
+  const tamar = await mk("GID-1008", "თამარ", "ლომიძე", "Tamar", "Lomidze", 2012, "FEMALE");
 
   // Club history — Giorgi transferred from Batumi to Tbilisi last year
   await db.clubMembership.createMany({
@@ -193,6 +193,9 @@ async function main() {
       { email: "president@gndsf.ge", passwordHash: hash, name: "ფედერაციის პრეზიდენტი", role: "PRESIDENT" },
       { email: "secretary@gndsf.ge", passwordHash: hash, name: "გენერალური მდივანი", role: "GENERAL_SECRETARY" },
       { email: "ritmi@gndsf.ge", passwordHash: hash, name: "კლუბ „რიტმის“ მენეჯერი", role: "CLUB_MANAGER", clubId: tbilisi.id },
+      // athlete-portal accounts → /cabinet
+      { email: "giorgi@demo.ge", passwordHash: hash, name: "გიორგი ბერიძე", role: "ATHLETE", athleteId: giorgi.id },
+      { email: "tamar@demo.ge", passwordHash: hash, name: "თამარ ლომიძე", role: "ATHLETE", athleteId: tamar.id },
     ],
   });
 

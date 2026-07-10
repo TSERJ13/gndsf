@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { requireUser, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireStaff, REGISTRY_ADMINS } from "@/lib/rbac";
 import { signOut } from "@/auth";
 
 const ROLE_LABELS: Record<string, string> = {
+  ATHLETE: "სპორტსმენი",
   SUPER_ADMIN: "სუპერადმინი",
   PRESIDENT: "პრეზიდენტი",
   VICE_PRESIDENT: "ვიცე-პრეზიდენტი",
@@ -13,7 +14,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireUser();
+  const user = await requireStaff();
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
 
   async function logout() {

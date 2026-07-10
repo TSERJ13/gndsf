@@ -6,7 +6,7 @@ import { CATEGORY_LABELS, DISCIPLINE_LABELS, fmtDate } from "@/lib/labels";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [topCouples, events, news] = await Promise.all([
+  const [topCouples, events, news, stats] = await Promise.all([
     db.rankingEntry.findMany({
       where: { format: "COUPLE", position: { lte: 3 } },
       orderBy: [{ totalPoints: "desc" }],
@@ -25,7 +25,14 @@ export default async function Home() {
       orderBy: { publishedAt: "desc" },
       take: 3,
     }),
+    Promise.all([
+      db.athlete.count({ where: { isActive: true } }),
+      db.partnership.count({ where: { endDate: null } }),
+      db.club.count({ where: { isActive: true } }),
+      db.competition.count({ where: { isPublished: true } }),
+    ]),
   ]);
+  const [nAthletes, nCouples, nClubs, nComps] = stats;
 
   return (
     <>
@@ -33,7 +40,11 @@ export default async function Home() {
       <section className="diag relative overflow-hidden border-b border-line bg-coal">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 top-1/2 h-[560px] w-[560px] -translate-y-1/2 opacity-[0.07]"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-wine/[0.06] via-transparent to-transparent"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 top-1/2 h-[580px] w-[580px] -translate-y-1/2 opacity-[0.08] md:-right-8"
         >
           <Image src="/brand/logo.png" alt="" fill className="object-contain" />
         </div>
@@ -52,17 +63,31 @@ export default async function Home() {
           <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
             <Link
               href="/rankings"
-              className="rounded bg-wine px-5 py-2.5 text-sm font-medium transition-colors hover:bg-flame"
+              className="rounded bg-wine px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-flame"
             >
               ეროვნული რეიტინგი
             </Link>
             <Link
               href="/athletes"
-              className="rounded border border-line px-5 py-2.5 text-sm text-smoke transition-colors hover:border-smoke hover:text-silver"
+              className="rounded border border-line px-5 py-2.5 text-sm text-smoke transition-colors hover:border-wine hover:text-wine"
             >
               სპორტსმენების ბაზა
             </Link>
           </div>
+
+          <dl className="rise rise-3 mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 border-t border-line pt-8 sm:grid-cols-4">
+            {[
+              { v: nAthletes, l: "სპორტსმენი" },
+              { v: nCouples, l: "მოქმედი წყვილი" },
+              { v: nClubs, l: "კლუბი" },
+              { v: nComps, l: "შეჯიბრება" },
+            ].map((x) => (
+              <div key={x.l}>
+                <dd className="tnum text-3xl font-bold text-wine">{x.v}</dd>
+                <dt className="mt-1 text-xs uppercase tracking-wider text-smoke">{x.l}</dt>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -154,6 +179,31 @@ export default async function Home() {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* membership CTA */}
+      <section className="mx-auto max-w-6xl px-4 pt-16">
+        <div className="diag relative overflow-hidden rounded-lg bg-wine px-6 py-12 text-white md:px-12">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-10 top-1/2 h-[320px] w-[320px] -translate-y-1/2 opacity-[0.12]"
+          >
+            <Image src="/brand/logo.png" alt="" fill className="object-contain brightness-0 invert" />
+          </div>
+          <h2 className="max-w-lg text-2xl font-bold md:text-3xl">
+            შემოუერთდი საქართველოს სპორტული ცეკვების ოჯახს
+          </h2>
+          <p className="mt-3 max-w-md text-sm text-white/80">
+            კლუბის რეგისტრაცია, სპორტსმენის ლიცენზირება და GID ნომერი — ერთი
+            მიმართვით.
+          </p>
+          <Link
+            href="/contact"
+            className="mt-6 inline-block rounded bg-white px-5 py-2.5 text-sm font-medium text-wine transition-opacity hover:opacity-90"
+          >
+            დაგვიკავშირდი
+          </Link>
         </div>
       </section>
     </>

@@ -44,7 +44,7 @@ export default async function RankingsPage({
   const pill = (active: boolean) =>
     `rounded px-3 py-1.5 text-sm transition-colors ${
       active
-        ? "bg-wine font-medium text-silver"
+        ? "bg-wine font-medium text-white"
         : "border border-line text-smoke hover:border-smoke hover:text-silver"
     }`;
 

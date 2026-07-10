@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import ThemeToggle from "@/components/ThemeToggle";
+import MobileNav from "@/components/MobileNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,28 +33,48 @@ const NAV = [
   { href: "/contact", label: "კონტაქტი" },
 ];
 
+// Applies the saved theme before first paint (no flash). Default: light.
+const themeInit = `try{var t=localStorage.getItem("gndsf-theme");if(t==="dark")document.documentElement.dataset.theme="dark"}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ka">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body className="min-h-screen bg-ink text-silver">
         <header className="sticky top-0 z-50 border-b border-line bg-ink/85 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-3">
-              <Image src="/brand/logo.png" alt="GNDSF" width={38} height={38} priority />
-              <span className="text-sm font-semibold tracking-wide">
-                GNDSF
-                <span className="ml-2 hidden text-xs font-normal text-smoke lg:inline">
-                  სპორტული ცეკვების ეროვნული ფედერაცია
-                </span>
-              </span>
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image
+                src="/brand/logo-header@2x.png"
+                alt="GNDSF"
+                width={40}
+                height={40}
+                quality={100}
+                priority
+              />
+              <span className="text-base font-bold tracking-[0.08em]">GNDSF</span>
             </Link>
+
             <nav className="hidden items-center gap-6 text-sm text-smoke md:flex">
               {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="transition-colors hover:text-silver">
+                <Link key={n.href} href={n.href} className="transition-colors hover:text-wine">
                   {n.label}
                 </Link>
               ))}
+              <Link
+                href="/login"
+                className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
+              >
+                შესვლა
+              </Link>
             </nav>
+
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <MobileNav items={NAV} />
+            </div>
           </div>
         </header>
 
@@ -61,12 +83,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-24 border-t border-line">
           <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 py-10 text-sm text-smoke md:flex-row md:items-center">
             <div className="flex items-center gap-3">
-              <Image src="/brand/logo.png" alt="" width={28} height={28} />
+              <Image src="/brand/logo-header.png" alt="" width={28} height={28} />
               <span>© {new Date().getFullYear()} GNDSF · gndsf.ge</span>
             </div>
             <div className="flex gap-6">
-              <Link href="/documents" className="hover:text-silver">წესდება</Link>
-              <Link href="/contact" className="hover:text-silver">კონტაქტი</Link>
+              <Link href="/documents" className="hover:text-wine">წესდება</Link>
+              <Link href="/contact" className="hover:text-wine">კონტაქტი</Link>
             </div>
           </div>
         </footer>

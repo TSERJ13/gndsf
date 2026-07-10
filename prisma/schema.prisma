@@ -45,6 +45,7 @@ enum CompetitionType {
 }
 
 enum Role {
+  ATHLETE
   SUPER_ADMIN
   PRESIDENT
   VICE_PRESIDENT
@@ -57,7 +58,7 @@ enum Role {
 
 model Athlete {
   id        String   @id @default(uuid())
-  minNumber String   @unique // federation MIN registration number
+  gid       String   @unique // federation-wide athlete ID (GID)
   firstName String
   lastName  String
   firstNameEn String?
@@ -69,6 +70,7 @@ model Athlete {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user             User?
   clubMemberships  ClubMembership[]
   asLeader         Partnership[]    @relation("leader")
   asFollower       Partnership[]    @relation("follower")
@@ -240,11 +242,13 @@ model User {
   passwordHash String
   name         String
   role         Role
+  athleteId    String? @unique // ATHLETE portal link
   clubId       String? // CLUB_MANAGER scope
   region       String? // REGIONAL_REP scope
   isActive     Boolean @default(true)
 
-  club Club? @relation(fields: [clubId], references: [id])
+  club    Club?    @relation(fields: [clubId], references: [id])
+  athlete Athlete? @relation(fields: [athleteId], references: [id])
   auditLogs AuditLog[]
   news      News[]
 }

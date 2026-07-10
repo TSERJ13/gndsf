@@ -8,6 +8,7 @@ export type SessionUser = {
   email?: string | null;
   role: Role;
   clubId: string | null;
+  athleteId?: string | null;
 };
 
 // Roles allowed to manage the athlete registry (full scope)
@@ -25,6 +26,19 @@ export async function requireUser(): Promise<SessionUser> {
   const session = await auth();
   if (!session?.user) redirect("/login");
   return session.user as SessionUser;
+}
+
+// Admin-area gate: athletes belong in their cabinet, not the back office.
+export async function requireStaff(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (user.role === "ATHLETE") redirect("/cabinet");
+  return user;
+}
+
+export async function requireAthlete(): Promise<SessionUser & { athleteId: string }> {
+  const user = await requireUser();
+  if (user.role !== "ATHLETE" || !user.athleteId) redirect("/admin");
+  return user as SessionUser & { athleteId: string };
 }
 
 export async function requireRole(roles: Role[]): Promise<SessionUser> {

@@ -11,7 +11,9 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const session = await auth();
-  if (session?.user) redirect("/admin");
+  if (session?.user) {
+    redirect((session.user as { role?: string }).role === "ATHLETE" ? "/cabinet" : "/admin");
+  }
   const { error } = await searchParams;
 
   async function login(formData: FormData) {
@@ -70,7 +72,7 @@ export default async function LoginPage({
               className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
             />
           </div>
-          <button className="w-full rounded bg-wine px-4 py-2.5 text-sm font-medium transition-colors hover:bg-flame">
+          <button className="w-full rounded bg-wine px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-flame">
             შესვლა
           </button>
         </form>

@@ -11,6 +11,7 @@ export const authConfig = {
       if (user) {
         token.role = (user as { role?: string }).role;
         token.clubId = (user as { clubId?: string | null }).clubId ?? null;
+        token.athleteId = (user as { athleteId?: string | null }).athleteId ?? null;
       }
       return token;
     },
@@ -20,11 +21,14 @@ export const authConfig = {
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { clubId?: string | null }).clubId =
           (token.clubId as string | null) ?? null;
+        (session.user as { athleteId?: string | null }).athleteId =
+          (token.athleteId as string | null) ?? null;
       }
       return session;
     },
     authorized({ auth, request }) {
-      const isAdminArea = request.nextUrl.pathname.startsWith("/admin");
+      const path = request.nextUrl.pathname;
+      const isAdminArea = path.startsWith("/admin") || path.startsWith("/cabinet");
       if (!isAdminArea) return true;
       return !!auth?.user;
     },

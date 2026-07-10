@@ -32,15 +32,15 @@ export async function createAthlete(formData: FormData) {
 
   // MIN: next sequential federation number
   const last = await db.athlete.findFirst({
-    orderBy: { minNumber: "desc" },
-    select: { minNumber: true },
+    orderBy: { gid: "desc" },
+    select: { gid: true },
   });
-  const nextNum = (parseInt(last?.minNumber.replace(/\D/g, "") ?? "1000", 10) || 1000) + 1;
-  const minNumber = `GEO-${nextNum}`;
+  const nextNum = (parseInt(last?.gid.replace(/\D/g, "") ?? "1000", 10) || 1000) + 1;
+  const gid = `GID-${nextNum}`;
 
   const athlete = await db.athlete.create({
     data: {
-      minNumber,
+      gid,
       firstName,
       lastName,
       birthDate: new Date(birthDate),
@@ -57,10 +57,51 @@ export async function createAthlete(formData: FormData) {
       action: "ATHLETE_CREATE",
       entity: "Athlete",
       entityId: athlete.id,
-      detail: `${firstName} ${lastName} (${minNumber})`,
+      detail: `${firstName} ${lastName} (${gid})`,
     },
   });
 
   revalidatePath("/admin/athletes");
-  redirect("/admin/athletes?created=" + minNumber);
+  redirect("/admin/athletes?created=" + gid);
+}
+
+// ── Athlete portal account (email + password → /cabinet access) ──
+export async function createPortalAccount(formData: FormData) {
+  const { requireRole, REGISTRY_ADMINS } = await import("@/lib/rbac");
+  const bcrypt = (await import("bcryptjs")).default;
+  const user = await requireRole(REGISTRY_ADMINS);
+
+  const athleteId = String(formData.get("athleteId") ?? "");
+  const email = String(formData.get("email") ?? "").toLowerCase().trim();
+  const password = String(formData.get("password") ?? "");
+  if (!athleteId || !email || password.length < 8) {
+    redirect("/admin/athletes?error=portal");
+  }
+
+  const athlete = await db.athlete.findUniqueOrThrow({ where: { id: athleteId } });
+  const exists = await db.user.findFirst({
+    where: { OR: [{ email }, { athleteId }] },
+  });
+  if (exists) redirect("/admin/athletes?error=portalexists");
+
+  await db.user.create({
+    data: {
+      email,
+      passwordHash: await bcrypt.hash(password, 10),
+      name: `${athlete.firstName} ${athlete.lastName}`,
+      role: "ATHLETE",
+      athleteId,
+    },
+  });
+  await db.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "PORTAL_ACCOUNT_CREATE",
+      entity: "User",
+      entityId: athleteId,
+      detail: `${athlete.gid} → ${email}`,
+    },
+  });
+  revalidatePath("/admin/athletes");
+  redirect("/admin/athletes?created=portal");
 }

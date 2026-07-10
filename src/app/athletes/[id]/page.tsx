@@ -66,7 +66,7 @@ export default async function AthletePage({
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <div className="text-xs uppercase tracking-[0.25em] text-wine">
-              MIN {athlete.minNumber}
+              GID {athlete.gid}
             </div>
             <h1 className="mt-2 text-3xl font-bold md:text-4xl">
               {athlete.firstName} {athlete.lastName}

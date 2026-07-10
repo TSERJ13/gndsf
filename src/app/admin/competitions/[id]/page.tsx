@@ -140,7 +140,7 @@ export default async function CompetitionAdmin({
                         ))
                       : soloists.map((a) => (
                           <option key={a.id} value={`A:${a.id}`}>
-                            {a.firstName} {a.lastName} ({a.minNumber})
+                            {a.firstName} {a.lastName} ({a.gid})
                           </option>
                         ))}
                   </select>

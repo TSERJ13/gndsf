@@ -25,7 +25,7 @@ export default async function AthletesPage({
               { lastName: { contains: q, mode: "insensitive" } },
               { firstNameEn: { contains: q, mode: "insensitive" } },
               { lastNameEn: { contains: q, mode: "insensitive" } },
-              { minNumber: { contains: q, mode: "insensitive" } },
+              { gid: { contains: q, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -48,7 +48,7 @@ export default async function AthletesPage({
     <div className="mx-auto max-w-6xl px-4 pt-12">
       <h1 className="text-3xl font-bold">სპორტსმენების ბაზა</h1>
       <p className="mt-2 text-sm text-smoke">
-        მოძებნეთ სახელით ან MIN ნომრით; გაფილტრეთ ასაკობრივი კატეგორიით.
+        მოძებნეთ სახელით ან GID ნომრით; გაფილტრეთ ასაკობრივი კატეგორიით.
       </p>
 
       <form className="mt-6 flex flex-wrap gap-3" action="/athletes">
@@ -56,7 +56,7 @@ export default async function AthletesPage({
           type="search"
           name="q"
           defaultValue={q}
-          placeholder="სახელი, გვარი ან MIN…"
+          placeholder="სახელი, გვარი ან GID…"
           className="w-full max-w-xs rounded border border-line bg-coal px-3 py-2 text-sm outline-none placeholder:text-smoke focus:border-wine"
         />
         <select
@@ -71,7 +71,7 @@ export default async function AthletesPage({
             </option>
           ))}
         </select>
-        <button className="rounded bg-wine px-4 py-2 text-sm font-medium transition-colors hover:bg-flame">
+        <button className="rounded bg-wine px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-flame">
           ძებნა
         </button>
       </form>
@@ -80,7 +80,7 @@ export default async function AthletesPage({
         <table className="w-full text-sm">
           <thead className="bg-coal text-left text-xs uppercase tracking-wider text-smoke">
             <tr>
-              <th className="px-4 py-3">MIN</th>
+              <th className="px-4 py-3">GID</th>
               <th className="px-4 py-3">სპორტსმენი</th>
               <th className="px-4 py-3">კატეგორია</th>
               <th className="px-4 py-3">კლუბი</th>
@@ -89,7 +89,7 @@ export default async function AthletesPage({
           <tbody className="divide-y divide-line">
             {filtered.map((a) => (
               <tr key={a.id} className="transition-colors hover:bg-coal">
-                <td className="tnum px-4 py-3 text-smoke">{a.minNumber}</td>
+                <td className="tnum px-4 py-3 text-smoke">{a.gid}</td>
                 <td className="px-4 py-3">
                   <Link href={`/athletes/${a.id}`} className="font-medium hover:text-flame">
                     {a.firstName} {a.lastName}

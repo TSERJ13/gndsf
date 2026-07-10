@@ -125,7 +125,7 @@ export default async function AdminPartnerships({
               </label>
               <select id="leaderId" name="leaderId" required className={input}>
                 {freeMales.map((a) => (
-                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.minNumber})</option>
+                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.gid})</option>
                 ))}
               </select>
             </div>
@@ -135,7 +135,7 @@ export default async function AdminPartnerships({
               </label>
               <select id="followerId" name="followerId" required className={input}>
                 {freeFemales.map((a) => (
-                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.minNumber})</option>
+                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.gid})</option>
                 ))}
               </select>
             </div>

@@ -10,8 +10,16 @@ export default function ContactPage() {
           <p className="mt-2 text-sm text-smoke">info@gndsf.ge</p>
         </div>
         <div className="rounded-lg border border-line bg-coal p-5">
+          <h2 className="font-semibold">პრეზიდენტი</h2>
+          <p className="mt-2 text-sm text-smoke">
+            <a href="mailto:president@gndsf.ge" className="hover:text-wine">president@gndsf.ge</a>
+          </p>
+        </div>
+        <div className="rounded-lg border border-line bg-coal p-5">
           <h2 className="font-semibold">გენერალური მდივანი</h2>
-          <p className="mt-2 text-sm text-smoke">secretary@gndsf.ge</p>
+          <p className="mt-2 text-sm text-smoke">
+            <a href="mailto:secretary@gndsf.ge" className="hover:text-wine">secretary@gndsf.ge</a>
+          </p>
         </div>
       </div>
       <p className="mt-6 text-sm text-smoke">

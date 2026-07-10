@@ -28,11 +28,11 @@ async function main() {
     },
   });
   const giorgiMariam = await db.partnership.findFirstOrThrow({
-    where: { endDate: null, leader: { minNumber: "GEO-1001" } },
+    where: { endDate: null, leader: { gid: "GID-1001" } },
     include: { leader: true, follower: true },
   });
   const sabaElene = await db.partnership.findFirstOrThrow({
-    where: { endDate: null, leader: { minNumber: "GEO-1006" } },
+    where: { endDate: null, leader: { gid: "GID-1006" } },
     include: { leader: true, follower: true },
   });
 

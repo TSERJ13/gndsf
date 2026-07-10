@@ -1,25 +1,32 @@
 @import "tailwindcss";
 
-/* ── GNDSF design tokens — derived from the federation logo ──
-   wine   #8B1520  the red dancer (accents, CTAs, live data)
-   flame  #C41E2C  hover / emphasis step of wine
-   ink    #0C0B0D  page background (graphite, not pure black)
-   coal   #16141A  raised surfaces (cards)
-   line   #2A2731  hairline borders
-   silver #E8E6EC  the white dancer (primary text)
-   smoke  #9B96A6  secondary text
-*/
+/* ── GNDSF design tokens ──────────────────────────────────────
+   SEMANTIC roles (names kept for compatibility across the app):
+     ink    = page background        coal  = raised surface (cards)
+     line   = hairline borders       silver = primary text
+     smoke  = secondary text         wine/flame = brand accent
+   Light theme is the DEFAULT; [data-theme="dark"] switches values.
+   Tailwind v4 utilities compile to var(--color-*), so overriding
+   the variables re-themes every page instantly.                 */
 @theme {
   --color-wine: #8b1520;
   --color-flame: #c41e2c;
+  --color-ink: #faf9f7;
+  --color-coal: #ffffff;
+  --color-line: #e6e2db;
+  --color-silver: #1a181c;
+  --color-smoke: #6d6a75;
+
+  --font-sans: "Noto Sans Georgian", "Helvetica Neue", Arial, system-ui,
+    sans-serif;
+}
+
+[data-theme="dark"] {
   --color-ink: #0c0b0d;
   --color-coal: #16141a;
   --color-line: #2a2731;
   --color-silver: #e8e6ec;
   --color-smoke: #9b96a6;
-
-  --font-sans: "Noto Sans Georgian", "Helvetica Neue", Arial, system-ui,
-    sans-serif;
 }
 
 html {
@@ -45,7 +52,7 @@ body {
 
 ::selection {
   background: var(--color-wine);
-  color: var(--color-silver);
+  color: #fff;
 }
 
 @media (prefers-reduced-motion: no-preference) {
