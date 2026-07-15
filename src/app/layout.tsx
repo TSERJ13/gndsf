@@ -6,6 +6,7 @@ import MobileNav from "@/components/MobileNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://gndsf.ge"),
   title: {
     default: "GNDSF — საქართველოს სპორტული ცეკვების ეროვნული ფედერაცია",
     template: "%s — GNDSF",
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/clubs", label: "კლუბები" },
   { href: "/athletes", label: "სპორტსმენები" },
   { href: "/rankings", label: "რეიტინგი" },
+  { href: "/competitions", label: "შედეგები" },
   { href: "/documents", label: "დოკუმენტები" },
   { href: "/contact", label: "კონტაქტი" },
 ];

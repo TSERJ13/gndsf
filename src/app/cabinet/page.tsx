@@ -10,6 +10,7 @@ import {
   fmtDate,
 } from "@/lib/labels";
 import { uploadPhoto } from "./actions";
+import { changeOwnPassword } from "@/app/admin/settings/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "სპორტსმენის კაბინეტი" };
@@ -17,10 +18,10 @@ export const metadata = { title: "სპორტსმენის კაბი
 export default async function CabinetPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; pok?: string; perror?: string }>;
 }) {
   const user = await requireAthlete();
-  const { ok, error } = await searchParams;
+  const { ok, error, pok, perror } = await searchParams;
 
   const athlete = await db.athlete.findUniqueOrThrow({
     where: { id: user.athleteId },
@@ -225,7 +226,12 @@ export default async function CabinetPage({
                 return (
                   <tr key={e.id} className="transition-colors hover:bg-coal">
                     <td className="px-4 py-3">
-                      <div className="font-medium">{e.event.competition.name}</div>
+                      <Link
+                        href={`/competitions/${e.event.competitionId}`}
+                        className="font-medium hover:text-wine"
+                      >
+                        {e.event.competition.name}
+                      </Link>
                       <div className="tnum text-xs text-smoke">
                         {fmtDate(e.event.competition.startDate)} · {e.event.competition.city}
                       </div>
@@ -259,6 +265,40 @@ export default async function CabinetPage({
             ჩემი საჯარო პროფილი →
           </Link>
         </div>
+      </section>
+
+      {/* ── account settings ── */}
+      <section className="mt-10 max-w-md">
+        <h2 className="text-xl font-semibold">ანგარიშის პარამეტრები</h2>
+        {pok && <p className="mt-3 text-sm text-green-400">პაროლი შეიცვალა.</p>}
+        {perror && (
+          <p className="mt-3 text-sm text-flame">
+            {perror === "wrong" ? "მიმდინარე პაროლი არასწორია." : "ახალი პაროლი მინიმუმ 8 სიმბოლო."}
+          </p>
+        )}
+        <form action={changeOwnPassword} className="mt-4 space-y-4 rounded-lg border border-line bg-coal p-5">
+          <div>
+            <label className="text-xs uppercase tracking-wider text-smoke" htmlFor="current">
+              მიმდინარე პაროლი
+            </label>
+            <input
+              id="current" name="current" type="password" required autoComplete="current-password"
+              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+            />
+          </div>
+          <div>
+            <label className="text-xs uppercase tracking-wider text-smoke" htmlFor="next">
+              ახალი პაროლი
+            </label>
+            <input
+              id="next" name="next" type="password" minLength={8} required autoComplete="new-password"
+              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+            />
+          </div>
+          <button className="rounded bg-wine px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-flame">
+            შეცვლა
+          </button>
+        </form>
       </section>
     </div>
   );

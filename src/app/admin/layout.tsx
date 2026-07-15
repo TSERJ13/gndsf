@@ -28,6 +28,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/partnerships", label: "წყვილები", show: isRegistryAdmin },
     { href: "/admin/clubs", label: "კლუბები", show: isRegistryAdmin },
     { href: "/admin/competitions", label: "შეჯიბრებები", show: isRegistryAdmin },
+    { href: "/admin/news", label: "სიახლეები", show: isRegistryAdmin },
+    { href: "/admin/calendar", label: "კალენდარი", show: isRegistryAdmin },
+    { href: "/admin/documents", label: "დოკუმენტები", show: isRegistryAdmin },
+    { href: "/admin/users", label: "მომხმარებლები", show: user.role === "SUPER_ADMIN" },
+    { href: "/admin/settings", label: "პარამეტრები", show: true },
   ].filter((n) => n.show);
 
   // The admin is deliberately a different world: light, dense, utilitarian.

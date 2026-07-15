@@ -4,6 +4,17 @@ import { fmtDate } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const a = await db.news.findUnique({ where: { slug } });
+  if (!a) return { title: "სიახლე" };
+  return {
+    title: a.title,
+    description: a.excerpt ?? a.body.slice(0, 160),
+    openGraph: { title: a.title, description: a.excerpt ?? undefined, type: "article" },
+  };
+}
+
 export default async function NewsArticle({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const article = await db.news.findUnique({ where: { slug } });

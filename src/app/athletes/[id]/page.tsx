@@ -11,6 +11,25 @@ import {
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const a = await db.athlete.findUnique({
+    where: { id },
+    include: { clubMemberships: { where: { endDate: null }, include: { club: true } } },
+  });
+  if (!a) return { title: "სპორტსმენი" };
+  const name = `${a.firstName} ${a.lastName}`;
+  const club = a.clubMemberships[0]?.club.name;
+  return {
+    title: name,
+    description: `${name} (${a.gid}) — ${CATEGORY_LABELS[categoryFor(a.birthDate)]}${club ? `, ${club}` : ""}. რეიტინგი, ქულები და შეჯიბრებების ისტორია gndsf.ge-ზე.`,
+  };
+}
+
 export default async function AthletePage({
   params,
 }: {
@@ -134,7 +153,12 @@ export default async function AthletePage({
                 return (
                   <tr key={e.id} className="transition-colors hover:bg-coal">
                     <td className="px-4 py-3">
-                      <div className="font-medium">{e.event.competition.name}</div>
+                      <Link
+                        href={`/competitions/${e.event.competitionId}`}
+                        className="font-medium hover:text-wine"
+                      >
+                        {e.event.competition.name}
+                      </Link>
                       <div className="tnum text-xs text-smoke">
                         {fmtDate(e.event.competition.startDate)}
                       </div>
