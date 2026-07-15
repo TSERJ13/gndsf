@@ -95,6 +95,28 @@ npm run dev                          # http://localhost:3000
 2. `git push` — Vercel თავად ააწყობს (build script უკვე შეიცავს prisma generate-ს)
 3. სურვილისამებრ: Vercel → Storage → Create Blob store (ფოტოებისთვის)
 
+## v0.12 — ციფრული ლიცენზია (QR + Wallet)
+
+- **/cabinet/card**: WDSF-სტილის მუქი ლიცენზია-ბარათი — ფოტო, სახელი (ka/en),
+  GID, დაბადების თარიღი, კატეგორია, კლუბი, სეზონი, სტატუსი და QR კოდი.
+- **QR → /verify/[gid]**: სკანირება ხსნის საჯარო შემოწმების გვერდს, რომელიც
+  ცოცხალ სტატუსს აჩვენებს ბაზიდან (აქტიური/შეჩერებული, ფოტო, კლუბი).
+  QR წაკითხვადობა დადასტურებულია რეალური სკანერით (zbar).
+- **Wallet ღილაკები** ჩნდება env-ცვლადების დამატებისთანავე:
+
+  Google Wallet (უფასო):
+  1. pay.google.com/business/console → Google Wallet API → Issuer account
+  2. Google Cloud: service account + JSON key; Wallet კონსოლში ამ ანგარიშს
+     მიეცით წვდომა; შექმენით generic class ID: `gndsf_license`
+  3. env: GOOGLE_WALLET_ISSUER_ID, GOOGLE_WALLET_SA_EMAIL, GOOGLE_WALLET_SA_KEY
+
+  Apple Wallet (Apple Developer, $99/წ):
+  1. developer.apple.com → Identifiers → Pass Type ID (pass.ge.gndsf.license)
+  2. ამ ID-ზე სერტიფიკატი + private key; ჩამოტვირთეთ Apple WWDR G4 სერტიფიკატი
+  3. env (base64 PEM): APPLE_PASS_SIGNER_CERT, APPLE_PASS_SIGNER_KEY,
+     APPLE_WWDR_CERT, APPLE_PASS_TYPE_ID, APPLE_TEAM_ID
+     (სურვილით: APPLE_PASS_KEY_PASSPHRASE)
+
 ## შემდეგი ფაზები
 
 - Phase 3–4: საჯარო შეჯიბრების გვერდები + CMS (სიახლეები/კალენდარი/დოკუმენტები ადმინიდან)
