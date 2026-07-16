@@ -66,10 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 quality={100}
                 priority
               />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold tracking-[0.1em] text-wine">GNDSF</span>
-                <span className="text-[10px] uppercase tracking-widest text-smoke hidden sm:block">საქართველოს სპორტული ცეკვების ეროვნული ფედერაცია</span>
-              </div>
+              <span className="text-base font-bold tracking-[0.08em] text-wine mt-1">GNDSF</span>
             </Link>
 
             <nav className="hidden items-center gap-7 text-[13px] font-medium uppercase tracking-[0.05em] text-smoke lg:flex">
