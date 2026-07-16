@@ -18,7 +18,7 @@ export default async function AdminMail({
 }) {
   const user = await requireStaff();
   const { box: boxParam, ok, error } = await searchParams;
-  const box = boxParam === "sent" ? "sent" : "inbox";
+  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : "inbox";
 
   const account = await db.mailAccount.findUnique({ where: { userId: user.id } });
 
@@ -112,6 +112,12 @@ export default async function AdminMail({
                 className={`rounded px-3 py-1.5 text-sm ${box === "sent" ? "bg-neutral-900 text-white" : "border border-neutral-300 hover:bg-neutral-50"}`}
               >
                 გაგზავნილი
+              </Link>
+              <Link
+                href="/admin/mail?box=spam"
+                className={`rounded px-3 py-1.5 text-sm ${box === "spam" ? "bg-neutral-900 text-white" : "border border-neutral-300 hover:bg-neutral-50"}`}
+              >
+                სპამი
               </Link>
             </div>
 

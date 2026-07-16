@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/rbac";
 import { decrypt } from "@/lib/crypto";
 import { readMessage } from "@/lib/mailbox";
 import { composeMail } from "../../actions";
+import sanitizeHtml from "sanitize-html";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "წერილი · ფოსტა" };
@@ -22,7 +23,7 @@ export default async function MailMessage({
   const user = await requireStaff();
   const { uid } = await params;
   const { box: boxParam } = await searchParams;
-  const box = boxParam === "sent" ? "sent" : "inbox";
+  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : "inbox";
 
   const account = await db.mailAccount.findUnique({ where: { userId: user.id } });
   if (!account) notFound();
@@ -38,14 +39,26 @@ export default async function MailMessage({
   // "Name <addr@x>" → addr@x ; plain address stays as is
   const replyTo = (msg.from.match(/<([^>]+)>/)?.[1] ?? msg.from).trim();
 
+  const safeHtml = msg.html
+    ? sanitizeHtml(msg.html, {
+        allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img", "style", "html", "body", "head"]),
+        allowedAttributes: {
+          ...sanitizeHtml.defaults.allowedAttributes,
+          "*": ["style", "class"],
+          img: ["src", "alt", "width", "height"],
+          a: ["href", "name", "target"],
+        },
+      })
+    : "";
+
   return (
     <div className="max-w-3xl">
       <Link href={`/admin/mail?box=${box}`} className="text-sm text-neutral-500 hover:text-neutral-900">
-        ← {box === "inbox" ? "შემოსული" : "გაგზავნილი"}
+        ← {box === "inbox" ? "შემოსული" : box === "spam" ? "სპამი" : "გაგზავნილი"}
       </Link>
-      <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
+      <div className="mt-4 rounded-lg border border-neutral-200 bg-white shadow-sm">
         <div className="border-b border-neutral-200 px-5 py-4">
-          <h1 className="text-lg font-semibold">{msg.subject}</h1>
+          <h1 className="text-xl font-semibold">{msg.subject}</h1>
           <div className="mt-2 space-y-0.5 text-sm text-neutral-600">
             <div><span className="text-neutral-400">ვისგან:</span> {msg.from}</div>
             <div><span className="text-neutral-400">ვის:</span> {msg.to}</div>
@@ -59,10 +72,17 @@ export default async function MailMessage({
             </p>
           )}
         </div>
-        {/* plain text only — HTML from strangers never renders in the admin */}
-        <pre className="whitespace-pre-wrap px-5 py-4 font-sans text-sm leading-relaxed text-neutral-800">
-          {msg.text || "(ცარიელი წერილი)"}
-        </pre>
+        
+        {safeHtml ? (
+          <div 
+            className="prose prose-sm max-w-none px-5 py-6 text-neutral-800"
+            dangerouslySetInnerHTML={{ __html: safeHtml }} 
+          />
+        ) : (
+          <pre className="whitespace-pre-wrap px-5 py-6 font-sans text-sm leading-relaxed text-neutral-800">
+            {msg.text || "(ცარიელი წერილი)"}
+          </pre>
+        )}
       </div>
 
       {box === "inbox" && (

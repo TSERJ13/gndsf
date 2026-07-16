@@ -58,16 +58,27 @@ async function resolveSentPath(c: ImapFlow): Promise<string> {
   return "Sent";
 }
 
+async function resolveSpamPath(c: ImapFlow): Promise<string> {
+  try {
+    const boxes = await c.list();
+    const bySpecial = boxes.find((b) => b.specialUse === "\\Junk");
+    if (bySpecial) return bySpecial.path;
+    const byName = boxes.find((b) => /spam|junk/i.test(b.name));
+    if (byName) return byName.path;
+  } catch {}
+  return "Spam";
+}
+
 export async function listMessages(
   email: string,
   password: string,
-  box: "inbox" | "sent",
+  box: "inbox" | "sent" | "spam",
   limit = 20,
 ): Promise<MailListItem[]> {
   const c = client(email, password);
   await c.connect();
   try {
-    const path = box === "inbox" ? "INBOX" : await resolveSentPath(c);
+    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : await resolveSpamPath(c);
     const lock = await c.getMailboxLock(path);
     try {
       const total = typeof c.mailbox === "object" ? c.mailbox.exists : 0;
@@ -98,13 +109,13 @@ export async function listMessages(
 export async function readMessage(
   email: string,
   password: string,
-  box: "inbox" | "sent",
+  box: "inbox" | "sent" | "spam",
   uid: number,
 ) {
   const c = client(email, password);
   await c.connect();
   try {
-    const path = box === "inbox" ? "INBOX" : await resolveSentPath(c);
+    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : await resolveSpamPath(c);
     const lock = await c.getMailboxLock(path);
     try {
       const dl = await c.download(String(uid), undefined, { uid: true });
@@ -112,7 +123,7 @@ export async function readMessage(
       const chunks: Buffer[] = [];
       for await (const chunk of dl.content) chunks.push(chunk as Buffer);
       const parsed = await simpleParser(Buffer.concat(chunks));
-      if (box === "inbox") {
+      if (box === "inbox" || box === "spam") {
         await c.messageFlagsAdd(String(uid), ["\\Seen"], { uid: true });
       }
       return {
@@ -120,6 +131,7 @@ export async function readMessage(
         to: Array.isArray(parsed.to) ? parsed.to.map((t) => t.text).join(", ") : parsed.to?.text ?? "—",
         subject: parsed.subject ?? "(უთემო)",
         date: parsed.date ?? null,
+        html: parsed.html || "",
         // text part if present, otherwise HTML stripped to text
         text:
           parsed.text ??
