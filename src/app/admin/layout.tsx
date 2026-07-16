@@ -33,14 +33,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-[#f6f5f3] text-neutral-900">
       <div className="mx-auto flex max-w-7xl">
-        <AdminSidebar 
-          nav={nav} 
-          user={{ 
-            name: user.name || "მომხმარებელი", 
-            roleLabel: ROLE_LABELS[user.role] 
-          }} 
-        />
-        <main className="min-w-0 flex-1 px-8 py-8">{children}</main>
+        <AdminSidebar nav={nav} />
+        <main className="min-w-0 flex-1 px-4 py-8 md:px-8 pb-24 md:pb-8">{children}</main>
       </div>
     </div>
   );

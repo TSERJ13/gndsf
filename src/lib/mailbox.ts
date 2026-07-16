@@ -69,16 +69,27 @@ async function resolveSpamPath(c: ImapFlow): Promise<string> {
   return "Spam";
 }
 
+async function resolveTrashPath(c: ImapFlow): Promise<string> {
+  try {
+    const boxes = await c.list();
+    const bySpecial = boxes.find((b) => b.specialUse === "\\Trash");
+    if (bySpecial) return bySpecial.path;
+    const byName = boxes.find((b) => /trash|deleted|bin/i.test(b.name));
+    if (byName) return byName.path;
+  } catch {}
+  return "Trash";
+}
+
 export async function listMessages(
   email: string,
   password: string,
-  box: "inbox" | "sent" | "spam",
+  box: "inbox" | "sent" | "spam" | "trash",
   limit = 20,
 ): Promise<MailListItem[]> {
   const c = client(email, password);
   await c.connect();
   try {
-    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : await resolveSpamPath(c);
+    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : box === "spam" ? await resolveSpamPath(c) : await resolveTrashPath(c);
     const lock = await c.getMailboxLock(path);
     try {
       const total = typeof c.mailbox === "object" ? c.mailbox.exists : 0;
@@ -109,13 +120,13 @@ export async function listMessages(
 export async function readMessage(
   email: string,
   password: string,
-  box: "inbox" | "sent" | "spam",
+  box: "inbox" | "sent" | "spam" | "trash",
   uid: number,
 ) {
   const c = client(email, password);
   await c.connect();
   try {
-    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : await resolveSpamPath(c);
+    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : box === "spam" ? await resolveSpamPath(c) : await resolveTrashPath(c);
     const lock = await c.getMailboxLock(path);
     try {
       const dl = await c.download(String(uid), undefined, { uid: true });
@@ -138,6 +149,38 @@ export async function readMessage(
           (parsed.html ? parsed.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() : ""),
         attachments: parsed.attachments.map((a) => a.filename ?? "attachment"),
       };
+    } finally {
+      lock.release();
+    }
+  } finally {
+    await c.logout().catch(() => {});
+  }
+}
+
+export async function deleteMessage(
+  email: string,
+  password: string,
+  box: "inbox" | "sent" | "spam" | "trash",
+  uid: number,
+) {
+  const c = client(email, password);
+  await c.connect();
+  try {
+    const path = box === "inbox" ? "INBOX" : box === "sent" ? await resolveSentPath(c) : box === "spam" ? await resolveSpamPath(c) : await resolveTrashPath(c);
+    const lock = await c.getMailboxLock(path);
+    try {
+      if (box === "trash") {
+        // Permanently delete
+        await c.messageFlagsAdd(String(uid), ["\\Deleted"], { uid: true });
+      } else {
+        // Move to trash
+        const trashPath = await resolveTrashPath(c);
+        if (path !== trashPath) {
+          await c.messageMove(String(uid), trashPath, { uid: true });
+        } else {
+          await c.messageFlagsAdd(String(uid), ["\\Deleted"], { uid: true });
+        }
+      }
     } finally {
       lock.release();
     }

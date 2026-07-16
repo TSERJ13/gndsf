@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/rbac";
 import { encrypt } from "@/lib/crypto";
-import { verifyLogin, sendFromMailbox } from "@/lib/mailbox";
+import { verifyLogin, sendFromMailbox, deleteMessage } from "@/lib/mailbox";
 import { decrypt } from "@/lib/crypto";
 
 export async function connectMailbox(formData: FormData) {
@@ -60,4 +60,23 @@ export async function composeMail(formData: FormData) {
     data: { userId: user.id, action: "MAIL_SEND", entity: "MailAccount", detail: `→ ${to}: ${subject}` },
   });
   redirect("/admin/mail?box=sent&ok=sent");
+}
+
+export async function deleteMailAction(uid: number, box: "inbox" | "sent" | "spam" | "trash") {
+  const user = await requireStaff();
+  const acc = await db.mailAccount.findUnique({ where: { userId: user.id } });
+  if (!acc) redirect("/admin/mail");
+
+  try {
+    await deleteMessage(acc.email, decrypt(acc.encSecret), box, uid);
+  } catch (e) {
+    console.error("mail delete failed:", e);
+    redirect(`/admin/mail?error=delete&box=${box}`);
+  }
+  
+  await db.auditLog.create({
+    data: { userId: user.id, action: "MAIL_DELETE", entity: "MailAccount", detail: `UID: ${uid}` },
+  });
+  
+  redirect(`/admin/mail?box=${box}&ok=deleted`);
 }

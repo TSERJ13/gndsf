@@ -18,7 +18,7 @@ export default async function AdminMail({
 }) {
   const user = await requireStaff();
   const { box: boxParam, ok, error } = await searchParams;
-  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : "inbox";
+  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : boxParam === "trash" ? "trash" : "inbox";
 
   const account = await db.mailAccount.findUnique({ where: { userId: user.id } });
 
@@ -41,12 +41,14 @@ export default async function AdminMail({
     connected: "ფოსტა დაკავშირდა — შემოსული წერილები ქვემოთაა.",
     disconnected: "ფოსტა გაითიშა.",
     sent: "წერილი გაიგზავნა.",
+    deleted: "წერილი წაიშალა.",
   };
   const ERR: Record<string, string> = {
     fields: "შეიყვანეთ @gndsf.ge მისამართი და პაროლი.",
     login: "Titan-მა შესვლა არ დაუშვა — გადაამოწმეთ პაროლი, ჩართეთ third-party access და გამორთეთ 2FA ამ ყუთზე.",
     compose: "მიმღები, თემა და ტექსტი სავალდებულოა.",
     send: "გაგზავნა ვერ მოხერხდა — სცადეთ ხელახლა.",
+    delete: "წერილის წაშლა ვერ მოხერხდა.",
   };
 
   return (
@@ -100,7 +102,7 @@ export default async function AdminMail({
       ) : (
         <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_340px]">
           <div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/mail"
                 className={`rounded px-3 py-1.5 text-sm ${box === "inbox" ? "bg-neutral-900 text-white" : "border border-neutral-300 hover:bg-neutral-50"}`}
@@ -118,6 +120,12 @@ export default async function AdminMail({
                 className={`rounded px-3 py-1.5 text-sm ${box === "spam" ? "bg-neutral-900 text-white" : "border border-neutral-300 hover:bg-neutral-50"}`}
               >
                 სპამი
+              </Link>
+              <Link
+                href="/admin/mail?box=trash"
+                className={`rounded px-3 py-1.5 text-sm ${box === "trash" ? "bg-red-600 text-white border-transparent" : "text-red-600 border border-red-200 hover:bg-red-50"}`}
+              >
+                წაშლილი
               </Link>
             </div>
 

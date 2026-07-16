@@ -40,90 +40,90 @@ const ICONS: Record<string, React.ElementType> = {
   "/admin/settings": Settings,
 };
 
-import { doLogout } from "@/app/auth-actions";
-
 export default function AdminSidebar({ 
-  nav, 
-  user 
+  nav 
 }: { 
-  nav: NavItem[], 
-  user: { name: string; roleLabel: string } 
+  nav: NavItem[] 
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <aside 
-      className={`sticky top-0 flex h-screen flex-col border-r border-neutral-200 bg-white transition-all duration-300 ${
-        isCollapsed ? "w-20" : "w-64"
-      }`}
-    >
-      <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4">
-        <Link href="/" className={`flex items-center gap-2.5 overflow-hidden ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto'}`}>
-          <Image src="/brand/logo.png" alt="" width={30} height={30} className="shrink-0" />
-          <div className="whitespace-nowrap">
-            <div className="text-sm font-semibold leading-none">GNDSF</div>
-            <div className="mt-0.5 text-[11px] text-neutral-500">ადმინისტრირება</div>
-          </div>
-        </Link>
+    <>
+      {/* Mobile Hamburger Button (visible only on mobile when sidebar is closed) */}
+      {!isMobileOpen && (
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-wine text-white shadow-lg md:hidden"
+        >
+          <Menu size={24} />
+        </button>
+      )}
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:sticky md:top-0 ${
+          isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
+        } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
+      >
+        <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4">
+          <Link href="/" className={`flex items-center gap-2.5 overflow-hidden ${isCollapsed && !isMobileOpen ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto'}`}>
+            <Image src="/brand/logo.png" alt="" width={30} height={30} className="shrink-0" />
+            <div className="whitespace-nowrap">
+              <div className="text-sm font-semibold leading-none">GNDSF</div>
+              <div className="mt-0.5 text-[11px] text-neutral-500">ადმინისტრირება</div>
+            </div>
+          </Link>
+          
+          {/* Close button for mobile */}
+          <button 
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden flex h-8 w-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        </div>
+
+        {/* Desktop floating toggle button */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 ${isCollapsed ? "mx-auto" : ""}`}
+          className="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 h-7 w-7 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-500 shadow-sm hover:bg-neutral-50 hover:text-neutral-900 transition-transform"
         >
-          {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+          {isCollapsed ? <Menu size={14} /> : <ChevronLeft size={16} />}
         </button>
-      </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
-        {nav.map((n) => {
-          const Icon = ICONS[n.href] || Settings;
-          const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
-          
-          return (
-            <Link
-              key={n.href}
-              href={n.href}
-              title={isCollapsed ? n.label : undefined}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                isActive 
-                  ? "bg-neutral-900 text-white" 
-                  : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900"
-              }`}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!isCollapsed && <span className="whitespace-nowrap">{n.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="border-t border-neutral-200 p-4">
-        {!isCollapsed ? (
-          <div className="overflow-hidden">
-            <div className="truncate text-sm font-medium text-neutral-900">{user.name}</div>
-            <div className="truncate text-xs text-neutral-500">{user.roleLabel}</div>
-            <form action={doLogout}>
-              <button 
-                type="submit"
-                className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 hover:text-red-700 w-full text-left"
+        <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
+          {nav.map((n) => {
+            const Icon = ICONS[n.href] || Settings;
+            const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
+            
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                onClick={() => setIsMobileOpen(false)}
+                title={isCollapsed && !isMobileOpen ? n.label : undefined}
+                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  isActive 
+                    ? "bg-neutral-900 text-white" 
+                    : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900"
+                }`}
               >
-                <LogOut size={14} />
-                <span>გასვლა</span>
-              </button>
-            </form>
-          </div>
-        ) : (
-          <form action={doLogout}>
-            <button 
-              type="submit"
-              title="გასვლა"
-              className="flex items-center justify-center text-red-600 hover:text-red-700 w-full"
-            >
-              <LogOut size={20} />
-            </button>
-          </form>
-        )}
-      </div>
-    </aside>
+                <Icon size={18} className="shrink-0" />
+                {(!isCollapsed || isMobileOpen) && <span className="whitespace-nowrap">{n.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }

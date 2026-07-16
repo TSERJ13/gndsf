@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/rbac";
 import { decrypt } from "@/lib/crypto";
 import { readMessage } from "@/lib/mailbox";
-import { composeMail } from "../../actions";
+import { composeMail, deleteMailAction } from "../../actions";
 import sanitizeHtml from "sanitize-html";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function MailMessage({
   const user = await requireStaff();
   const { uid } = await params;
   const { box: boxParam } = await searchParams;
-  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : "inbox";
+  const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : boxParam === "trash" ? "trash" : "inbox";
 
   const account = await db.mailAccount.findUnique({ where: { userId: user.id } });
   if (!account) notFound();
@@ -54,23 +54,30 @@ export default async function MailMessage({
   return (
     <div className="max-w-3xl">
       <Link href={`/admin/mail?box=${box}`} className="text-sm text-neutral-500 hover:text-neutral-900">
-        ← {box === "inbox" ? "შემოსული" : box === "spam" ? "სპამი" : "გაგზავნილი"}
+        ← {box === "inbox" ? "შემოსული" : box === "spam" ? "სპამი" : box === "trash" ? "წაშლილი" : "გაგზავნილი"}
       </Link>
       <div className="mt-4 rounded-lg border border-neutral-200 bg-white shadow-sm">
-        <div className="border-b border-neutral-200 px-5 py-4">
-          <h1 className="text-xl font-semibold">{msg.subject}</h1>
-          <div className="mt-2 space-y-0.5 text-sm text-neutral-600">
-            <div><span className="text-neutral-400">ვისგან:</span> {msg.from}</div>
-            <div><span className="text-neutral-400">ვის:</span> {msg.to}</div>
-            {msg.date && (
-              <div className="tabular-nums"><span className="text-neutral-400">დრო:</span> {fmtDT(msg.date)}</div>
+        <div className="flex justify-between items-start border-b border-neutral-200 px-5 py-4">
+          <div>
+            <h1 className="text-xl font-semibold">{msg.subject}</h1>
+            <div className="mt-2 space-y-0.5 text-sm text-neutral-600">
+              <div><span className="text-neutral-400">ვისგან:</span> {msg.from}</div>
+              <div><span className="text-neutral-400">ვის:</span> {msg.to}</div>
+              {msg.date && (
+                <div className="tabular-nums"><span className="text-neutral-400">დრო:</span> {fmtDT(msg.date)}</div>
+              )}
+            </div>
+            {msg.attachments.length > 0 && (
+              <p className="mt-2 text-xs text-neutral-500">
+                📎 დანართები ({msg.attachments.length}): {msg.attachments.join(", ")} — გასახსნელად გამოიყენეთ Titan-ის ვებმეილი.
+              </p>
             )}
           </div>
-          {msg.attachments.length > 0 && (
-            <p className="mt-2 text-xs text-neutral-500">
-              📎 დანართები ({msg.attachments.length}): {msg.attachments.join(", ")} — გასახსნელად გამოიყენეთ Titan-ის ვებმეილი.
-            </p>
-          )}
+          <form action={deleteMailAction.bind(null, Number(uid), box as any)}>
+            <button className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md">
+              {box === "trash" ? "საბოლოოდ წაშლა" : "წაშლა"}
+            </button>
+          </form>
         </div>
         
         {safeHtml ? (
