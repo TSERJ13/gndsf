@@ -23,8 +23,15 @@ export async function uploadPhoto(formData: FormData) {
   if (!ext) redirect("/cabinet?error=type");
   if (file.size > MAX_BYTES) redirect("/cabinet?error=size");
 
+  // On Vercel the filesystem is read-only: without a Blob store there is
+  // nowhere to save. Fail politely instead of crashing the server action.
+  if (!process.env.BLOB_READ_WRITE_TOKEN && process.env.VERCEL) {
+    redirect("/cabinet?error=storage");
+  }
+
   let photoUrl: string;
 
+  try {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     const { put } = await import("@vercel/blob");
     const blob = await put(`athletes/${user.athleteId}${ext}`, file, {
@@ -41,6 +48,10 @@ export async function uploadPhoto(formData: FormData) {
     const filename = `${user.athleteId}${ext}`;
     await writeFile(path.join(dir, filename), Buffer.from(await file.arrayBuffer()));
     photoUrl = `/uploads/athletes/${filename}?v=${Date.now()}`;
+  }
+  } catch (e) {
+    console.error("photo upload failed:", e);
+    redirect("/cabinet?error=storage");
   }
 
   await db.athlete.update({

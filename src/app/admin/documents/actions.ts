@@ -23,6 +23,9 @@ export async function uploadDocument(formData: FormData) {
   }
   if (file.type !== "application/pdf") redirect("/admin/documents?error=type");
   if (file.size > MAX_BYTES) redirect("/admin/documents?error=size");
+  if (!process.env.BLOB_READ_WRITE_TOKEN && process.env.VERCEL) {
+    redirect("/admin/documents?error=storage");
+  }
 
   let fileUrl: string;
   const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;

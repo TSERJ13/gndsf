@@ -36,7 +36,9 @@ export default async function AdminDocuments({
             ? "მხოლოდ PDF ფაილია დაშვებული."
             : error === "size"
               ? "ფაილი 15 MB-ზე დიდია."
-              : "სათაური და ფაილი სავალდებულოა."}
+              : error === "storage"
+                ? "ფაილების საცავი არ არის კონფიგურირებული — Vercel-ში შექმენით Blob store (Storage → Create)."
+                : "სათაური და ფაილი სავალდებულოა."}
         </p>
       )}
 

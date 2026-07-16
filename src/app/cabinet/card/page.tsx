@@ -146,11 +146,18 @@ export default async function CardPage() {
           </a>
         )}
         {!appleReady && !googleReady && (
-          <p className="rounded-lg border border-line bg-coal p-4 text-xs text-smoke">
-            Apple/Google Wallet ღილაკები გამოჩნდება ფედერაციის Wallet-სერტიფიკატების
-            დამატებისთანავე (იხ. README). QR ბარათი უკვე სრულად მუშაობს — შეინახეთ
-            ეკრანის ანაბეჭდით ან გახსენით შეჯიბრებაზე პირდაპირ კაბინეტიდან.
-          </p>
+          <div className="rounded-lg border border-line bg-coal p-4 text-xs text-smoke">
+            <p className="font-medium text-silver">სწრაფი წვდომა შეჯიბრებაზე:</p>
+            <p className="mt-1.5">
+              iPhone: Safari → გაზიარება <span className="text-silver">⎋</span> → „Add to Home Screen“
+            </p>
+            <p className="mt-1">
+              Android: Chrome → მენიუ <span className="text-silver">⋮</span> → „Add to Home screen“
+            </p>
+            <p className="mt-1.5">
+              მთავარ ეკრანზე გაჩნდება GNDSF-ის აიკონი — ბარათი ერთი შეხებით გაიხსნება.
+            </p>
+          </div>
         )}
       </div>
     </div>
