@@ -41,9 +41,11 @@ const ICONS: Record<string, React.ElementType> = {
 };
 
 export default function AdminSidebar({ 
-  nav 
+  nav,
+  userRole
 }: { 
-  nav: NavItem[] 
+  nav: NavItem[];
+  userRole?: string;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -70,7 +72,7 @@ export default function AdminSidebar({
       )}
 
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:sticky md:top-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:sticky md:top-[73px] md:h-[calc(100vh-73px)] ${
           isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
       >
@@ -79,7 +81,7 @@ export default function AdminSidebar({
             <Image src="/brand/logo.png" alt="" width={30} height={30} className="shrink-0" />
             <div className="whitespace-nowrap">
               <div className="text-sm font-semibold leading-none">GNDSF</div>
-              <div className="mt-0.5 text-[11px] text-neutral-500">ადმინისტრირება</div>
+              <div className="mt-0.5 text-[11px] font-medium text-wine uppercase tracking-wider">{userRole || "ადმინისტრირება"}</div>
             </div>
           </Link>
           
