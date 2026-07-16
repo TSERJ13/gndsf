@@ -5,8 +5,12 @@ import Link from "next/link";
 
 export default function MobileNav({
   items,
+  isLoggedIn,
+  dashboardHref,
 }: {
   items: { href: string; label: string }[];
+  isLoggedIn?: boolean;
+  dashboardHref?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -43,15 +47,38 @@ export default function MobileNav({
                 </Link>
               </li>
             ))}
-            <li>
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="my-3 block rounded bg-wine px-4 py-2.5 text-center text-sm font-medium text-white"
-              >
-                შესვლა
-              </Link>
-            </li>
+            {isLoggedIn ? (
+              <>
+                <li>
+                  <Link
+                    href={dashboardHref || "/cabinet"}
+                    onClick={() => setOpen(false)}
+                    className="my-3 block rounded border border-line px-4 py-2.5 text-center text-sm font-medium text-silver"
+                  >
+                    კაბინეტი
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/api/auth/signout"
+                    onClick={() => setOpen(false)}
+                    className="mb-3 block rounded bg-red-900/50 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-red-800/60"
+                  >
+                    გასვლა
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="my-3 block rounded bg-wine px-4 py-2.5 text-center text-sm font-medium text-white"
+                >
+                  შესვლა
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}

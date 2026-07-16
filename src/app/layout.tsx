@@ -38,7 +38,13 @@ const NAV = [
 // Applies the saved theme before first paint (no flash). Default: light.
 const themeInit = `try{var t=localStorage.getItem("gndsf-theme");if(t==="dark")document.documentElement.dataset.theme="dark"}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import { auth } from "@/auth";
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const isLoggedIn = !!session;
+  const dashboardHref = session?.user?.role === "ADMIN" ? "/admin" : "/cabinet";
+
   return (
     <html lang="ka">
       <head>
@@ -65,17 +71,34 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {n.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
-              >
-                შესვლა
-              </Link>
+              {isLoggedIn ? (
+                <div className="flex items-center gap-4">
+                  <Link
+                    href={dashboardHref}
+                    className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
+                  >
+                    კაბინეტი
+                  </Link>
+                  <Link
+                    href="/api/auth/signout"
+                    className="rounded bg-red-900/50 px-3 py-1.5 text-white transition-colors hover:bg-red-800/60"
+                  >
+                    გასვლა
+                  </Link>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
+                >
+                  შესვლა
+                </Link>
+              )}
             </nav>
 
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <MobileNav items={NAV} />
+              <MobileNav items={NAV} isLoggedIn={isLoggedIn} dashboardHref={dashboardHref} />
             </div>
           </div>
         </header>
