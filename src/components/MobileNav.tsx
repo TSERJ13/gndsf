@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { doLogout } from "@/app/auth-actions";
+
 export default function MobileNav({
   items,
   isLoggedIn,
@@ -15,7 +17,7 @@ export default function MobileNav({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         onClick={() => setOpen(!open)}
         aria-label="მენიუ"
@@ -34,14 +36,14 @@ export default function MobileNav({
       </button>
 
       {open && (
-        <nav className="absolute inset-x-0 top-16 z-50 border-b border-line bg-coal shadow-lg">
+        <nav className="absolute inset-x-0 top-[72px] z-50 border-b border-line bg-coal shadow-lg">
           <ul className="mx-auto max-w-6xl px-4 py-2">
             {items.map((n) => (
               <li key={n.href}>
                 <Link
                   href={n.href}
                   onClick={() => setOpen(false)}
-                  className="block border-b border-line py-3 text-sm text-silver last:border-0"
+                  className="block border-b border-line py-3 text-sm text-silver last:border-0 uppercase tracking-wider"
                 >
                   {n.label}
                 </Link>
@@ -53,19 +55,21 @@ export default function MobileNav({
                   <Link
                     href={dashboardHref || "/cabinet"}
                     onClick={() => setOpen(false)}
-                    className="my-3 block rounded border border-line px-4 py-2.5 text-center text-sm font-medium text-silver"
+                    className="my-3 block rounded border border-wine/30 px-4 py-2.5 text-center text-sm font-medium text-wine"
                   >
                     კაბინეტი
                   </Link>
                 </li>
                 <li>
-                  <Link
-                    href="/api/auth/signout"
-                    onClick={() => setOpen(false)}
-                    className="mb-3 block rounded bg-red-900/50 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-red-800/60"
-                  >
-                    გასვლა
-                  </Link>
+                  <form action={doLogout} className="mb-3">
+                    <button
+                      type="submit"
+                      onClick={() => setOpen(false)}
+                      className="block w-full rounded bg-red-900/10 px-4 py-2.5 text-center text-sm font-medium text-flame hover:bg-red-900/20"
+                    >
+                      გასვლა
+                    </button>
+                  </form>
                 </li>
               </>
             ) : (

@@ -40,6 +40,8 @@ const ICONS: Record<string, React.ElementType> = {
   "/admin/settings": Settings,
 };
 
+import { doLogout } from "@/app/auth-actions";
+
 export default function AdminSidebar({ 
   nav, 
   user 
@@ -100,22 +102,26 @@ export default function AdminSidebar({
           <div className="overflow-hidden">
             <div className="truncate text-sm font-medium text-neutral-900">{user.name}</div>
             <div className="truncate text-xs text-neutral-500">{user.roleLabel}</div>
-            <Link 
-              href="/api/auth/signout" 
-              className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 hover:text-red-700"
-            >
-              <LogOut size={14} />
-              <span>გასვლა</span>
-            </Link>
+            <form action={doLogout}>
+              <button 
+                type="submit"
+                className="mt-3 flex items-center gap-2 text-xs font-medium text-red-600 hover:text-red-700 w-full text-left"
+              >
+                <LogOut size={14} />
+                <span>გასვლა</span>
+              </button>
+            </form>
           </div>
         ) : (
-          <Link 
-            href="/api/auth/signout" 
-            title="გასვლა"
-            className="flex items-center justify-center text-red-600 hover:text-red-700"
-          >
-            <LogOut size={20} />
-          </Link>
+          <form action={doLogout}>
+            <button 
+              type="submit"
+              title="გასვლა"
+              className="flex items-center justify-center text-red-600 hover:text-red-700 w-full"
+            >
+              <LogOut size={20} />
+            </button>
+          </form>
         )}
       </div>
     </aside>

@@ -40,6 +40,8 @@ const themeInit = `try{var t=localStorage.getItem("gndsf-theme");if(t==="dark")d
 
 import { auth } from "@/auth";
 
+import { doLogout } from "@/app/auth-actions";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   const isLoggedIn = !!session;
@@ -53,52 +55,55 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
       <body className="min-h-screen bg-ink text-silver">
-        <header className="sticky top-0 z-50 border-b border-line bg-ink/85 backdrop-blur">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-            <Link href="/" className="flex items-center gap-2.5">
+        <header className="sticky top-0 z-50 border-b border-line bg-ink/90 backdrop-blur-md">
+          <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-4 px-6">
+            <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
               <Image
                 src="/brand/logo-header@2x.png"
                 alt="GNDSF"
-                width={40}
-                height={40}
+                width={44}
+                height={44}
                 quality={100}
                 priority
               />
-              <span className="text-base font-bold tracking-[0.08em]">GNDSF</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold tracking-[0.1em] text-wine">GNDSF</span>
+                <span className="text-[10px] uppercase tracking-widest text-smoke hidden sm:block">საქართველოს სპორტული ცეკვების ეროვნული ფედერაცია</span>
+              </div>
             </Link>
 
-            <nav className="hidden items-center gap-6 text-sm text-smoke md:flex">
+            <nav className="hidden items-center gap-7 text-[13px] font-medium uppercase tracking-[0.05em] text-smoke lg:flex">
               {NAV.map((n) => (
                 <Link key={n.href} href={n.href} className="transition-colors hover:text-wine">
                   {n.label}
                 </Link>
               ))}
+              <div className="h-4 w-[1px] bg-line ml-2"></div>
               {isLoggedIn ? (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 ml-2">
                   <Link
                     href={dashboardHref}
-                    className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
+                    className="rounded-full border border-wine/30 px-5 py-2 text-wine transition-colors hover:border-wine hover:bg-wine/5"
                   >
                     კაბინეტი
                   </Link>
-                  <Link
-                    href="/api/auth/signout"
-                    className="rounded bg-red-900/50 px-3 py-1.5 text-white transition-colors hover:bg-red-800/60"
-                  >
-                    გასვლა
-                  </Link>
+                  <form action={doLogout}>
+                    <button className="text-smoke hover:text-flame transition-colors font-medium">
+                      გასვლა
+                    </button>
+                  </form>
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className="rounded border border-line px-3 py-1.5 transition-colors hover:border-wine hover:text-wine"
+                  className="rounded-full bg-wine px-6 py-2 text-white transition-colors hover:bg-flame ml-2 shadow-sm"
                 >
                   შესვლა
                 </Link>
               )}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <ThemeToggle />
               <MobileNav items={NAV} isLoggedIn={isLoggedIn} dashboardHref={dashboardHref} />
             </div>
