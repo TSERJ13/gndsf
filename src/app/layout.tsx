@@ -43,7 +43,9 @@ import { auth } from "@/auth";
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   const isLoggedIn = !!session;
-  const dashboardHref = session?.user?.role === "ADMIN" ? "/admin" : "/cabinet";
+  // NextAuth types don't include 'role' by default on user
+  const userRole = (session?.user as any)?.role;
+  const dashboardHref = userRole && userRole !== "ATHLETE" ? "/admin" : "/cabinet";
 
   return (
     <html lang="ka">
