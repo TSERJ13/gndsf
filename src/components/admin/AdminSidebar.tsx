@@ -53,6 +53,16 @@ export default function AdminSidebar({
 
   return (
     <>
+      <style>{`
+        @media (min-width: 768px) {
+          .admin-sidebar-desktop {
+            position: sticky !important;
+            top: 72px !important;
+            height: calc(100vh - 72px) !important;
+          }
+        }
+      `}</style>
+      
       {/* Mobile Hamburger Button (visible only on mobile when sidebar is closed) */}
       {!isMobileOpen && (
         <button
@@ -105,7 +115,9 @@ export default function AdminSidebar({
         <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
           {nav.map((n) => {
             const Icon = ICONS[n.href] || Settings;
-            const isActive = pathname === n.href || pathname.startsWith(n.href + "/");
+            const isActive = n.href === "/admin" 
+              ? pathname === "/admin" 
+              : pathname === n.href || pathname.startsWith(n.href + "/");
             
             return (
               <Link
