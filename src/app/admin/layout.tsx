@@ -32,6 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/calendar", label: "კალენდარი", show: isRegistryAdmin },
     { href: "/admin/documents", label: "დოკუმენტები", show: isRegistryAdmin },
     { href: "/admin/users", label: "მომხმარებლები", show: user.role === "SUPER_ADMIN" },
+    { href: "/admin/mail", label: "ფოსტა", show: true },
     { href: "/admin/settings", label: "პარამეტრები", show: true },
   ].filter((n) => n.show);
 

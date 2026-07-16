@@ -251,6 +251,7 @@ model User {
   athlete Athlete? @relation(fields: [athleteId], references: [id])
   auditLogs AuditLog[]
   news      News[]
+  mailAccount MailAccount?
 }
 
 model News {
@@ -286,6 +287,18 @@ model Document {
   category  String // e.g. "Rules", "Regulations", "Forms"
   fileUrl   String
   createdAt DateTime @default(now())
+}
+
+// Official's connected Titan mailbox. Password is AES-256-GCM
+// encrypted at rest with MAIL_CRED_KEY (falls back to AUTH_SECRET).
+model MailAccount {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  email     String
+  encSecret String // encrypted mailbox password
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model AuditLog {
