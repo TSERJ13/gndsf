@@ -11,22 +11,22 @@
 @theme {
   --color-wine: #8b1520;
   --color-flame: #c41e2c;
-  --color-ink: #faf9f7;
-  --color-coal: #ffffff;
-  --color-line: #e6e2db;
-  --color-silver: #1a181c;
-  --color-smoke: #6d6a75;
+  --color-ink: #F7F4EF;   /* ღია კაკაოსფერი (Light Cocoa / Beige) */
+  --color-coal: #FFFFFF;  /* ნორმალური თეთრი ფერი ბარათებისთვის */
+  --color-line: #E5DFD5;
+  --color-silver: #1A1A1A;
+  --color-smoke: #5A5A60;
 
   --font-sans: "Noto Sans Georgian", "Helvetica Neue", Arial, system-ui,
     sans-serif;
 }
 
 [data-theme="dark"] {
-  --color-ink: #0c0b0d;
-  --color-coal: #16141a;
-  --color-line: #2a2731;
-  --color-silver: #e8e6ec;
-  --color-smoke: #9b96a6;
+  --color-ink: #18181B;   /* ნორმალური მუქი ნაცრისფერი */
+  --color-coal: #27272A;  /* ოდნავ ღია ნაცრისფერი ბარათებისთვის */
+  --color-line: #3F3F46;
+  --color-silver: #F4F4F5;
+  --color-smoke: #A1A1AA;
 }
 
 html {
