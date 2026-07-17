@@ -71,8 +71,13 @@ export default function AdminSidebar({
         />
       )}
 
+      {/* Spacer for fixed sidebar to prevent main content overlap */}
+      <div 
+        className={`hidden md:block shrink-0 transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"}`}
+      />
+
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!sticky ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!fixed ${
           isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
         style={{
