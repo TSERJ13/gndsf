@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { requireUser, clubScope } from "@/lib/rbac";
 import CategoryTransitions from "@/components/CategoryTransitions";
 import TodoList from "./TodoList";
-import Calculator from "./Calculator";
 import WorkspaceCalendar from "./WorkspaceCalendar";
 
 export const dynamic = "force-dynamic";
@@ -61,20 +60,14 @@ export default async function WorkspacePage({
             </h2>
             <TodoList initialTasks={tasks} />
           </div>
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <h2 className="mb-4 text-lg font-semibold text-neutral-900">
-              კალენდარი
-            </h2>
-            <WorkspaceCalendar competitions={competitions} />
-          </div>
         </div>
         
         <div className="space-y-6">
           <div className="rounded-lg border border-neutral-200 bg-white p-5">
             <h2 className="mb-4 text-lg font-semibold text-neutral-900">
-              კალკულატორი
+              კალენდარი
             </h2>
-            <Calculator />
+            <WorkspaceCalendar competitions={competitions} />
           </div>
         </div>
       </div>

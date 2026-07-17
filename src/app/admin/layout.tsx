@@ -1,5 +1,7 @@
 import { requireStaff, REGISTRY_ADMINS } from "@/lib/rbac";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import FloatingCalculator from "@/components/admin/FloatingCalculator";
+import { getExchangeRates } from "@/lib/nbg";
 
 const ROLE_LABELS: Record<string, string> = {
   ATHLETE: "სპორტსმენი",
@@ -31,6 +33,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/settings", label: "პარამეტრები", show: true },
   ].filter((n) => n.show);
 
+  const showCalc = ["PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY", "SUPER_ADMIN"].includes(user.role);
+  const rates = showCalc ? await getExchangeRates() : {};
+
   return (
     <div className="min-h-screen bg-[#f6f5f3] text-neutral-900">
       <div className="flex w-full">
@@ -41,6 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </main>
       </div>
+      {showCalc && <FloatingCalculator rates={rates} />}
     </div>
   );
 }
