@@ -82,7 +82,7 @@ export default async function AthleteDocuments({
       )}
       {ai === "off" && (
         <p className="mt-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          AI-შემოწმება გამორთულია — Vercel-ში დაამატეთ ANTHROPIC_API_KEY.
+          AI-შემოწმება გამორთულია — Vercel-ში დაამატეთ GEMINI_API_KEY.
         </p>
       )}
       {ok === "deleted" && (

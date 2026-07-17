@@ -1,14 +1,12 @@
 // ── AI birth-date extraction from athlete documents ──
 // Sends the uploaded scan (JPG/PNG image block or PDF document block)
-// to the Claude API and asks for the date of birth as strict JSON.
-// Docs: https://platform.claude.com/docs/en/build-with-claude/vision
+// to the Gemini API and asks for the date of birth as strict JSON.
 
-const API_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5";
+const MODEL = "gemini-1.5-flash";
 const IMAGE_MAX = 5 * 1024 * 1024; // API limit per image
 
 export function aiConfigured(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!process.env.GEMINI_API_KEY;
 }
 
 export type Extraction =
@@ -29,53 +27,49 @@ export async function extractBirthDate(
     const buf = Buffer.from(await fileRes.arrayBuffer());
     if (isImage && buf.length > IMAGE_MAX) return { ok: false, reason: "toolarge" };
 
-    const fileBlock = isImage
-      ? {
-          type: "image",
-          source: { type: "base64", media_type: contentType, data: buf.toString("base64") },
-        }
-      : {
-          type: "document",
-          source: { type: "base64", media_type: "application/pdf", data: buf.toString("base64") },
-        };
+    const promptText = 
+      "This is a Georgian identity document, birth certificate, or medical certificate. " +
+      "Find the person's DATE OF BIRTH (დაბადების თარიღი). Georgian documents usually " +
+      "print dates as DD.MM.YYYY. Respond with ONLY this JSON, no other text: " +
+      '{"found": true, "birthDate": "YYYY-MM-DD"} or {"found": false}';
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const res = await fetch(API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 200,
-        messages: [
+        contents: [
           {
-            role: "user",
-            content: [
-              fileBlock,
+            parts: [
               {
-                type: "text",
-                text:
-                  "This is a Georgian identity document, birth certificate, or medical certificate. " +
-                  "Find the person's DATE OF BIRTH (დაბადების თარიღი). Georgian documents usually " +
-                  "print dates as DD.MM.YYYY. Respond with ONLY this JSON, no other text: " +
-                  '{"found": true, "birthDate": "YYYY-MM-DD"} or {"found": false}',
+                inline_data: {
+                  mime_type: contentType,
+                  data: buf.toString("base64"),
+                },
+              },
+              {
+                text: promptText,
               },
             ],
           },
         ],
+        generationConfig: {
+          responseMimeType: "application/json",
+        },
       }),
     });
+
     if (!res.ok) {
       console.error("docai api error:", res.status, await res.text().catch(() => ""));
       return { ok: false, reason: "error" };
     }
-    const data = (await res.json()) as { content?: { type: string; text?: string }[] };
-    const text = (data.content ?? [])
-      .filter((b) => b.type === "text")
-      .map((b) => b.text ?? "")
-      .join("");
+    const data = await res.json();
+    
+    // Gemini response format parsing
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const parsed = parseModelJson(text);
     if (parsed?.found && parsed.birthDate && /^\d{4}-\d{2}-\d{2}$/.test(parsed.birthDate)) {
       return { ok: true, birthDate: parsed.birthDate };
