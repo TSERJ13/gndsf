@@ -17,7 +17,8 @@ import {
   Settings,
   Menu,
   ChevronLeft,
-  LogOut
+  LogOut,
+  Briefcase
 } from "lucide-react";
 
 export type NavItem = {
@@ -28,6 +29,7 @@ export type NavItem = {
 
 const ICONS: Record<string, React.ElementType> = {
   "/admin": LayoutDashboard,
+  "/admin/workspace": Briefcase,
   "/admin/athletes": Users,
   "/admin/partnerships": HeartHandshake,
   "/admin/clubs": Building2,

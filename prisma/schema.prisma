@@ -254,6 +254,7 @@ model User {
   news      News[]
   mailAccount MailAccount?
   athleteDocs AthleteDocument[]
+  adminTasks AdminTask[]
 }
 
 model News {
@@ -332,4 +333,16 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model AdminTask {
+  id        String   @id @default(uuid())
+  userId    String
+  text      String
+  isDone    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

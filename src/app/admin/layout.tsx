@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Moved "ფოსტა" higher up below the main dashboard
   const nav = [
     { href: "/admin", label: "დაფა", show: true },
+    { href: "/admin/workspace", label: "სამუშაო სივრცე", show: true },
     { href: "/admin/mail", label: "ფოსტა", show: true },
     { href: "/admin/athletes", label: "სპორტსმენები", show: true },
     { href: "/admin/partnerships", label: "წყვილები", show: isRegistryAdmin },
