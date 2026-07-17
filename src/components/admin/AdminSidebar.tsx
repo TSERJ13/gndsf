@@ -53,16 +53,6 @@ export default function AdminSidebar({
 
   return (
     <>
-      <style>{`
-        @media (min-width: 768px) {
-          .admin-sidebar-desktop {
-            position: sticky !important;
-            top: 72px !important;
-            height: calc(100vh - 72px) !important;
-          }
-        }
-      `}</style>
-      
       {/* Mobile Hamburger Button (visible only on mobile when sidebar is closed) */}
       {!isMobileOpen && (
         <button
@@ -82,9 +72,13 @@ export default function AdminSidebar({
       )}
 
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 admin-sidebar-desktop ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!sticky ${
           isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
+        style={{
+          top: "72px",
+          height: "calc(100vh - 72px)"
+        }}
       >
         <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4">
           <Link href="/" className={`flex items-center gap-2.5 overflow-hidden ${isCollapsed && !isMobileOpen ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto'}`}>
