@@ -124,14 +124,16 @@ export default function AdminSidebar({
                 href={n.href}
                 onClick={() => setIsMobileOpen(false)}
                 title={isCollapsed && !isMobileOpen ? n.label : undefined}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex h-11 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors ${
                   isActive 
                     ? "bg-neutral-900 text-white" 
                     : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900"
                 }`}
               >
-                <Icon size={18} className="shrink-0" />
-                {(!isCollapsed || isMobileOpen) && <span className="whitespace-nowrap">{n.label}</span>}
+                <Icon size={22} className="shrink-0" />
+                <span className={`whitespace-nowrap transition-all duration-300 ${isCollapsed && !isMobileOpen ? 'w-0 opacity-0 overflow-hidden' : 'w-auto opacity-100'}`}>
+                  {n.label}
+                </span>
               </Link>
             );
           })}

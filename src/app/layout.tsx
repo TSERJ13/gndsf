@@ -54,8 +54,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       </head>
-      <body className="min-h-screen bg-ink text-silver">
-        <header className="sticky top-0 z-50 border-b border-line bg-ink/90 backdrop-blur-md">
+      <body className="min-h-screen bg-ink text-silver pt-[72px]">
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-line bg-ink/90 backdrop-blur-md">
           <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-4 px-6">
             <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
               <Image
