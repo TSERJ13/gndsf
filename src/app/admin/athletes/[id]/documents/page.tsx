@@ -3,7 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/rbac";
 import { fmtDate, CATEGORY_LABELS, categoryFor } from "@/lib/labels";
-import { deleteAthleteDoc } from "./actions";
+import { deleteAthleteDoc, verifyAthleteDoc } from "./actions";
+import { aiConfigured } from "@/lib/docai";
 import DocUploader from "./DocUploader";
 
 export const dynamic = "force-dynamic";
@@ -24,11 +25,11 @@ export default async function AthleteDocuments({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string }>;
+  searchParams: Promise<{ ok?: string; ai?: string }>;
 }) {
   const user = await requireStaff();
   const { id } = await params;
-  const { ok } = await searchParams;
+  const { ok, ai } = await searchParams;
 
   const athlete = await db.athlete.findUnique({
     where: { id },
@@ -48,6 +49,13 @@ export default async function AthleteDocuments({
   }
 
   const storageReady = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const aiReady = aiConfigured();
+
+  const BADGE: Record<string, { cls: string; label: string }> = {
+    MATCH: { cls: "bg-green-100 text-green-800", label: "✓ ემთხვევა" },
+    MISMATCH: { cls: "bg-red-100 text-red-800", label: "⚠ შეუსაბამობა" },
+    UNREADABLE: { cls: "bg-neutral-100 text-neutral-600", label: "— ვერ წაიკითხა" },
+  };
 
   return (
     <div>
@@ -65,6 +73,16 @@ export default async function AthleteDocuments({
       {ok === "uploaded" && (
         <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
           დოკუმენტი აიტვირთა.
+        </p>
+      )}
+      {ai === "done" && (
+        <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          AI-შემოწმება დასრულდა — შედეგი დოკუმენტთანაა მითითებული.
+        </p>
+      )}
+      {ai === "off" && (
+        <p className="mt-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          AI-შემოწმება გამორთულია — Vercel-ში დაამატეთ ANTHROPIC_API_KEY.
         </p>
       )}
       {ok === "deleted" && (
@@ -85,13 +103,35 @@ export default async function AthleteDocuments({
                   {fmtBytes(d.size)} · {fmtDate(d.createdAt)}
                   {d.uploadedBy && <> · {d.uploadedBy.name}</>}
                 </div>
+                {d.verifyStatus && BADGE[d.verifyStatus] && (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${BADGE[d.verifyStatus].cls}`}>
+                      {BADGE[d.verifyStatus].label}
+                    </span>
+                    {d.verifyNote && (
+                      <span className={`text-xs ${d.verifyStatus === "MISMATCH" ? "text-red-700" : "text-neutral-500"}`}>
+                        {d.verifyNote}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <form action={deleteAthleteDoc}>
-                <input type="hidden" name="id" value={d.id} />
-                <button className="rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50">
-                  წაშლა
-                </button>
-              </form>
+              <div className="flex shrink-0 items-center gap-2">
+                {aiReady && (
+                  <form action={verifyAthleteDoc}>
+                    <input type="hidden" name="id" value={d.id} />
+                    <button className="rounded border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-50">
+                      🔍 AI შემოწმება
+                    </button>
+                  </form>
+                )}
+                <form action={deleteAthleteDoc}>
+                  <input type="hidden" name="id" value={d.id} />
+                  <button className="rounded border border-red-200 px-3 py-1 text-xs text-red-700 hover:bg-red-50">
+                    წაშლა
+                  </button>
+                </form>
+              </div>
             </li>
           ))}
           {athlete.documents.length === 0 && (

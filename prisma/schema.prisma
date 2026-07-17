@@ -304,14 +304,17 @@ model MailAccount {
 }
 
 model AthleteDocument {
-  id           String   @id @default(uuid())
-  athleteId    String
-  name         String
-  size         Int
-  contentType  String
-  url          String
-  uploadedById String?
-  createdAt    DateTime @default(now())
+  id                 String    @id @default(uuid())
+  athleteId          String
+  name               String
+  size               Int
+  contentType        String
+  url                String
+  uploadedById       String?
+  createdAt          DateTime  @default(now())
+  extractedBirthDate DateTime?
+  verifyStatus       String?
+  verifyNote         String?
 
   athlete    Athlete @relation(fields: [athleteId], references: [id])
   uploadedBy User?   @relation(fields: [uploadedById], references: [id])
