@@ -13,6 +13,7 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
   const [display, setDisplay] = useState("0");
   const [equation, setEquation] = useState("");
   const [currencyMode, setCurrencyMode] = useState<string | null>(null); // e.g. "USD"
+  const [currencyDir, setCurrencyDir] = useState<"TO_FOREIGN" | "FROM_FOREIGN">("TO_FOREIGN");
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -34,9 +35,9 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
   // Save state to localStorage whenever it changes
   useEffect(() => {
     if (!isMounted) return;
-    const stateToSave = { isOpen, display, equation, currencyMode };
+    const stateToSave = { isOpen, display, equation, currencyMode, currencyDir };
     localStorage.setItem("gndsf_calc_state", JSON.stringify(stateToSave));
-  }, [isOpen, display, equation, currencyMode, isMounted]);
+  }, [isOpen, display, equation, currencyMode, currencyDir, isMounted]);
 
   if (!isMounted) return null; // Avoid hydration mismatch
 
@@ -89,19 +90,15 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
   const toggleCurrency = (code: string) => {
     if (display === "Error") return;
     
-    // If clicking the same currency again, convert back to GEL
+    // If user clicked the same currency, just toggle the direction instead of disabling it
     if (currencyMode === code) {
-      setCurrencyMode(null);
+      setCurrencyDir(currencyDir === "TO_FOREIGN" ? "FROM_FOREIGN" : "TO_FOREIGN");
       return;
     }
     
     // Changing currency mode
     setCurrencyMode(code);
-    
-    // Convert current display to the target currency based on GEL value
-    // Assuming current display is always treated as GEL initially, or we recalculate.
-    // For simplicity, we just set the mode and let the user see the conversion below.
-    // Actually, a better UX is to not change 'display' value, but show the converted value.
+    setCurrencyDir("TO_FOREIGN"); // default direction
   };
 
   const getConvertedValue = () => {
@@ -109,10 +106,13 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
     const val = parseFloat(display);
     if (isNaN(val)) return null;
     
-    // NBG rates: 1 USD = X GEL. 
-    // If user typed 100 (GEL), it's 100 / X USD
-    const converted = val / rates[currencyMode];
-    return `${val} GEL = ${converted.toFixed(2)} ${currencyMode}`;
+    if (currencyDir === "TO_FOREIGN") {
+      const converted = val / rates[currencyMode];
+      return `${val} GEL = ${converted.toFixed(2)} ${currencyMode}`;
+    } else {
+      const converted = val * rates[currencyMode];
+      return `${val} ${currencyMode} = ${converted.toFixed(2)} GEL`;
+    }
   };
 
   const btnClass = "flex h-10 items-center justify-center rounded border border-neutral-200 bg-neutral-50 text-sm font-medium hover:bg-neutral-100 active:bg-neutral-200 transition-colors";
@@ -142,8 +142,20 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
             </div>
             
             {/* Currency Result */}
-            <div className={`text-xs h-4 mt-1 font-medium ${currencyMode ? "text-wine" : "text-transparent"}`}>
+            <div className={`text-xs mt-1 font-medium flex items-center justify-end gap-1 min-h-[16px] ${currencyMode ? "text-wine" : "text-transparent"}`}>
               {getConvertedValue() || " "}
+              {currencyMode && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrencyMode(null);
+                  }}
+                  className="ml-2 rounded hover:bg-wine/10 px-1 py-0.5 text-wine/70 hover:text-wine"
+                  title="გათიშვა"
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -153,10 +165,15 @@ export default function FloatingCalculator({ rates }: { rates: NbgRates }) {
               <button
                 key={code}
                 onClick={() => toggleCurrency(code)}
-                title={rates[code] ? `1 ${code} = ${rates[code]} ₾` : "Rate not found"}
-                className={`${curClass} ${currencyMode === code ? "bg-wine text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
+                title={rates[code] ? `1 ${code} = ${rates[code]} ₾ (დააჭირეთ გადასართავად)` : "Rate not found"}
+                className={`${curClass} relative ${currencyMode === code ? "bg-wine text-white" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
               >
                 {code}
+                {currencyMode === code && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-white text-[8px] font-bold text-wine shadow-sm">
+                    {currencyDir === "TO_FOREIGN" ? "₾" : code[0]}
+                  </span>
+                )}
               </button>
             ))}
           </div>
