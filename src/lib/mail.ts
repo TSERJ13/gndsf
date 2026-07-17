@@ -32,3 +32,23 @@ export async function sendContactMail(input: {
     text: `სახელი: ${input.name}\nელფოსტა: ${input.email}\n\n${input.message}\n\n—\nგაგზავნილია gndsf.ge-ს საკონტაქტო ფორმიდან`,
   });
 }
+
+// Recipients for internal leadership notifications (trainer → leadership).
+const LEADERSHIP = (process.env.LEADERSHIP_EMAILS ??
+  "president@gndsf.ge,vicepresident@gndsf.ge,secretary@gndsf.ge")
+  .split(",")
+  .map((e) => e.trim())
+  .filter(Boolean);
+
+export async function sendLeadershipNotice(input: {
+  subject: string;
+  text: string;
+  senderName: string;
+}) {
+  await transporter().sendMail({
+    from: `"${input.senderName} — gndsf.ge" <${process.env.SMTP_USER}>`,
+    to: LEADERSHIP,
+    subject: input.subject,
+    text: input.text,
+  });
+}

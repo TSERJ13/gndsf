@@ -77,6 +77,7 @@ model Athlete {
   soloEntries      Entry[]
   rankingPoints    RankingPoint[]
   rankingEntries   RankingEntry[]
+  documents        AthleteDocument[]
 
   @@index([lastName, firstName])
 }
@@ -252,6 +253,7 @@ model User {
   auditLogs AuditLog[]
   news      News[]
   mailAccount MailAccount?
+  athleteDocs AthleteDocument[]
 }
 
 model News {
@@ -299,6 +301,22 @@ model MailAccount {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model AthleteDocument {
+  id           String   @id @default(uuid())
+  athleteId    String
+  name         String
+  size         Int
+  contentType  String
+  url          String
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  athlete    Athlete @relation(fields: [athleteId], references: [id])
+  uploadedBy User?   @relation(fields: [uploadedById], references: [id])
+
+  @@index([athleteId])
 }
 
 model AuditLog {

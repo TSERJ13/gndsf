@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
 import { CATEGORY_LABELS, categoryFor, fmtDate } from "@/lib/labels";
@@ -86,7 +87,15 @@ export default async function AdminAthletes({
                 <tr key={a.id}>
                   <td className="px-4 py-3 tabular-nums text-neutral-500">{a.gid}</td>
                   <td className="px-4 py-3 font-medium">
-                    {a.firstName} {a.lastName}
+                    <div className="flex items-center justify-between gap-4">
+                      <span>{a.firstName} {a.lastName}</span>
+                      <Link
+                        href={`/admin/athletes/${a.id}/documents`}
+                        className="rounded border border-neutral-300 px-2.5 py-1 text-xs hover:bg-neutral-50 font-normal text-neutral-700"
+                      >
+                        დოკ.
+                      </Link>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-neutral-600">
                     {CATEGORY_LABELS[categoryFor(a.birthDate)]}

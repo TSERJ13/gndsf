@@ -1,13 +1,19 @@
 import { db } from "@/lib/db";
 import { requireUser, clubScope } from "@/lib/rbac";
 import { fmtDate } from "@/lib/labels";
+import CategoryTransitions from "@/components/CategoryTransitions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ადმინ დაფა" };
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ notify?: string }>;
+}) {
   const user = await requireUser();
   const scope = clubScope(user);
+  const { notify } = await searchParams;
 
   const athleteWhere = scope
     ? { clubMemberships: { some: { clubId: scope.clubId, endDate: null } } }
@@ -35,6 +41,25 @@ export default async function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">დაფა</h1>
+
+      {notify === "failed" && (
+        <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+          შეტყობინების გაგზავნა ვერ მოხერხდა — სცადეთ ხელახლა.
+        </p>
+      )}
+      {notify === "config" && (
+        <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
+          ფოსტის გაგზავნა არ არის კონფიგურირებული (SMTP).
+        </p>
+      )}
+      <div className="mt-6">
+        <CategoryTransitions
+          clubId={user.role === "CLUB_MANAGER" ? (user.clubId ?? null) : null}
+          role={user.role}
+          notified={notify === "sent"}
+        />
+      </div>
+
       <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-lg border border-neutral-200 bg-white p-5">

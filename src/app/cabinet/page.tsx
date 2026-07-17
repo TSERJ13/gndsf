@@ -7,6 +7,7 @@ import {
   DISCIPLINE_LABELS,
   FORMAT_LABELS,
   categoryFor,
+  categoryForYear,
   fmtDate,
 } from "@/lib/labels";
 import { uploadPhoto } from "./actions";
@@ -34,6 +35,7 @@ export default async function CabinetPage({
         include: { result: { include: { entry: { include: { event: { include: { competition: true } } } } } } },
         orderBy: { earnedAt: "desc" },
       },
+      documents: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -104,6 +106,16 @@ export default async function CabinetPage({
                 <> · პარტნიორი: {activePartner.firstName} {activePartner.lastName}</>
               )}
             </div>
+            {(() => {
+              const y = new Date().getFullYear();
+              const now = categoryForYear(athlete.birthDate, y);
+              const next = categoryForYear(athlete.birthDate, y + 1);
+              return now !== next ? (
+                <p className="mt-2 rounded border border-wine/40 bg-wine/5 px-3 py-1.5 text-xs text-wine">
+                  {y + 1} წლის 1 იანვრიდან გადადიხართ კატეგორიაში: <b>{CATEGORY_LABELS[next]}</b>
+                </p>
+              ) : null;
+            })()}
             <div className="mt-4">
               <Link
                 href="/cabinet/card"
@@ -276,6 +288,21 @@ export default async function CabinetPage({
           </Link>
         </div>
       </section>
+
+      {/* ── athlete documents ── */}
+      {athlete.documents.length > 0 && (
+        <section className="mt-10 max-w-xl">
+          <h2 className="text-xl font-semibold">ჩემი დოკუმენტები</h2>
+          <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-coal">
+            {athlete.documents.map((d) => (
+              <li key={d.id} className="flex items-center justify-between gap-4 p-4 text-sm">
+                <a href={d.url} target="_blank" className="font-medium hover:text-wine">{d.name}</a>
+                <span className="tnum shrink-0 text-xs text-smoke">{fmtDate(d.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ── account settings ── */}
       <section className="mt-10 max-w-md">
