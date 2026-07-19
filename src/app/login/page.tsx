@@ -31,23 +31,23 @@ export default async function LoginPage({
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-4">
-      <div className="rounded-lg border border-line bg-coal p-8">
-        <div className="flex items-center gap-3">
-          <Image src="/brand/logo.png" alt="" width={34} height={34} />
-          <h1 className="text-lg font-semibold">ადმინისტრირება</h1>
+    <div className="mx-auto flex min-h-[75vh] max-w-md flex-col justify-center px-4">
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-coal p-10 md:p-12 shadow-sm">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Image src="/brand/logo.png" alt="" width={50} height={50} />
+          <h1 className="heading-display text-3xl">ადმინისტრირება</h1>
         </div>
-        <p className="mt-2 text-sm text-smoke">
+        <p className="mt-4 text-center text-sm font-medium text-smoke">
           შედით ფედერაციის ან კლუბის ანგარიშით.
         </p>
         {error && (
-          <p className="mt-4 rounded border border-wine/40 bg-wine/10 px-3 py-2 text-sm text-flame">
+          <p className="mt-6 rounded-lg border border-wine/40 bg-wine/10 px-4 py-3 text-center text-sm font-semibold text-flame">
             ელფოსტა ან პაროლი არასწორია. სცადეთ ხელახლა.
           </p>
         )}
-        <form action={login} className="mt-6 space-y-4">
+        <form action={login} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="email" className="text-xs uppercase tracking-wider text-smoke">
+            <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-smoke">
               ელფოსტა
             </label>
             <input
@@ -56,11 +56,11 @@ export default async function LoginPage({
               type="email"
               required
               autoComplete="email"
-              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+              className="mt-2 w-full rounded-lg border border-line bg-transparent px-4 py-3 text-sm outline-none transition-colors focus:border-[#005eb8]"
             />
           </div>
           <div>
-            <label htmlFor="password" className="text-xs uppercase tracking-wider text-smoke">
+            <label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-smoke">
               პაროლი
             </label>
             <input
@@ -69,10 +69,10 @@ export default async function LoginPage({
               type="password"
               required
               autoComplete="current-password"
-              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+              className="mt-2 w-full rounded-lg border border-line bg-transparent px-4 py-3 text-sm outline-none transition-colors focus:border-[#005eb8]"
             />
           </div>
-          <button className="w-full rounded bg-wine px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-flame">
+          <button className="mt-2 w-full rounded-full bg-[#005eb8] px-6 py-3.5 text-[15px] font-bold text-white transition-opacity hover:opacity-90 shadow-sm">
             შესვლა
           </button>
         </form>

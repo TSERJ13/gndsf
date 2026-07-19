@@ -34,34 +34,34 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">დაფა</h1>
-      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <h1 className="heading-display text-3xl md:text-4xl">დაფა</h1>
+      <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-lg border border-neutral-200 bg-white p-5">
-            <div className="text-3xl font-semibold tabular-nums">{s.value}</div>
-            <div className="mt-1 text-sm text-neutral-500">{s.label}</div>
+          <div key={s.label} className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+            <div className="text-4xl font-black tabular-nums text-[#005eb8]">{s.value}</div>
+            <div className="mt-2 text-xs font-bold uppercase tracking-wider text-neutral-500">{s.label}</div>
           </div>
         ))}
       </div>
 
-      <h2 className="mt-10 text-lg font-semibold">ბოლო ცვლილებები</h2>
-      <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+      <h2 className="heading-display mt-14 text-2xl">ბოლო ცვლილებები</h2>
+      <div className="mt-6 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500">
+          <thead className="bg-[#f8f8f8] text-left text-xs uppercase tracking-wider text-[#555]">
             <tr>
-              <th className="px-4 py-3">მოქმედება</th>
-              <th className="px-4 py-3">დეტალი</th>
-              <th className="px-4 py-3">ვინ</th>
-              <th className="px-4 py-3">როდის</th>
+              <th className="px-6 py-4 font-bold">მოქმედება</th>
+              <th className="px-6 py-4 font-bold">დეტალი</th>
+              <th className="px-6 py-4 font-bold">ვინ</th>
+              <th className="px-6 py-4 font-bold">როდის</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
             {audit.map((a) => (
-              <tr key={a.id}>
-                <td className="px-4 py-3 font-mono text-xs">{a.action}</td>
-                <td className="px-4 py-3 text-neutral-600">{a.detail ?? "—"}</td>
-                <td className="px-4 py-3 text-neutral-600">{a.user?.name ?? "სისტემა"}</td>
-                <td className="px-4 py-3 tabular-nums text-neutral-500">{fmtDate(a.createdAt)}</td>
+              <tr key={a.id} className="transition-colors hover:bg-neutral-50">
+                <td className="px-6 py-4 font-mono text-xs">{a.action}</td>
+                <td className="px-6 py-4 text-neutral-600">{a.detail ?? "—"}</td>
+                <td className="px-6 py-4 font-semibold text-neutral-800">{a.user?.name ?? "სისტემა"}</td>
+                <td className="px-6 py-4 tabular-nums text-neutral-500">{fmtDate(a.createdAt)}</td>
               </tr>
             ))}
             {audit.length === 0 && (

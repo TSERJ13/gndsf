@@ -42,20 +42,20 @@ export default async function RankingsPage({
   };
 
   const pill = (active: boolean) =>
-    `rounded px-3 py-1.5 text-sm transition-colors ${
+    `rounded-full px-5 py-2 text-sm font-bold transition-colors ${
       active
-        ? "bg-wine font-medium text-white"
-        : "border border-line text-smoke hover:border-smoke hover:text-silver"
+        ? "bg-[#005eb8] text-white"
+        : "border border-line bg-coal text-smoke hover:border-[#005eb8] hover:text-[#005eb8]"
     }`;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-12">
-      <h1 className="text-3xl font-bold">ეროვნული რეიტინგი</h1>
-      <p className="mt-2 text-sm text-smoke">
+    <div className="mx-auto max-w-[1400px] px-6 pt-16">
+      <h1 className="heading-display text-center text-3xl md:text-4xl">ეროვნული რეიტინგი</h1>
+      <p className="mt-4 text-center text-sm font-medium text-smoke">
         განახლდება ავტომატურად ყოველი შეჯიბრების შედეგების დამტკიცებისთანავე.
       </p>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <div className="mt-10 flex flex-wrap justify-center items-center gap-3">
         {(["LATIN", "STANDARD"] as const).map((d) => (
           <Link key={d} href={link({ disc: d })} className={pill(disc === d)}>
             {DISCIPLINE_LABELS[d]}
@@ -78,39 +78,39 @@ export default async function RankingsPage({
         ))}
       </div>
 
-      <div className="mt-8 overflow-x-auto rounded-lg border border-line">
+      <div className="mt-12 overflow-x-auto border-t border-line">
         <table className="w-full text-sm">
-          <thead className="bg-coal text-left text-xs uppercase tracking-wider text-smoke">
+          <thead className="bg-[#f8f8f8] text-left text-xs uppercase tracking-wider text-[#555] dark:bg-[#1a1a1a] dark:text-[#aaa]">
             <tr>
-              <th className="w-16 px-4 py-3">#</th>
-              <th className="px-4 py-3">{fmt === "COUPLE" ? "წყვილი" : "სპორტსმენი"}</th>
-              <th className="px-4 py-3">კატეგორია</th>
-              <th className="px-4 py-3 text-right">ქულა</th>
+              <th className="w-16 px-6 py-4 font-bold">#</th>
+              <th className="px-6 py-4 font-bold">{fmt === "COUPLE" ? "წყვილი" : "სპორტსმენი"}</th>
+              <th className="px-6 py-4 font-bold">კატეგორია</th>
+              <th className="px-6 py-4 text-right font-bold">ქულა</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {rows.map((r) => (
               <tr key={r.id} className="transition-colors hover:bg-coal">
-                <td className="tnum px-4 py-3 font-bold text-wine">{r.position}</td>
-                <td className="px-4 py-3 font-medium">
+                <td className="tnum px-6 py-4 font-bold text-[#005eb8] text-lg">{r.position}</td>
+                <td className="px-6 py-4 font-bold">
                   {r.partnership ? (
                     <>
-                      <Link href={`/athletes/${r.partnership.leaderId}`} className="hover:text-flame">
+                      <Link href={`/athletes/${r.partnership.leaderId}`} className="text-silver hover:text-[#005eb8]">
                         {r.partnership.leader.firstName} {r.partnership.leader.lastName}
                       </Link>
-                      {" · "}
-                      <Link href={`/athletes/${r.partnership.followerId}`} className="hover:text-flame">
+                      <span className="text-smoke mx-1">·</span>
+                      <Link href={`/athletes/${r.partnership.followerId}`} className="text-silver hover:text-[#005eb8]">
                         {r.partnership.follower.firstName} {r.partnership.follower.lastName}
                       </Link>
                     </>
                   ) : (
-                    <Link href={`/athletes/${r.athleteId}`} className="hover:text-flame">
+                    <Link href={`/athletes/${r.athleteId}`} className="text-silver hover:text-[#005eb8]">
                       {r.athlete!.firstName} {r.athlete!.lastName}
                     </Link>
                   )}
                 </td>
-                <td className="px-4 py-3 text-smoke">{CATEGORY_LABELS[r.ageCategory]}</td>
-                <td className="tnum px-4 py-3 text-right font-semibold">{r.totalPoints}</td>
+                <td className="px-6 py-4 text-smoke">{CATEGORY_LABELS[r.ageCategory]}</td>
+                <td className="tnum px-6 py-4 text-right text-lg font-black">{r.totalPoints}</td>
               </tr>
             ))}
             {rows.length === 0 && (

@@ -79,10 +79,10 @@ export default async function CabinetPage({
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-12">
+    <div className="mx-auto max-w-[1400px] px-6 pt-16">
       {/* ── identity card ── */}
-      <section className="rounded-lg border border-line bg-coal p-6 md:p-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-start">
+      <section className="relative overflow-hidden rounded-xl border border-line bg-coal p-8 md:p-12">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start">
           <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg border border-line bg-ink">
             {athlete.photoUrl ? (
               <Image src={athlete.photoUrl} alt="" fill className="object-cover" unoptimized />
@@ -93,10 +93,12 @@ export default async function CabinetPage({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs uppercase tracking-[0.25em] text-wine">
-              GID {athlete.gid} · სპორტსმენის კაბინეტი
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#f0f0f0] px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#555] dark:bg-[#222] dark:text-[#aaa]">
+              <span>GID {athlete.gid}</span>
+              <span className="h-1 w-1 rounded-full bg-[#aaa]"></span>
+              <span>სპორტსმენის კაბინეტი</span>
             </div>
-            <h1 className="mt-2 text-3xl font-bold md:text-4xl">
+            <h1 className="heading-display mt-2 text-4xl md:text-5xl">
               {athlete.firstName} {athlete.lastName}
             </h1>
             <div className="mt-2 text-sm text-smoke">
@@ -116,10 +118,10 @@ export default async function CabinetPage({
                 </p>
               ) : null;
             })()}
-            <div className="mt-4">
+            <div className="mt-6">
               <Link
                 href="/cabinet/card"
-                className="inline-block rounded bg-wine px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-flame"
+                className="inline-block rounded-full bg-[#005eb8] px-6 py-2.5 text-[15px] font-bold text-white transition-opacity hover:opacity-90"
               >
                 ჩემი ციფრული ბარათი →
               </Link>
@@ -130,9 +132,9 @@ export default async function CabinetPage({
                 name="photo"
                 accept="image/jpeg,image/png,image/webp"
                 required
-                className="text-sm text-smoke file:mr-3 file:rounded file:border file:border-line file:bg-ink file:px-3 file:py-1.5 file:text-sm file:text-silver hover:file:border-smoke"
+                className="text-sm text-smoke file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-line file:bg-transparent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-silver hover:file:border-[#005eb8]"
               />
-              <button className="rounded bg-wine px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-flame">
+              <button className="rounded-full bg-coal border border-line px-5 py-2 text-[14px] font-bold text-silver transition-colors hover:border-[#005eb8] hover:text-[#005eb8]">
                 ფოტოს ატვირთვა
               </button>
             </form>
@@ -171,8 +173,8 @@ export default async function CabinetPage({
       </section>
 
       {/* ── current rankings ── */}
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold">ჩემი რეიტინგი</h2>
+      <section className="mt-14">
+        <h2 className="heading-display text-2xl">ჩემი რეიტინგი</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {rankings.map((r) => (
             <div key={r.id} className="rounded-lg border border-line bg-coal p-5">
@@ -201,8 +203,8 @@ export default async function CabinetPage({
       </section>
 
       {/* ── points breakdown ── */}
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold">ქულების დეტალიზაცია</h2>
+      <section className="mt-14">
+        <h2 className="heading-display text-2xl">ქულების დეტალიზაცია</h2>
         <p className="mt-1 text-sm text-smoke">მხოლოდ მოქმედი (12 თვის) ქულები.</p>
         <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-coal">
           {athlete.rankingPoints.map((p) => (
@@ -225,17 +227,17 @@ export default async function CabinetPage({
       </section>
 
       {/* ── competition history ── */}
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold">ტურნირების ისტორია</h2>
-        <div className="mt-4 overflow-x-auto rounded-lg border border-line">
+      <section className="mt-14">
+        <h2 className="heading-display text-2xl">ტურნირების ისტორია</h2>
+        <div className="mt-6 overflow-x-auto border-t border-line">
           <table className="w-full text-sm">
-            <thead className="bg-coal text-left text-xs uppercase tracking-wider text-smoke">
+            <thead className="bg-[#f8f8f8] text-left text-xs uppercase tracking-wider text-[#555] dark:bg-[#1a1a1a] dark:text-[#aaa]">
               <tr>
-                <th className="px-4 py-3">შეჯიბრება</th>
-                <th className="px-4 py-3">კატეგორია</th>
-                <th className="px-4 py-3">პარტნიორი</th>
-                <th className="px-4 py-3">კლუბი</th>
-                <th className="px-4 py-3 text-right">ადგილი</th>
+                <th className="px-6 py-4 font-bold">შეჯიბრება</th>
+                <th className="px-6 py-4 font-bold">კატეგორია</th>
+                <th className="px-6 py-4 font-bold">პარტნიორი</th>
+                <th className="px-6 py-4 font-bold">კლუბი</th>
+                <th className="px-6 py-4 text-right font-bold">ადგილი</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -247,26 +249,26 @@ export default async function CabinetPage({
                   : null;
                 return (
                   <tr key={e.id} className="transition-colors hover:bg-coal">
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4">
                       <Link
                         href={`/competitions/${e.event.competitionId}`}
-                        className="font-medium hover:text-wine"
+                        className="font-bold text-silver hover:text-[#005eb8]"
                       >
                         {e.event.competition.name}
                       </Link>
-                      <div className="tnum text-xs text-smoke">
+                      <div className="tnum mt-1 text-xs text-smoke">
                         {fmtDate(e.event.competition.startDate)} · {e.event.competition.city}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-smoke">
+                    <td className="px-6 py-4 text-smoke">
                       {CATEGORY_LABELS[e.ageCategorySnapshot]} ·{" "}
                       {DISCIPLINE_LABELS[e.event.discipline]}
                     </td>
-                    <td className="px-4 py-3 text-smoke">
+                    <td className="px-6 py-4 text-smoke">
                       {partner ? `${partner.firstName} ${partner.lastName}` : "სოლო"}
                     </td>
-                    <td className="px-4 py-3 text-smoke">{e.club?.name ?? "—"}</td>
-                    <td className="tnum px-4 py-3 text-right text-lg font-bold">
+                    <td className="px-6 py-4 text-smoke">{e.club?.name ?? "—"}</td>
+                    <td className="tnum px-6 py-4 text-right text-lg font-bold">
                       {e.result ? `#${e.result.placement}` : "—"}
                     </td>
                   </tr>
@@ -291,8 +293,8 @@ export default async function CabinetPage({
 
       {/* ── athlete documents ── */}
       {athlete.documents.length > 0 && (
-        <section className="mt-10 max-w-xl">
-          <h2 className="text-xl font-semibold">ჩემი დოკუმენტები</h2>
+        <section className="mt-14 max-w-xl">
+          <h2 className="heading-display text-2xl">ჩემი დოკუმენტები</h2>
           <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-coal">
             {athlete.documents.map((d) => (
               <li key={d.id} className="flex items-center justify-between gap-4 p-4 text-sm">
@@ -305,8 +307,8 @@ export default async function CabinetPage({
       )}
 
       {/* ── account settings ── */}
-      <section className="mt-10 max-w-md">
-        <h2 className="text-xl font-semibold">ანგარიშის პარამეტრები</h2>
+      <section className="mt-14 max-w-md">
+        <h2 className="heading-display text-2xl">ანგარიშის პარამეტრები</h2>
         {pok && <p className="mt-3 text-sm text-green-400">პაროლი შეიცვალა.</p>}
         {perror && (
           <p className="mt-3 text-sm text-flame">
@@ -320,19 +322,19 @@ export default async function CabinetPage({
             </label>
             <input
               id="current" name="current" type="password" required autoComplete="current-password"
-              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+              className="mt-1 w-full rounded-lg border border-line bg-transparent px-4 py-2.5 text-sm outline-none transition-colors focus:border-[#005eb8]"
             />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-smoke" htmlFor="next">
+            <label className="text-xs font-bold uppercase tracking-wider text-smoke" htmlFor="next">
               ახალი პაროლი
             </label>
             <input
               id="next" name="next" type="password" minLength={8} required autoComplete="new-password"
-              className="mt-1 w-full rounded border border-line bg-ink px-3 py-2 text-sm outline-none focus:border-wine"
+              className="mt-1 w-full rounded-lg border border-line bg-transparent px-4 py-2.5 text-sm outline-none transition-colors focus:border-[#005eb8]"
             />
           </div>
-          <button className="rounded bg-wine px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-flame">
+          <button className="rounded-full bg-[#005eb8] px-6 py-2.5 text-[15px] font-bold text-white transition-opacity hover:opacity-90">
             შეცვლა
           </button>
         </form>
