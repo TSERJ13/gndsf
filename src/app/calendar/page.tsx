@@ -39,16 +39,16 @@ export default async function CalendarPage({
   const nearestId = upcoming[0]?.id;
 
   const pill = (active: boolean) =>
-    `rounded-full px-4 py-1.5 text-sm transition-colors ${
+    `rounded-full px-5 py-2 text-sm font-bold transition-colors ${
       active
-        ? "bg-wine font-medium text-white"
-        : "border border-line text-smoke hover:border-wine hover:text-wine"
+        ? "bg-[#005eb8] text-white"
+        : "border border-line bg-coal text-smoke hover:border-[#005eb8] hover:text-[#005eb8]"
     }`;
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-12">
-      <h1 className="text-3xl font-bold">შეჯიბრებების კალენდარი</h1>
-      <div className="mt-6 flex flex-wrap gap-2">
+    <div className="mx-auto max-w-[1400px] px-6 pt-16">
+      <h1 className="heading-display text-center text-3xl md:text-4xl">შეჯიბრებების კალენდარი</h1>
+      <div className="mt-10 flex flex-wrap justify-center gap-3">
         <Link href="/calendar" className={pill(!f)}>ყველა</Link>
         <Link href="/calendar?f=geo" className={pill(f === "geo")}>საქართველო</Link>
         <Link href="/calendar?f=intl" className={pill(f === "intl")}>საერთაშორისო</Link>
@@ -61,53 +61,56 @@ export default async function CalendarPage({
             <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-smoke">
               {KA_MONTHS[m]} {y}
             </h2>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-6 space-y-4">
               {list.map((e) => {
                 const dd = daysUntil(e.date);
                 const isNearest = e.id === nearestId;
                 return (
-                  <li
-                    key={e.id}
-                    className={`flex items-center gap-4 rounded-lg border bg-coal p-4 transition-colors ${
-                      isNearest ? "border-wine" : "border-line hover:border-smoke"
-                    }`}
-                  >
-                    <div
-                      className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg ${
-                        isNearest ? "bg-wine text-white" : "bg-ink text-silver"
-                      }`}
-                    >
-                      <span className="tnum text-2xl font-bold leading-none">
+                  <li key={e.id} className="flex items-center gap-4">
+                    {/* Stacked Date on the far left */}
+                    <div className="flex w-12 shrink-0 flex-col items-center justify-center">
+                      <span className="tnum text-[28px] font-black leading-none text-silver">
                         {e.date.getDate()}
                       </span>
-                      <span className="mt-1 text-[11px] uppercase tracking-wider opacity-80">
+                      <span className="mt-1 text-[13px] font-semibold text-smoke">
                         {KA_MONTHS_SHORT[e.date.getMonth()]}
                       </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium">{e.title}</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-smoke">
-                        <span>{e.city}</span>
-                        {e.isIntl && (
-                          <span className="rounded bg-wine/10 px-2 py-0.5 text-xs text-wine">
-                            საერთაშორისო
-                          </span>
-                        )}
+                    
+                    {/* WDSF-style outer pill */}
+                    <a
+                      href={e.link ?? "/calendar"}
+                      className={`relative flex min-h-[72px] flex-1 items-center justify-between overflow-hidden rounded-full px-6 py-2 pr-12 text-white transition-opacity hover:opacity-95 ${
+                        e.isIntl ? "bg-[#f06424]" : "bg-[#005eb8]"
+                      } ${isNearest ? "ring-2 ring-offset-2 ring-wine ring-offset-ink" : ""}`}
+                    >
+                      {/* Event Title */}
+                      <span className="text-[15px] font-semibold tracking-wide md:text-[16px]">
+                        {e.title} {e.city && `- ${e.city}`}
+                      </span>
+                      
+                      <div className="hidden shrink-0 items-center gap-3 md:flex">
                         {isNearest && dd >= 0 && (
-                          <span className="tnum text-xs font-medium text-wine">
+                          <span className="tnum text-[11px] font-bold uppercase tracking-wider text-white/90">
                             {dd === 0 ? "დღეს" : dd === 1 ? "ხვალ" : `${dd} დღეში`}
                           </span>
                         )}
+                        
+                        {/* Inner white pill for categories */}
+                        <span className="flex h-9 items-center justify-center rounded-full bg-white px-6 shadow-sm">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-black">
+                            {e.isIntl ? "INTERNATIONAL" : "NATIONAL"}
+                          </span>
+                        </span>
                       </div>
-                    </div>
-                    {e.link && (
-                      <a
-                        href={e.link}
-                        className="shrink-0 rounded border border-line px-3 py-1.5 text-sm text-smoke transition-colors hover:border-wine hover:text-wine"
-                      >
-                        დეტალები
-                      </a>
-                    )}
+                      
+                      {/* Right chevron arrow */}
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-80">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m9 18 6-6-6-6" />
+                        </svg>
+                      </span>
+                    </a>
                   </li>
                 );
               })}
