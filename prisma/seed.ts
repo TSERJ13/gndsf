@@ -31,6 +31,9 @@ async function main() {
   await db.news.deleteMany();
   await db.calendarEvent.deleteMany();
   await db.auditLog.deleteMany();
+  await db.adminTask.deleteMany();
+  await db.mailAccount.deleteMany();
+  await db.athleteDocument.deleteMany();
   await db.user.deleteMany();
   await db.athlete.deleteMany();
   await db.club.deleteMany();

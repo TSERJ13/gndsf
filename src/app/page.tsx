@@ -1,189 +1,149 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
-import { CATEGORY_LABELS, DISCIPLINE_LABELS, fmtDate } from "@/lib/labels";
+import { fmtDate } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
+const KA_MONTHS_SHORT = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
+
 export default async function Home() {
-  const [topCouples, events, news, stats] = await Promise.all([
-    db.rankingEntry.findMany({
-      where: { format: "COUPLE", position: { lte: 3 } },
-      orderBy: [{ totalPoints: "desc" }],
-      take: 3,
-      include: {
-        partnership: { include: { leader: true, follower: true } },
-      },
-    }),
-    db.calendarEvent.findMany({
-      where: { date: { gte: new Date() } },
-      orderBy: { date: "asc" },
-      take: 3,
-    }),
+  const [news, events] = await Promise.all([
     db.news.findMany({
       where: { publishedAt: { not: null } },
       orderBy: { publishedAt: "desc" },
-      take: 3,
+      take: 2,
     }),
-    Promise.all([
-      db.athlete.count({ where: { isActive: true } }),
-      db.partnership.count({ where: { endDate: null } }),
-      db.club.count({ where: { isActive: true } }),
-      db.competition.count({ where: { isPublished: true } }),
-    ]),
+    db.calendarEvent.findMany({
+      where: { date: { gte: new Date(Date.now() - 864e5) } },
+      orderBy: { date: "asc" },
+      take: 6,
+    }),
   ]);
-  const [nAthletes, nCouples, nClubs, nComps] = stats;
 
   return (
     <>
-      {/* Hero — the diagonal cut is the site's signature line */}
-      <section className="diag relative overflow-hidden border-b border-line bg-coal">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-wine/[0.06] via-transparent to-transparent"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 top-1/2 h-[580px] w-[580px] -translate-y-1/2 opacity-[0.08] md:-right-8"
-        >
-          <Image src="/brand/logo.png" alt="" fill className="object-contain" />
-        </div>
-        <div className="mx-auto max-w-6xl px-4 pb-28 pt-20 md:pt-28">
-          <p className="rise text-xs uppercase tracking-[0.3em] text-wine">
-            gndsf.ge · ოფიციალური პლატფორმა
-          </p>
-          <h1 className="rise rise-1 mt-4 max-w-3xl text-4xl font-bold leading-tight md:text-6xl">
-            საქართველოს სპორტული ცეკვების{" "}
-            <span className="text-wine">ეროვნული ფედერაცია</span>
-          </h1>
-          <p className="rise rise-2 mt-5 max-w-xl text-smoke">
-            სპორტსმენების რეესტრი, შეჯიბრებების კალენდარი და ეროვნული
-            რეიტინგი — ერთ სივრცეში, WDSF სტანდარტით.
-          </p>
-          <div className="rise rise-3 mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/rankings"
-              className="rounded bg-wine px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-flame"
-            >
-              ეროვნული რეიტინგი
-            </Link>
-            <Link
-              href="/athletes"
-              className="rounded border border-line px-5 py-2.5 text-sm text-smoke transition-colors hover:border-wine hover:text-wine"
-            >
-              სპორტსმენების ბაზა
-            </Link>
-          </div>
+      {/* ══ LATEST NEWS ══ */}
+      <section className="mx-auto max-w-[1400px] px-6 pt-14">
+        <h1 className="heading-display text-center text-3xl md:text-4xl">
+          ბოლო სიახლეები
+        </h1>
 
-          <dl className="rise rise-3 mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 border-t border-line pt-8 sm:grid-cols-4">
-            {[
-              { v: nAthletes, l: "სპორტსმენი" },
-              { v: nCouples, l: "მოქმედი წყვილი" },
-              { v: nClubs, l: "კლუბი" },
-              { v: nComps, l: "შეჯიბრება" },
-            ].map((x) => (
-              <div key={x.l}>
-                <dd className="tnum text-3xl font-bold text-wine">{x.v}</dd>
-                <dt className="mt-1 text-xs uppercase tracking-wider text-smoke">{x.l}</dt>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
-
-      {/* Top couples */}
-      <section className="mx-auto max-w-6xl px-4 pt-16">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">წამყვანი წყვილები</h2>
-          <Link href="/rankings" className="text-sm text-smoke hover:text-silver">
-            სრული რეიტინგი →
-          </Link>
-        </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {topCouples.map((r) => (
-            <Link
-              key={r.id}
-              href={`/couples/${r.partnershipId}`}
-              className="group rounded-lg border border-line bg-coal p-5 transition-colors hover:border-wine"
-            >
-              <div className="tnum text-3xl font-bold text-wine">#{r.position}</div>
-              <div className="mt-3 font-medium">
-                {r.partnership!.leader.firstName} {r.partnership!.leader.lastName}
-                {" · "}
-                {r.partnership!.follower.firstName} {r.partnership!.follower.lastName}
-              </div>
-              <div className="mt-1 text-sm text-smoke">
-                {CATEGORY_LABELS[r.ageCategory]} · {DISCIPLINE_LABELS[r.discipline]}
-              </div>
-              <div className="tnum mt-4 text-sm text-smoke">
-                <span className="text-silver">{r.totalPoints}</span> ქულა
-              </div>
-            </Link>
-          ))}
-          {topCouples.length === 0 && (
-            <p className="text-sm text-smoke">რეიტინგი ჯერ არ არის გამოქვეყნებული.</p>
-          )}
-        </div>
-      </section>
-
-      {/* Upcoming + news */}
-      <section className="mx-auto grid max-w-6xl gap-12 px-4 pt-16 md:grid-cols-2">
-        <div>
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold">უახლოესი შეჯიბრებები</h2>
-            <Link href="/calendar" className="text-sm text-smoke hover:text-silver">
-              კალენდარი →
-            </Link>
-          </div>
-          <ul className="mt-6 divide-y divide-line rounded-lg border border-line bg-coal">
-            {events.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-4 p-4">
-                <div>
-                  <div className="font-medium">{e.title}</div>
-                  <div className="mt-0.5 text-sm text-smoke">{e.city}</div>
-                </div>
-                <div className="text-right">
-                  <div className="tnum text-sm">{fmtDate(e.date)}</div>
-                  {e.isIntl && (
-                    <span className="mt-1 inline-block rounded bg-wine/15 px-2 py-0.5 text-xs text-flame">
-                      საერთაშორისო
-                    </span>
+        <div className="mt-10 grid gap-10 md:grid-cols-2">
+          {news.map((n) => (
+            <article key={n.id} className="group">
+              <Link href={`/news/${n.slug}`} className="block">
+                <div className="relative aspect-[16/8] overflow-hidden bg-coal">
+                  {n.coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={n.coverUrl}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-coal via-ink to-coal">
+                      <Image
+                        src="/brand/logo.png"
+                        alt=""
+                        width={160}
+                        height={160}
+                        className="opacity-15"
+                      />
+                    </div>
                   )}
                 </div>
-              </li>
-            ))}
-            {events.length === 0 && (
-              <li className="p-4 text-sm text-smoke">დაგეგმილი შეჯიბრება ჯერ არ არის.</li>
-            )}
-          </ul>
+                <h2 className="mt-5 text-[22px] leading-snug text-silver transition-colors group-hover:text-gold md:text-[25px]">
+                  {n.title}
+                </h2>
+              </Link>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <span className="tnum text-sm font-semibold">
+                  {n.publishedAt && fmtDate(n.publishedAt)}
+                </span>
+                {n.excerpt && (
+                  <span className="line-clamp-1 text-sm text-smoke">{n.excerpt}</span>
+                )}
+              </div>
+            </article>
+          ))}
+          {news.length === 0 && (
+            <p className="col-span-full text-center text-sm text-smoke">
+              სიახლეები მალე დაემატება.
+            </p>
+          )}
         </div>
 
-        <div>
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold">სიახლეები</h2>
-            <Link href="/news" className="text-sm text-smoke hover:text-silver">
-              ყველა →
-            </Link>
-          </div>
-          <ul className="mt-6 space-y-4">
-            {news.map((n) => (
-              <li key={n.id}>
-                <Link
-                  href={`/news/${n.slug}`}
-                  className="block rounded-lg border border-line bg-coal p-4 transition-colors hover:border-wine"
-                >
-                  <div className="text-xs text-smoke">{n.publishedAt && fmtDate(n.publishedAt)}</div>
-                  <div className="mt-1 font-medium">{n.title}</div>
-                  {n.excerpt && <p className="mt-1 text-sm text-smoke">{n.excerpt}</p>}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <div className="mt-8 flex justify-end">
+          <Link
+            href="/news"
+            className="flex items-center gap-1.5 text-[15px] font-semibold text-silver transition-colors hover:text-gold"
+          >
+            ყველა სიახლე
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gold">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </Link>
         </div>
       </section>
 
-      {/* membership CTA */}
-      <section className="mx-auto max-w-6xl px-4 pt-16">
+      {/* ══ UPCOMING EVENTS ══ */}
+      <section className="mx-auto max-w-[1400px] px-6 pt-20">
+        <h2 className="heading-display text-center text-3xl md:text-4xl">
+          მომავალი შეჯიბრებები
+        </h2>
+
+        <div className="mt-10 grid gap-x-16 gap-y-6 lg:grid-cols-2">
+          {events.map((e) => (
+            <div key={e.id} className="flex items-center gap-5">
+              <div className="w-12 shrink-0 text-center">
+                <div className="tnum text-[28px] font-bold leading-none">
+                  {e.date.getDate()}
+                </div>
+                <div className="mt-1 text-xs font-medium uppercase text-smoke">
+                  {KA_MONTHS_SHORT[e.date.getMonth()]}
+                </div>
+              </div>
+              <a
+                href={e.link ?? "/calendar"}
+                className={`flex min-h-[64px] flex-1 items-center justify-between gap-4 rounded-full px-7 py-3 text-white transition-opacity hover:opacity-95 ${
+                  e.isIntl ? "bg-pill-orange" : "bg-pill-blue"
+                }`}
+              >
+                <span className="text-[15px] font-medium leading-tight">{e.title}</span>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className="hidden rounded-full bg-white px-5 py-2 text-xs font-bold uppercase tracking-wide text-silver sm:block">
+                    {e.city}
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </span>
+              </a>
+            </div>
+          ))}
+          {events.length === 0 && (
+            <p className="col-span-full text-center text-sm text-smoke">
+              მომავალი შეჯიბრებები მალე გამოცხადდება.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-8 flex justify-end">
+          <Link
+            href="/calendar"
+            className="flex items-center gap-1.5 text-[15px] font-semibold text-silver transition-colors hover:text-gold"
+          >
+            სრული კალენდარი
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gold">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </Link>
+        </div>
+      </section>
+
+      {/* ══ membership CTA (brand band) ══ */}
+      <section className="mx-auto max-w-[1400px] px-6 pt-20">
         <div className="diag relative overflow-hidden rounded-lg bg-wine px-6 py-12 text-white md:px-12">
           <div
             aria-hidden

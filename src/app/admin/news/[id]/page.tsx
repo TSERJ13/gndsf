@@ -46,6 +46,10 @@ export default async function EditNews({
           <input id="excerpt" name="excerpt" defaultValue={n.excerpt ?? ""} className={input} />
         </div>
         <div>
+          <label className={label} htmlFor="coverUrl">ყდის სურათის ბმული (არასავალდებულო)</label>
+          <input id="coverUrl" name="coverUrl" type="url" defaultValue={n.coverUrl ?? ""} placeholder="https://" className={input} />
+        </div>
+        <div>
           <label className={label} htmlFor="body">ტექსტი</label>
           <textarea id="body" name="body" rows={14} defaultValue={n.body} required className={input} />
         </div>

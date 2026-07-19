@@ -11,6 +11,7 @@ function fields(formData: FormData) {
     title: String(formData.get("title") ?? "").trim(),
     excerpt: String(formData.get("excerpt") ?? "").trim() || null,
     body: String(formData.get("body") ?? "").trim(),
+    coverUrl: String(formData.get("coverUrl") ?? "").trim() || null,
     publish: formData.get("publish") === "on",
   };
 }
@@ -37,6 +38,7 @@ export async function createNews(formData: FormData) {
       title: f.title,
       excerpt: f.excerpt,
       body: f.body,
+      coverUrl: f.coverUrl,
       publishedAt: f.publish ? new Date() : null,
       authorId: user.id,
     },
@@ -59,6 +61,7 @@ export async function updateNews(formData: FormData) {
       title: f.title,
       excerpt: f.excerpt,
       body: f.body,
+      coverUrl: f.coverUrl,
       publishedAt: f.publish ? (prev.publishedAt ?? new Date()) : null,
     },
   });

@@ -86,6 +86,10 @@ export default async function AdminNews({
               <input id="excerpt" name="excerpt" className={input} />
             </div>
             <div>
+              <label className={label} htmlFor="coverUrl">ყდის სურათის ბმული (არასავალდებულო)</label>
+              <input id="coverUrl" name="coverUrl" type="url" placeholder="https://" className={input} />
+            </div>
+            <div>
               <label className={label} htmlFor="body">ტექსტი</label>
               <textarea id="body" name="body" rows={8} required className={input} />
             </div>
