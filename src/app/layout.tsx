@@ -165,7 +165,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
         </header>
 
-        <main className="motion-fade-up flex-1">{children}</main>
+        <main className="motion-fade-up flex-1 min-h-[calc(100vh-200px)] lg:min-h-[calc(100vh-350px)]">{children}</main>
 
         {/* ── Footer ── */}
         <footer className="mt-auto bg-gradient-to-b from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] text-white">
