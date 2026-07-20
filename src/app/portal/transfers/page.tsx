@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
+import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
 import { requestTransfer, approveTransfer, rejectTransfer } from "./actions";
 
@@ -15,7 +16,7 @@ export default async function TransfersPage({
   const scope = clubScope(user);
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
   if (!isRegistryAdmin && user.role !== "CLUB_MANAGER") {
-    throw new Error("Access denied");
+    redirect("/portal");
   }
 
   const { ok, error } = await searchParams;

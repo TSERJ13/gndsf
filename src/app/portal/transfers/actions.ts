@@ -11,7 +11,7 @@ export async function requestTransfer(formData: FormData) {
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
 
   if (!isRegistryAdmin && user.role !== "CLUB_MANAGER") {
-    throw new Error("Access denied");
+    redirect("/portal");
   }
 
   const gid = formData.get("gid") as string;
@@ -79,13 +79,13 @@ export async function approveTransfer(formData: FormData) {
   });
 
   if (!request || request.status !== "PENDING") {
-    throw new Error("Invalid request");
+    redirect("/portal/transfers");
   }
 
   const canApprove = isRegistryAdmin || (scope && scope.clubId === request.fromClubId);
   
   if (!canApprove) {
-    throw new Error("Access denied");
+    redirect("/portal/transfers?error=unauthorized");
   }
 
   // Transaction: close old membership, create new one, update request status
@@ -148,13 +148,13 @@ export async function rejectTransfer(formData: FormData) {
   });
 
   if (!request || request.status !== "PENDING") {
-    throw new Error("Invalid request");
+    redirect("/portal/transfers");
   }
 
   const canApprove = isRegistryAdmin || (scope && scope.clubId === request.fromClubId);
   
   if (!canApprove) {
-    throw new Error("Access denied");
+    redirect("/portal/transfers?error=unauthorized");
   }
 
   await db.clubTransferRequest.update({

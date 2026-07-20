@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
+import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
 import { formPartnership, splitPartnership } from "./actions";
 
@@ -15,7 +16,7 @@ export default async function AdminPartnerships({
   const scope = clubScope(user);
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
   if (!isRegistryAdmin && user.role !== "CLUB_MANAGER") {
-    throw new Error("Access denied"); // handled by error boundary or redirect
+    redirect("/portal");
   }
   const { ok, error } = await searchParams;
 
