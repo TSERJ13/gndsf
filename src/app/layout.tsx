@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="ka">
-      <body className={`${notoSansGeorgian.className} min-h-screen bg-white text-black pt-[100px] lg:pt-[190px]`}>
+      <body className={`${notoSansGeorgian.className} min-h-screen flex flex-col bg-white text-black pt-[100px] lg:pt-[190px]`}>
         <header className="fixed left-0 right-0 top-0 z-50 bg-white/95 backdrop-blur-2xl transition-all duration-500" translate="no">
           <div className="mx-auto max-w-[1400px]">
             {/* ── row 1: Logo & Federation Name ── */}
@@ -165,10 +165,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
         </header>
 
-        <main className="motion-fade-up">{children}</main>
+        <main className="motion-fade-up flex-1">{children}</main>
 
         {/* ── Footer ── */}
-        <footer className="mt-24 bg-gradient-to-b from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] text-white">
+        <footer className="mt-auto bg-gradient-to-b from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] text-white">
           <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-center gap-10 px-6 py-16 text-[13px] font-medium text-white/80">
             {/* Logo and Name Side-by-Side */}
             <div className="flex items-center justify-center gap-5 text-left">
