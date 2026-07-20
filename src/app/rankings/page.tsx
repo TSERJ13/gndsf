@@ -11,7 +11,7 @@ import type { AgeCategory, Discipline, Format } from "@prisma/client";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ეროვნული რეიტინგი" };
 
-type Search = { cat?: string; disc?: string; fmt?: string };
+type Search = { cat?: string; disc?: string; fmt?: string; view?: string };
 
 export default async function RankingsPage({
   searchParams,
@@ -22,6 +22,9 @@ export default async function RankingsPage({
   const cat = (sp.cat as AgeCategory) || undefined;
   const disc = (sp.disc as Discipline) || "LATIN";
   const fmt = (sp.fmt as Format) || "COUPLE";
+
+  const view = sp.view || "grid";
+  const showTable = view === "table";
 
   const rows = await db.rankingEntry.findMany({
     where: { discipline: disc, format: fmt, ...(cat ? { ageCategory: cat } : {}) },
@@ -34,95 +37,173 @@ export default async function RankingsPage({
 
   const link = (patch: Partial<Search>) => {
     const p = new URLSearchParams();
-    const next = { cat: sp.cat, disc, fmt, ...patch };
+    const next = { cat: sp.cat, disc, fmt, view: sp.view, ...patch };
     if (next.cat) p.set("cat", next.cat);
     if (next.disc) p.set("disc", next.disc);
     if (next.fmt) p.set("fmt", next.fmt);
+    if (next.view) p.set("view", next.view);
     return `/rankings?${p.toString()}`;
   };
 
-  const pill = (active: boolean) =>
-    `rounded-full px-5 py-2 text-sm font-bold transition-colors ${
-      active
-        ? "bg-[#005eb8] text-white"
-        : "border border-line bg-coal text-smoke hover:border-[#005eb8] hover:text-[#005eb8]"
-    }`;
+  const WDSFSelect = ({ active, label, href }: { active: boolean; label: string; href: string }) => (
+    <Link 
+      href={href} 
+      className={`flex h-11 items-center justify-between border px-4 min-w-[140px] text-[13px] transition-colors ${
+        active ? 'border-gray-400 bg-gray-50 text-black font-bold' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+      }`}
+    >
+      <span>{label}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 ml-4"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </Link>
+  );
 
   return (
-    <div className="mx-auto max-w-[1400px] px-6 pt-16">
-      <h1 className="heading-display text-center text-3xl md:text-4xl">ეროვნული რეიტინგი</h1>
-      <p className="mt-4 text-center text-sm font-medium text-smoke">
-        განახლდება ავტომატურად ყოველი შეჯიბრების შედეგების დამტკიცებისთანავე.
-      </p>
+    <div className="mx-auto max-w-[1400px] px-6 pt-10 lg:pt-16 motion-fade-up pb-24">
+      {/* Heading */}
+      <h1 className="text-3xl lg:text-[40px] font-light uppercase tracking-wide text-gray-800 mt-8 lg:mt-12">
+        GNDSF ეროვნული რეიტინგი
+      </h1>
 
-      <div className="mt-10 flex flex-wrap justify-center items-center gap-3">
+      {/* Filters mimicking WDSF Dropdowns */}
+      <div className="mt-10 flex flex-wrap gap-4 items-center">
         {(["LATIN", "STANDARD"] as const).map((d) => (
-          <Link key={d} href={link({ disc: d })} className={pill(disc === d)}>
-            {DISCIPLINE_LABELS[d]}
-          </Link>
+          <WDSFSelect key={d} active={disc === d} label={DISCIPLINE_LABELS[d]} href={link({ disc: d })} />
         ))}
-        <span className="mx-2 h-5 w-px bg-line" />
         {(["COUPLE", "SOLO"] as const).map((f) => (
-          <Link key={f} href={link({ fmt: f })} className={pill(fmt === f)}>
-            {FORMAT_LABELS[f]}
-          </Link>
+          <WDSFSelect key={f} active={fmt === f} label={FORMAT_LABELS[f]} href={link({ fmt: f })} />
         ))}
-        <span className="mx-2 h-5 w-px bg-line" />
-        <Link href={link({ cat: undefined })} className={pill(!cat)}>
-          ყველა
-        </Link>
+        <WDSFSelect active={!cat} label="ყველა ასაკი" href={link({ cat: undefined })} />
         {CATEGORIES.map((c) => (
-          <Link key={c} href={link({ cat: c })} className={pill(cat === c)}>
-            {CATEGORY_LABELS[c]}
-          </Link>
+          <WDSFSelect key={c} active={cat === c} label={CATEGORY_LABELS[c]} href={link({ cat: c })} />
         ))}
       </div>
 
-      <div className="mt-12 overflow-x-auto border-t border-line">
-        <table className="w-full text-sm">
-          <thead className="bg-[#f8f8f8] text-left text-xs uppercase tracking-wider text-[#555] dark:bg-[#1a1a1a] dark:text-[#aaa]">
-            <tr>
-              <th className="w-16 px-6 py-4 font-bold">#</th>
-              <th className="px-6 py-4 font-bold">{fmt === "COUPLE" ? "წყვილი" : "სპორტსმენი"}</th>
-              <th className="px-6 py-4 font-bold">კატეგორია</th>
-              <th className="px-6 py-4 text-right font-bold">ქულა</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {rows.map((r) => (
-              <tr key={r.id} className="transition-colors hover:bg-coal">
-                <td className="tnum px-6 py-4 font-bold text-[#005eb8] text-lg">{r.position}</td>
-                <td className="px-6 py-4 font-bold">
+      {/* Toggles and Advanced Filters Row */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 pb-6">
+        <Link 
+          href={link({ view: showTable ? "grid" : "table" })} 
+          className="flex items-center gap-3 text-[14px] font-bold text-gray-800 hover:text-black cursor-pointer"
+        >
+          <div className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${showTable ? 'border-[#c49a5b] bg-[#c49a5b]' : 'border-gray-300 bg-white'}`}>
+            {showTable && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+          </div>
+          Show as table
+        </Link>
+        <button className="flex items-center gap-2 text-[14px] font-bold text-gray-800 hover:text-black">
+          Advanced filter
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      {rows.length === 0 && (
+        <div className="mt-16 text-center text-gray-500 py-12 border border-gray-100 rounded-xl bg-gray-50">
+          ამ ფილტრით რეიტინგი ცარიელია — შედეგები ჯერ არ არის შეყვანილი.
+        </div>
+      )}
+
+      {/* Grid View */}
+      {!showTable && rows.length > 0 && (
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {rows.map((r) => {
+            const href = r.partnership ? `/couples/${r.partnershipId}` : `/athletes/${r.athleteId}`;
+            return (
+              <Link key={r.id} href={href} className="rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col h-full cursor-pointer">
+                {/* Images */}
+                {r.partnership ? (
+                <div className="flex gap-2 mb-5">
+                  <div className="flex-1 aspect-[3/4] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center relative border border-gray-100">
+                    <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 20 26 C 20 44, 44 44, 44 26" />
+                      <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 aspect-[3/4] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center relative border border-gray-100">
+                    <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 22 32 C 22 46, 42 46, 42 32" />
+                      <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
+                    </svg>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-1/2 aspect-[3/4] bg-gray-50 rounded-xl mx-auto mb-5 overflow-hidden flex items-center justify-center relative border border-gray-100">
+                  <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                    <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                    {r.athlete?.gender === "FEMALE" ? (
+                      <>
+                        <path d="M 22 32 C 22 46, 42 46, 42 32" />
+                        <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M 20 26 C 20 44, 44 44, 44 26" />
+                        <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+              )}
+
+              {/* Text */}
+              <div className="flex-1 flex flex-col">
+                <div className="font-bold text-[15px] leading-tight text-gray-900 mb-4">
                   {r.partnership ? (
                     <>
-                      <Link href={`/athletes/${r.partnership.leaderId}`} className="text-silver hover:text-[#005eb8]">
-                        {r.partnership.leader.firstName} {r.partnership.leader.lastName}
-                      </Link>
-                      <span className="text-smoke mx-1">·</span>
-                      <Link href={`/athletes/${r.partnership.followerId}`} className="text-silver hover:text-[#005eb8]">
-                        {r.partnership.follower.firstName} {r.partnership.follower.lastName}
-                      </Link>
+                      {r.partnership.leader.firstName} {r.partnership.leader.lastName} &<br />
+                      {r.partnership.follower.firstName} {r.partnership.follower.lastName}
                     </>
                   ) : (
-                    <Link href={`/athletes/${r.athleteId}`} className="text-silver hover:text-[#005eb8]">
-                      {r.athlete!.firstName} {r.athlete!.lastName}
-                    </Link>
+                    <>{r.athlete?.firstName} {r.athlete?.lastName}</>
                   )}
-                </td>
-                <td className="px-6 py-4 text-smoke">{CATEGORY_LABELS[r.ageCategory]}</td>
-                <td className="tnum px-6 py-4 text-right text-lg font-black">{r.totalPoints}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && (
+                </div>
+                
+                <div className="mt-auto space-y-1">
+                  <div className="text-[13px] text-gray-500">Rank: <span className="text-gray-900">{r.position}.</span></div>
+                  <div className="text-[13px] text-gray-500">Points: <span className="text-gray-900">{r.totalPoints}</span></div>
+                  <div className="text-[13px] font-bold text-gray-900 mt-4 pt-4">Georgia (GEO)</div>
+                </div>
+              </div>
+            </Link>
+          )})}
+        </div>
+      )}
+
+      {/* Table View */}
+      {showTable && rows.length > 0 && (
+        <div className="mt-10 overflow-x-auto">
+          <table className="w-full text-left text-[14px]">
+            <thead className="border-t-[2px] border-b-[2px] border-[#c49a5b]">
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-smoke">
-                  ამ ფილტრით რეიტინგი ცარიელია — შედეგები ჯერ არ არის შეყვანილი.
-                </td>
+                <th className="py-4 px-4 font-bold text-black w-24">Rank</th>
+                <th className="py-4 px-4 font-bold text-black w-24">Points</th>
+                <th className="py-4 px-4 font-bold text-black">Name</th>
+                <th className="py-4 px-4 font-bold text-black w-48">Country</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="border-b-[2px] border-[#c49a5b]">
+              {rows.map((r, i) => (
+                <tr key={r.id} className={i % 2 === 0 ? "bg-gray-50/60" : "bg-white"}>
+                  <td className="py-4 px-4 text-gray-900">{r.position}</td>
+                  <td className="py-4 px-4 text-gray-900">{r.totalPoints}</td>
+                  <td className="py-4 px-4 font-medium">
+                    {r.partnership ? (
+                      <Link href={`/couples/${r.partnershipId}`} className="text-[#c49a5b] hover:underline">
+                        {r.partnership.leader.firstName} {r.partnership.leader.lastName} / {r.partnership.follower.firstName} {r.partnership.follower.lastName}
+                      </Link>
+                    ) : (
+                      <Link href={`/athletes/${r.athleteId}`} className="text-[#c49a5b] hover:underline">
+                        {r.athlete?.firstName} {r.athlete?.lastName}
+                      </Link>
+                    )}
+                  </td>
+                  <td className="py-4 px-4 text-gray-900">Georgia (GEO)</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

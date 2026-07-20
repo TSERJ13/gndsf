@@ -11,54 +11,59 @@ export default async function NewsPage() {
     orderBy: { publishedAt: "desc" },
   });
   return (
-    <div className="mx-auto max-w-[1400px] px-6 pt-16">
-      <h1 className="heading-display text-center text-3xl md:text-4xl">სიახლეები</h1>
-      <div className="mt-14 grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+    <div className="bg-white min-h-screen">
+      <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">
+        <h1 className="text-3xl md:text-4xl lg:text-[40px] font-light uppercase text-black mb-12 tracking-wide">
+          სიახლეები
+        </h1>
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
         {news.map((n) => (
-          <article key={n.id} className="group">
-            <Link href={`/news/${n.slug}`} className="block">
-              <div className="relative aspect-[16/9] overflow-hidden bg-coal">
+          <article 
+            key={n.id} 
+            className="group block bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 transition-transform hover:-translate-y-1 flex flex-col"
+          >
+            <Link href={`/news/${n.slug}`} className="block flex-1">
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-50">
                 {n.coverUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={n.coverUrl}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    alt={n.title}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-coal via-ink to-coal">
-                    {/* Placeholder graphic if no cover */}
-                    <div className="text-4xl font-bold text-line">GNDSF</div>
+                  <div className="flex h-full w-full items-center justify-center">
+                    <div className="text-3xl font-black text-gray-200">GNDSF</div>
                   </div>
                 )}
               </div>
-              <h2 className="mt-5 text-[20px] font-light leading-snug text-silver md:text-[22px]">
-                {n.title}
-              </h2>
-            </Link>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="tnum text-[15px] font-bold text-silver">
-                {n.publishedAt && `${String(n.publishedAt.getDate()).padStart(2, '0')}/${String(n.publishedAt.getMonth() + 1).padStart(2, '0')}/${n.publishedAt.getFullYear()}`}
-              </span>
               
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-[#f0f0f0] px-3 py-1 text-xs font-bold text-[#555] transition-colors hover:bg-[#e0e0e0]">
-                  სიახლე
-                </span>
-                {n.excerpt && (
-                  <span className="rounded-full bg-[#f0f0f0] px-3 py-1 text-xs font-bold text-[#555] transition-colors hover:bg-[#e0e0e0]">
-                    {n.excerpt.substring(0, 15)}
+              <div className="p-6 md:p-8 flex-1 flex flex-col">
+                <h2 className="text-[20px] md:text-[22px] font-light leading-tight text-black mb-6">
+                  {n.title}
+                </h2>
+                
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span className="tnum text-[14px] font-bold text-black">
+                    {n.publishedAt && `${String(n.publishedAt.getDate()).padStart(2, '0')}/${String(n.publishedAt.getMonth() + 1).padStart(2, '0')}/${n.publishedAt.getFullYear()}`}
                   </span>
-                )}
+                  
+                  <div className="flex gap-2">
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-600">
+                      სიახლე
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           </article>
         ))}
         {news.length === 0 && (
-          <p className="col-span-full text-center text-sm text-smoke">
+          <p className="col-span-full py-10 text-center text-[15px] text-gray-500">
             სიახლეები ჯერ არ არის.
           </p>
         )}
+      </div>
       </div>
     </div>
   );

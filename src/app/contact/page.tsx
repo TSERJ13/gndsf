@@ -10,47 +10,72 @@ export default async function ContactPage({
   const { ok, error } = await searchParams;
 
   const input =
-    "mt-1 w-full rounded border border-line bg-coal px-3 py-2 text-sm outline-none placeholder:text-smoke focus:border-wine";
-  const label = "text-xs uppercase tracking-wider text-smoke";
+    "mt-2 w-full rounded-md border border-gray-200 bg-white px-4 py-3 text-[15px] outline-none placeholder:text-gray-400 transition-all focus:border-[#c49a5b] focus:ring-4 focus:ring-[#c49a5b]/10 shadow-sm";
+  const label = "text-[12px] font-bold uppercase tracking-widest text-gray-500";
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-12">
-      <h1 className="text-3xl font-bold">კონტაქტი</h1>
+    <div className="mx-auto max-w-[1200px] px-6 pt-16 lg:pt-24 pb-20 motion-fade-up">
+      <h1 className="heading-display text-center text-4xl lg:text-5xl mb-14">კონტაქტი</h1>
 
-      <div className="mt-8 grid gap-10 md:grid-cols-[320px_1fr]">
-        <div>
-          <div className="rounded-lg border border-line bg-coal p-5">
-            <h2 className="font-semibold">ფედერაცია</h2>
-            <p className="mt-2 text-sm">
-              <a href="mailto:contact@gndsf.ge" className="text-wine hover:text-flame">
-                contact@gndsf.ge
-              </a>
-            </p>
-            <p className="mt-3 text-xs text-smoke">
-              წერილს ფედერაციის პასუხისმგებელი პირები იღებენ და უმოკლეს ვადაში
-              გიპასუხებენ.
+      <div className="grid gap-12 lg:grid-cols-[380px_1fr]">
+        <div className="motion-fade-up motion-delay-1">
+          <div className="rounded-xl border border-gray-100 bg-white p-8 shadow-sm">
+            <h2 className="text-xl font-bold text-black mb-4">GNDSF</h2>
+            <div className="space-y-4 text-[15px]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 text-[#005eb8]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">ელფოსტა</div>
+                  <a href="mailto:contact@gndsf.ge" className="font-medium text-black hover:text-[#c49a5b] transition-colors">
+                    contact@gndsf.ge
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <hr className="my-6 border-gray-100" />
+            
+            <p className="text-sm leading-relaxed text-gray-500">
+              თქვენს წერილს ფედერაციის პასუხისმგებელი პირები იღებენ. უმოკლეს ვადაში დაგიკავშირდებით მითითებულ ელფოსტაზე.
             </p>
           </div>
         </div>
 
-        <div>
+        <div className="motion-fade-up motion-delay-2">
           {ok && (
-            <p className="mb-4 rounded border border-green-500/40 bg-green-500/5 px-4 py-3 text-sm text-green-500">
-              შეტყობინება გაიგზავნა — მადლობა! პასუხს მითითებულ ელფოსტაზე მიიღებთ.
-            </p>
+            <div className="mb-8 rounded-xl border border-green-200 bg-green-50 p-6 shadow-sm">
+              <p className="text-[15px] font-bold text-green-700 flex items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                შეტყობინება გაიგზავნა — მადლობა! პასუხს მითითებულ ელფოსტაზე მიიღებთ.
+              </p>
+            </div>
           )}
           {error && (
-            <p className="mb-4 rounded border border-wine/40 bg-wine/5 px-4 py-3 text-sm text-flame">
-              {error === "fields"
-                ? "შეავსეთ ყველა ველი — შეტყობინება მინიმუმ 10 სიმბოლო."
-                : error === "send"
-                  ? "გაგზავნა ვერ მოხერხდა — სცადეთ მოგვიანებით ან მოგვწერეთ პირდაპირ contact@gndsf.ge-ზე."
-                  : "ფორმა დროებით მიუწვდომელია — მოგვწერეთ პირდაპირ contact@gndsf.ge-ზე."}
-            </p>
+            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
+              <p className="text-[15px] font-bold text-red-600 flex items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {error === "fields"
+                  ? "შეავსეთ ყველა ველი — შეტყობინება მინიმუმ 10 სიმბოლო."
+                  : error === "send"
+                    ? "გაგზავნა ვერ მოხერხდა — სცადეთ მოგვიანებით ან მოგვწერეთ პირდაპირ contact@gndsf.ge-ზე."
+                    : "ფორმა დროებით მიუწვდომელია — მოგვწერეთ პირდაპირ contact@gndsf.ge-ზე."}
+              </p>
+            </div>
           )}
 
-          <form action={submitContact} className="space-y-4 rounded-lg border border-line bg-coal p-5">
-            {/* honeypot — hidden from humans, bots fill it */}
+          <form action={submitContact} className="space-y-6 rounded-xl border border-gray-100 bg-white p-8 shadow-sm">
+            {/* honeypot */}
             <input
               type="text"
               name="website"
@@ -59,9 +84,9 @@ export default async function ContactPage({
               className="absolute -left-[9999px] h-0 w-0 opacity-0"
               aria-hidden="true"
             />
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className={label} htmlFor="c-name">სახელი</label>
+                <label className={label} htmlFor="c-name">სახელი, გვარი</label>
                 <input id="c-name" name="name" required maxLength={100} className={input} />
               </div>
               <div>
@@ -70,7 +95,7 @@ export default async function ContactPage({
               </div>
             </div>
             <div>
-              <label className={label} htmlFor="c-subject">თემა</label>
+              <label className={label} htmlFor="c-subject">თემა / Subject</label>
               <input id="c-subject" name="subject" required maxLength={150} className={input} />
             </div>
             <div>
@@ -82,11 +107,11 @@ export default async function ContactPage({
                 required
                 minLength={10}
                 maxLength={5000}
-                className={input}
+                className={`${input} resize-y min-h-[150px]`}
               />
             </div>
-            <button className="rounded bg-wine px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-flame">
-              გაგზავნა
+            <button className="w-full md:w-auto rounded-full bg-[#005eb8] px-10 py-4 text-[15px] font-bold tracking-widest uppercase text-white shadow-md transition-transform hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-[#005eb8]/20">
+              შეტყობინების გაგზავნა
             </button>
           </form>
         </div>

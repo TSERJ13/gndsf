@@ -10,8 +10,8 @@ export const CATEGORY_LABELS: Record<AgeCategory, string> = {
 };
 
 export const DISCIPLINE_LABELS: Record<Discipline, string> = {
-  STANDARD: "ევროპული პროგრამა (Standard)",
-  LATIN: "ლათინური პროგრამა",
+  STANDARD: "Standard",
+  LATIN: "Latin",
 };
 
 export const FORMAT_LABELS: Record<Format, string> = {

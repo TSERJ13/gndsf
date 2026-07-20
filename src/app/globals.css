@@ -1,79 +1,83 @@
 @import "tailwindcss";
 
-/* ── GNDSF design tokens · WDSF-inspired light ────────────────
-   SEMANTIC roles (names kept for compatibility across the app):
-     ink    = page background        coal  = raised surface (cards)
-     line   = hairline borders       silver = primary text
-     smoke  = secondary text         wine/flame = brand accent
-     gold   = WDSF-style bronze accent (links, arrows, hovers)
-   Light theme is the DEFAULT; [data-theme="dark"] switches values. */
+/* ── GNDSF design tokens · 2026 WDSF Premium Light ────────────────
+   Strict Light Theme. Dark mode is eliminated to match WDSF parity.
+*/
 @theme {
-  --color-wine: #8b1520;
-  --color-flame: #c41e2c;
-  --color-gold: #a5824c;
-  --color-ink: #ffffff;
-  --color-coal: #fbfaf7;
-  --color-line: #e6e1d6;
-  --color-silver: #1c1c1e;
-  --color-smoke: #63636a;
+  --color-wine: #8b1520;     /* GNDSF legacy, kept for compatibility if needed */
+  --color-flame: #c41e2c;    /* GNDSF legacy hover */
+  
+  /* WDSF Specific Brand Colors */
+  --color-wdsf-gold: #c49a5b;
+  --color-wdsf-gold-dark: #b38234;
+  --color-wdsf-blue: #005eb8;
+  --color-wdsf-orange: #f06424;
 
-  --color-pill-blue: #2e5fb7;
-  --color-pill-orange: #e0722c;
+  /* Strict Light Palette */
+  --color-ink: #ffffff;      /* Pure white background */
+  --color-coal: #ffffff;     /* Surface color is also white, relying on shadows/borders */
+  --color-line: #e5e5e5;     /* Ultra-faint borders */
+  --color-silver: #111111;   /* Near-black for primary text */
+  --color-smoke: #555555;    /* Gray for secondary text */
 
-  --font-sans: "Noto Sans Georgian", "Helvetica Neue", Arial, system-ui,
-    sans-serif;
-}
-
-[data-theme="dark"] {
-  --color-ink: #131316;
-  --color-coal: #1c1c21;
-  --color-line: #33333a;
-  --color-silver: #f0eee9;
-  --color-smoke: #9c9aa4;
-  --color-gold: #c2a06a;
+  --font-sans: "Inter", "Noto Sans Georgian", "Helvetica Neue", Arial, sans-serif;
 }
 
 html {
   background: var(--color-ink);
   color: var(--color-silver);
   scroll-behavior: smooth;
+  /* Disable dark mode color scheme explicitly */
+  color-scheme: light;
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* WDSF-style thin display headings */
 .heading-display {
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-weight: 200;
-  color: var(--color-smoke);
+  letter-spacing: 0.12em;
+  font-weight: 300;
+  color: #000;
 }
 
 .tnum {
   font-variant-numeric: tabular-nums;
 }
 
-.diag {
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 3.5rem), 0 100%);
-}
-
 ::selection {
-  background: var(--color-wine);
+  background: #8B1E0F;
   color: #fff;
 }
 
+/* 2026 Hyper-modern Motion Utilities */
 @media (prefers-reduced-motion: no-preference) {
-  .rise {
-    animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  .motion-fade-up {
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .rise-1 { animation-delay: 0.08s; }
-  .rise-2 { animation-delay: 0.16s; }
-  .rise-3 { animation-delay: 0.24s; }
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(18px); }
+  .motion-delay-1 { animation-delay: 0.1s; }
+  .motion-delay-2 { animation-delay: 0.2s; }
+  .motion-delay-3 { animation-delay: 0.3s; }
+  
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: none; }
   }
+
+  .hover-lift {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* WDSF Specific Utilities */
+.bg-wdsf-gold-gradient {
+  background: linear-gradient(135deg, var(--color-wdsf-gold) 0%, var(--color-wdsf-gold-dark) 100%);
 }

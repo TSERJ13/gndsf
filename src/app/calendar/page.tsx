@@ -4,143 +4,258 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "კალენდარი" };
 
-const KA_MONTHS = [
-  "იანვარი","თებერვალი","მარტი","აპრილი","მაისი","ივნისი",
-  "ივლისი","აგვისტო","სექტემბერი","ოქტომბერი","ნოემბერი","დეკემბერი",
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ];
-const KA_MONTHS_SHORT = ["იან","თებ","მარ","აპრ","მაი","ივნ","ივლ","აგვ","სექ","ოქტ","ნოე","დეკ"];
 
-function daysUntil(d: Date) {
-  return Math.ceil((+d - Date.now()) / 864e5);
+function fmtMonth(d: Date) {
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function fmtDateRange(d: Date) {
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ f?: string }>;
+  searchParams: Promise<{ f?: string; view?: string }>;
 }) {
-  const { f } = await searchParams;
+  const { f, view = "list" } = await searchParams;
   const filter = f === "intl" ? { isIntl: true } : f === "geo" ? { isIntl: false } : {};
 
-  const events = await db.calendarEvent.findMany({
+  // Fetch manual calendar events
+  const manualEvents = await db.calendarEvent.findMany({
     where: filter,
-    orderBy: { date: "asc" },
   });
-  const upcoming = events.filter((e) => +e.date >= Date.now() - 864e5);
-  const past = events.filter((e) => +e.date < Date.now() - 864e5).reverse().slice(0, 6);
 
-  // group upcoming by "YYYY-MM"
-  const groups = new Map<string, typeof upcoming>();
+  // Fetch actual competitions (both published and upcoming)
+  const comps = await db.competition.findMany();
+
+  // Map competitions to calendar format
+  const compEvents = comps.map(c => ({
+    id: c.id,
+    title: c.name,
+    titleEn: c.nameEn,
+    city: c.city,
+    date: c.startDate,
+    isIntl: c.type === "INTERNATIONAL",
+    link: `/competitions/${c.id}`
+  }));
+
+  const compTitles = new Set(compEvents.map(c => c.title.toLowerCase()));
+  const compDates = new Map(compEvents.map(c => [c.date.toISOString().split('T')[0], c.id]));
+
+  const manualMapped = manualEvents.filter(e => !compTitles.has(e.title.toLowerCase())).map(e => {
+    // If no link is provided, try to find a competition on the exact same day
+    const dateStr = e.date.toISOString().split('T')[0];
+    const matchingCompId = compDates.get(dateStr);
+    
+    return {
+      id: e.id,
+      title: e.title,
+      titleEn: e.titleEn,
+      city: e.city,
+      date: e.date,
+      isIntl: e.isIntl,
+      link: e.link || (matchingCompId ? `/competitions/${matchingCompId}` : `/competitions?q=${encodeURIComponent(e.title)}`)
+    };
+  });
+
+  // Apply filters to combined list
+  let allEvents = [...compEvents, ...manualMapped];
+  if (f === "intl") allEvents = allEvents.filter(e => e.isIntl);
+  if (f === "geo") allEvents = allEvents.filter(e => !e.isIntl);
+
+  // Sort by date ascending
+  allEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const upcoming = allEvents.filter((e) => +e.date >= Date.now() - 864e5);
+
+  // Group by month
+  const grouped: Record<string, typeof allEvents> = {};
   for (const e of upcoming) {
-    const key = `${e.date.getFullYear()}-${e.date.getMonth()}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(e);
+    const m = fmtMonth(e.date);
+    if (!grouped[m]) grouped[m] = [];
+    grouped[m].push(e);
   }
-  const nearestId = upcoming[0]?.id;
-
-  const pill = (active: boolean) =>
-    `rounded-full px-5 py-2 text-sm font-bold transition-colors ${
-      active
-        ? "bg-[#005eb8] text-white"
-        : "border border-line bg-coal text-smoke hover:border-[#005eb8] hover:text-[#005eb8]"
-    }`;
 
   return (
-    <div className="mx-auto max-w-[1400px] px-6 pt-16">
-      <h1 className="heading-display text-center text-3xl md:text-4xl">შეჯიბრებების კალენდარი</h1>
-      <div className="mt-10 flex flex-wrap justify-center gap-3">
-        <Link href="/calendar" className={pill(!f)}>ყველა</Link>
-        <Link href="/calendar?f=geo" className={pill(f === "geo")}>საქართველო</Link>
-        <Link href="/calendar?f=intl" className={pill(f === "intl")}>საერთაშორისო</Link>
+    <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+        <h1 className="text-3xl md:text-4xl lg:text-[40px] font-light uppercase text-black tracking-wide">
+          შეჯიბრებების კალენდარი
+        </h1>
+        
+        {/* View Toggle Checkbox (Matching Rankings Page) */}
+        <Link 
+          href={`/calendar?f=${f || ''}&view=${view === 'list' ? 'classic' : 'list'}`}
+          className="flex items-center gap-3 text-[14px] font-bold text-gray-800 hover:text-black cursor-pointer"
+        >
+          <div className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${view === 'classic' ? 'border-[#c49a5b] bg-[#c49a5b]' : 'border-gray-300 bg-white'}`}>
+            {view === 'classic' && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+          </div>
+          Classic View
+        </Link>
       </div>
 
-      {[...groups].map(([key, list]) => {
-        const [y, m] = key.split("-").map(Number);
-        return (
-          <section key={key} className="mt-10">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-smoke">
-              {KA_MONTHS[m]} {y}
-            </h2>
-            <ul className="mt-6 space-y-4">
-              {list.map((e) => {
-                const dd = daysUntil(e.date);
-                const isNearest = e.id === nearestId;
-                return (
-                  <li key={e.id} className="flex items-center gap-4">
-                    {/* Stacked Date on the far left */}
-                    <div className="flex w-12 shrink-0 flex-col items-center justify-center">
-                      <span className="tnum text-[28px] font-black leading-none text-silver">
-                        {e.date.getDate()}
-                      </span>
-                      <span className="mt-1 text-[13px] font-semibold text-smoke">
-                        {KA_MONTHS_SHORT[e.date.getMonth()]}
-                      </span>
-                    </div>
-                    
-                    {/* WDSF-style outer pill */}
-                    <a
-                      href={e.link ?? "/calendar"}
-                      className={`relative flex min-h-[72px] flex-1 items-center justify-between overflow-hidden rounded-full px-6 py-2 pr-12 text-white transition-opacity hover:opacity-95 ${
-                        e.isIntl ? "bg-[#f06424]" : "bg-[#005eb8]"
-                      } ${isNearest ? "ring-2 ring-offset-2 ring-wine ring-offset-ink" : ""}`}
-                    >
-                      {/* Event Title */}
-                      <span className="text-[15px] font-semibold tracking-wide md:text-[16px]">
-                        {e.title} {e.city && `- ${e.city}`}
-                      </span>
-                      
-                      <div className="hidden shrink-0 items-center gap-3 md:flex">
-                        {isNearest && dd >= 0 && (
-                          <span className="tnum text-[11px] font-bold uppercase tracking-wider text-white/90">
-                            {dd === 0 ? "დღეს" : dd === 1 ? "ხვალ" : `${dd} დღეში`}
-                          </span>
-                        )}
-                        
-                        {/* Inner white pill for categories */}
-                        <span className="flex h-9 items-center justify-center rounded-full bg-white px-6 shadow-sm">
-                          <span className="text-[11px] font-black uppercase tracking-wider text-black">
-                            {e.isIntl ? "INTERNATIONAL" : "NATIONAL"}
-                          </span>
-                        </span>
-                      </div>
-                      
-                      {/* Right chevron arrow */}
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-80">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m9 18 6-6-6-6" />
-                        </svg>
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        );
-      })}
+      {/* Tabs */}
+      <div className="flex border-b border-gray-300 mb-10 flex-wrap">
+        <Link href={`/calendar?view=${view}`} className={`px-6 py-2 text-[15px] cursor-pointer transition-colors ${!f ? 'font-bold text-black border-t-2 border-t-[#c49a5b] border-l border-r border-gray-300 bg-white -mb-px' : 'font-medium text-gray-500 hover:text-black'}`}>
+          ყველა
+        </Link>
+        <Link href={`/calendar?f=geo&view=${view}`} className={`px-6 py-2 text-[15px] cursor-pointer transition-colors ${f === 'geo' ? 'font-bold text-black border-t-2 border-t-[#c49a5b] border-l border-r border-gray-300 bg-white -mb-px' : 'font-medium text-gray-500 hover:text-black'}`}>
+          საქართველო
+        </Link>
+        <Link href={`/calendar?f=intl&view=${view}`} className={`px-6 py-2 text-[15px] cursor-pointer transition-colors ${f === 'intl' ? 'font-bold text-black border-t-2 border-t-[#c49a5b] border-l border-r border-gray-300 bg-white -mb-px' : 'font-medium text-gray-500 hover:text-black'}`}>
+          საერთაშორისო
+        </Link>
+      </div>
 
       {upcoming.length === 0 && (
-        <p className="mt-10 rounded-lg border border-line bg-coal p-6 text-sm text-smoke">
-          ამ ფილტრით მომავალი შეჯიბრება არ არის — სცადეთ „ყველა“.
-        </p>
+        <div className="py-10 text-center text-gray-500">
+          კალენდარი ცარიელია.
+        </div>
       )}
 
-      {past.length > 0 && (
-        <section className="mt-14">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-smoke">
-            გასული შეჯიბრებები
-          </h2>
-          <ul className="mt-4 divide-y divide-line rounded-lg border border-line bg-coal opacity-75">
-            {past.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-                <span className="font-medium">{e.title}</span>
-                <span className="tnum text-smoke">
-                  {e.date.getDate()} {KA_MONTHS_SHORT[e.date.getMonth()]} {e.date.getFullYear()}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+      {/* LIST VIEW */}
+      {view === "list" && (
+        <div className="flex flex-col gap-12">
+          {Object.entries(grouped).map(([month, monthEvents]) => (
+            <div key={month}>
+              <div className="flex items-center gap-3 mb-6">
+                <h2 className="text-[22px] font-bold text-black">{month}</h2>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c49a5b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              </div>
+              <div className="flex flex-col border border-gray-200 bg-white">
+                {monthEvents.map((e, idx) => {
+                  const actualLink = e.link || `/competitions?q=${encodeURIComponent(e.title)}`;
+                  const isExternal = actualLink.startsWith('http');
+                  
+                  const Content = (
+                    <div className={`flex flex-col md:flex-row p-6 items-start md:items-center gap-6 relative ${idx !== monthEvents.length - 1 ? 'border-b border-gray-200' : ''} hover:bg-gray-50 transition-colors cursor-pointer`}>
+                      {/* Left Colored Border */}
+                      <div className={`absolute left-0 top-0 bottom-0 w-[5px] ${e.isIntl ? 'bg-[#00529b]' : 'bg-[#e56a39]'}`} />
+                      
+                      {/* Date */}
+                      <div className="md:w-[220px] shrink-0 font-bold text-[#00529b] pl-2">
+                        {fmtDateRange(e.date)}
+                      </div>
+                      
+                      {/* Location */}
+                      <div className="md:w-[250px] shrink-0 font-bold text-black flex items-center gap-2">
+                        {e.city || "—"}
+                      </div>
+                      
+                      {/* Details / Categories */}
+                      <div className="flex-1 text-[14px] text-gray-800">
+                        <span className="font-bold">{e.title}</span>
+                        <div className="text-gray-500 mt-1">
+                          {e.titleEn && <span className="mr-2">{e.titleEn}</span>}
+                          {e.isIntl ? <span className="inline-block px-2 py-0.5 bg-[#00529b]/10 text-[#00529b] rounded text-[11px] font-bold uppercase tracking-wider">International</span> : <span className="inline-block px-2 py-0.5 bg-[#e56a39]/10 text-[#e56a39] rounded text-[11px] font-bold uppercase tracking-wider">National</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+
+                  return (
+                    <Link key={e.id} href={actualLink} target={isExternal ? "_blank" : undefined} className="block group">
+                      {Content}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CLASSIC (GRID) VIEW */}
+      {view === "classic" && (
+        <div className="flex flex-col gap-12">
+          {/* Legend */}
+          <div className="flex flex-wrap gap-4 text-[13px] font-bold">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-[#00529b] rounded-sm"></div>
+              International
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-[#e56a39] rounded-sm"></div>
+              National
+            </div>
+          </div>
+
+          {Object.entries(grouped).map(([month, monthEvents]) => {
+            // Generate grid for the month
+            const firstEventDate = monthEvents[0].date;
+            const year = firstEventDate.getFullYear();
+            const monthIdx = firstEventDate.getMonth();
+            const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+            const firstDayOfWeek = new Date(year, monthIdx, 1).getDay(); // 0 = Sun
+            const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // 0 = Mon
+            
+            const days = Array.from({ length: 42 }, (_, i) => {
+              const dayNum = i - startOffset + 1;
+              if (dayNum > 0 && dayNum <= daysInMonth) return dayNum;
+              return null;
+            });
+
+            // If last row is empty, trim it
+            if (days.slice(35).every(d => d === null)) {
+              days.splice(35);
+            }
+
+            return (
+              <div key={month} className="bg-white border border-gray-200">
+                <div className="p-4 border-b border-gray-200 bg-gray-50 text-center font-bold text-[20px] text-black">
+                  {month}
+                </div>
+                
+                {/* Weekday Headers */}
+                <div className="grid grid-cols-7 border-b border-gray-200 bg-white">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
+                    <div key={d} className="p-2 text-center text-[12px] font-bold text-gray-500 border-r border-gray-200 last:border-r-0">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 border-b border-gray-200 last:border-b-0 bg-white">
+                  {days.map((dayNum, i) => {
+                    const cellEvents = dayNum 
+                      ? monthEvents.filter(e => e.date.getDate() === dayNum)
+                      : [];
+
+                    return (
+                      <div key={i} className={`min-h-[120px] p-2 border-r border-b border-gray-100 last:border-r-0 ${!dayNum ? 'bg-gray-50' : ''}`}>
+                        {dayNum && (
+                          <div className="font-bold text-[14px] text-gray-700 mb-2">{dayNum}</div>
+                        )}
+                        <div className="flex flex-col gap-1.5">
+                          {cellEvents.map(e => {
+                            const actualLink = e.link || `/competitions?q=${encodeURIComponent(e.title)}`;
+                            return (
+                              <Link 
+                                key={e.id}
+                                href={actualLink}
+                                target={actualLink.startsWith('http') ? "_blank" : undefined}
+                                className={`block p-1.5 text-[11px] leading-tight font-bold text-white rounded-sm transition-opacity hover:opacity-80 ${e.isIntl ? 'bg-[#00529b]' : 'bg-[#e56a39]'}`}
+                              >
+                                {e.title}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
