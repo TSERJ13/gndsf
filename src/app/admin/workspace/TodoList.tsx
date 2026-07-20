@@ -1,12 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
-import { Check, Trash2, Plus } from "lucide-react";
+import { useTransition, useState } from "react";
+import { Check, Trash2, Plus, X, StickyNote } from "lucide-react";
 import { addTask, toggleTask, deleteTask } from "./actions";
 import { AdminTask } from "@prisma/client";
 
 export default function TodoList({ initialTasks }: { initialTasks: AdminTask[] }) {
   const [isPending, startTransition] = useTransition();
+  const [isAdding, setIsAdding] = useState(false);
 
   const handleToggle = (id: string, current: boolean) => {
     startTransition(() => {
@@ -21,57 +22,87 @@ export default function TodoList({ initialTasks }: { initialTasks: AdminTask[] }
   };
 
   return (
-    <div>
-      <form action={addTask} className="flex gap-2 mb-4">
-        <input
-          type="text"
-          name="text"
-          placeholder="ახალი დავალება..."
-          className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-wine focus:ring-1 focus:ring-wine"
-          required
-        />
-        <button
-          type="submit"
-          className="flex shrink-0 items-center gap-1 rounded-md bg-wine px-3 py-2 text-sm font-medium text-white hover:bg-wine/90"
-        >
-          <Plus size={16} />
-          დამატება
-        </button>
-      </form>
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+          <StickyNote className="text-[#8B1E0F]" size={20} />
+          პირადი ჩანაწერები
+        </h2>
+        {!isAdding && (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex items-center gap-1 text-sm font-medium text-[#8B1E0F] hover:bg-[#8B1E0F]/10 px-3 py-1.5 rounded-full transition-colors"
+          >
+            <Plus size={16} />
+            დამატება
+          </button>
+        )}
+      </div>
+
+      {isAdding && (
+        <form action={(formData) => {
+          addTask(formData);
+          setIsAdding(false);
+        }} className="mb-6 p-4 bg-[#fdfaf6] border border-[#e8dcc7] rounded-xl relative shadow-inner">
+          <button type="button" onClick={() => setIsAdding(false)} className="absolute top-2 right-2 p-1 text-neutral-400 hover:text-red-500">
+            <X size={16} />
+          </button>
+          <label className="block text-xs font-bold text-[#8B1E0F] uppercase tracking-wider mb-2">ახალი ჩანაწერი</label>
+          <textarea
+            name="text"
+            placeholder="რისი დამახსოვრება გსურთ?"
+            className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm resize-none outline-none text-neutral-800 placeholder:text-neutral-400"
+            rows={3}
+            autoFocus
+            required
+          />
+          <div className="flex justify-end mt-2">
+            <button
+              type="submit"
+              className="bg-[#8B1E0F] text-white px-4 py-1.5 rounded-md text-xs font-bold tracking-wider hover:bg-[#6a150b] transition-colors"
+            >
+              შენახვა
+            </button>
+          </div>
+        </form>
+      )}
 
       {initialTasks.length === 0 ? (
-        <p className="text-sm text-neutral-500 py-4 text-center border border-dashed border-neutral-200 rounded-md">
-          ჩანაწერები არ გაქვთ.
-        </p>
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-10 opacity-50">
+          <StickyNote size={48} className="mb-3 text-neutral-300" />
+          <p className="text-sm font-medium text-neutral-500">
+            ჩანაწერები არ გაქვთ
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+        <ul className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
           {initialTasks.map((task) => (
             <li
               key={task.id}
-              className={`flex items-center justify-between gap-3 rounded-md border p-3 transition-colors ${
-                task.isDone ? "border-green-200 bg-green-50" : "border-neutral-200 bg-neutral-50"
+              className={`group relative flex items-start gap-3 rounded-xl border p-4 transition-all ${
+                task.isDone 
+                  ? "border-green-100 bg-green-50/50" 
+                  : "border-[#e8dcc7] bg-white shadow-sm hover:shadow-md"
               }`}
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <button
-                  onClick={() => handleToggle(task.id, task.isDone)}
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
-                    task.isDone ? "border-green-600 bg-green-600 text-white" : "border-neutral-300 bg-white"
-                  }`}
-                >
-                  {task.isDone && <Check size={14} />}
-                </button>
-                <span
-                  className={`text-sm break-words ${
-                    task.isDone ? "line-through text-neutral-500" : "text-neutral-700"
-                  }`}
-                >
-                  {task.text}
-                </span>
-              </div>
+              <button
+                onClick={() => handleToggle(task.id, task.isDone)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                  task.isDone ? "border-green-500 bg-green-500 text-white" : "border-[#c49a5b] hover:bg-[#c49a5b]/10"
+                }`}
+              >
+                {task.isDone && <Check size={12} strokeWidth={3} />}
+              </button>
+              <span
+                className={`text-sm leading-relaxed break-words flex-1 transition-all ${
+                  task.isDone ? "line-through text-neutral-400" : "text-neutral-700 font-medium"
+                }`}
+              >
+                {task.text}
+              </span>
               <button
                 onClick={() => handleDelete(task.id)}
-                className="shrink-0 p-1 text-neutral-400 hover:text-red-600 rounded"
+                className="opacity-0 group-hover:opacity-100 shrink-0 p-1.5 text-neutral-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
               >
                 <Trash2 size={16} />
               </button>

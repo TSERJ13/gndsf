@@ -81,14 +81,11 @@ export default function AdminSidebar({
       />
 
       <aside 
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!fixed pt-[100px] lg:pt-[190px] ${
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!fixed top-[100px] lg:top-[190px] h-[calc(100vh-100px)] lg:h-[calc(100vh-190px)] ${
           isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
-        style={{
-          height: "100vh"
-        }}
       >
-        <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4 mt-2">
+        <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4">
           <Link href="/" className={`flex items-center gap-2.5 overflow-hidden ${isCollapsed && !isMobileOpen ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto'}`}>
             <Image src="/brand/logo.png" alt="" width={30} height={30} className="shrink-0" />
             <div className="whitespace-nowrap">
