@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { upcomingTransitions } from "@/lib/transitions";
 import { CATEGORY_LABELS } from "@/lib/labels";
-import { notifyTransitions } from "@/app/admin/transitions-actions";
+import { notifyTransitions } from "@/app/portal/transitions-actions";
 import { mailConfigured } from "@/lib/mail";
 
 // Server component: shows who moves to the next age category on 1 January.

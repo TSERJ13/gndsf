@@ -64,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth();
   const isLoggedIn = !!session;
   const userRole = (session?.user as { role?: string } | undefined)?.role;
-  const dashboardHref = userRole && userRole !== "ATHLETE" ? "/admin" : "/cabinet";
+  const dashboardHref = userRole && userRole !== "ATHLETE" ? "/portal" : "/cabinet";
 
   return (
     <html lang="ka">

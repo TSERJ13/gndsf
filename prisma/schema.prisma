@@ -63,27 +63,28 @@ enum Role {
 // ─────────────────────── Identity & clubs ───────────────────────
 
 model Athlete {
-  id        String   @id @default(uuid())
-  gid       String   @unique // federation-wide athlete ID (GID)
-  firstName String
-  lastName  String
+  id          String   @id @default(uuid())
+  gid         String   @unique // federation-wide athlete ID (GID)
+  firstName   String
+  lastName    String
   firstNameEn String?
   lastNameEn  String?
-  birthDate DateTime
-  gender    Gender
-  photoUrl  String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  birthDate   DateTime
+  gender      Gender
+  photoUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user             User?
   clubMemberships  ClubMembership[]
-  asLeader         Partnership[]    @relation("leader")
-  asFollower       Partnership[]    @relation("follower")
+  asLeader         Partnership[]         @relation("leader")
+  asFollower       Partnership[]         @relation("follower")
   soloEntries      Entry[]
   rankingPoints    RankingPoint[]
   rankingEntries   RankingEntry[]
   documents        AthleteDocument[]
+  transferRequests ClubTransferRequest[]
 
   @@index([lastName, firstName])
 }
@@ -100,10 +101,12 @@ model Club {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  memberships ClubMembership[]
-  entries     Entry[]          @relation("entryClubSnapshot")
-  managers    User[]
-  registrations AthleteRegistration[]
+  memberships          ClubMembership[]
+  entries              Entry[]               @relation("entryClubSnapshot")
+  managers             User[]
+  registrations        AthleteRegistration[]
+  transferRequestsFrom ClubTransferRequest[] @relation("TransferFrom")
+  transferRequestsTo   ClubTransferRequest[] @relation("TransferTo")
 }
 
 // Dated history — transfers never overwrite the past.
@@ -130,9 +133,9 @@ model Partnership {
   startDate  DateTime
   endDate    DateTime? // null = active couple
 
-  leader   Athlete @relation("leader", fields: [leaderId], references: [id])
-  follower Athlete @relation("follower", fields: [followerId], references: [id])
-  entries  Entry[]
+  leader         Athlete        @relation("leader", fields: [leaderId], references: [id])
+  follower       Athlete        @relation("follower", fields: [followerId], references: [id])
+  entries        Entry[]
   rankingEntries RankingEntry[]
 
   @@index([leaderId, endDate])
@@ -142,18 +145,18 @@ model Partnership {
 // ─────────────────────── Competitions ───────────────────────
 
 model Competition {
-  id        String          @id @default(uuid())
-  name      String
-  nameEn    String?
-  type      CompetitionType
-  city      String
-  venue     String?
-  startDate DateTime
-  endDate   DateTime?
+  id                String          @id @default(uuid())
+  name              String
+  nameEn            String?
+  type              CompetitionType
+  city              String
+  venue             String?
+  startDate         DateTime
+  endDate           DateTime?
   // points multiplier by competition tier (e.g. NATIONAL 1.0, INTERNATIONAL 1.5)
-  pointsCoefficient Float   @default(1.0)
-  isPublished       Boolean @default(false)
-  createdAt DateTime        @default(now())
+  pointsCoefficient Float           @default(1.0)
+  isPublished       Boolean         @default(false)
+  createdAt         DateTime        @default(now())
 
   events CompEvent[]
 }
@@ -196,8 +199,8 @@ model Entry {
 }
 
 model Result {
-  id            String  @id @default(uuid())
-  entryId       String  @unique
+  id            String @id @default(uuid())
+  entryId       String @unique
   placement     Int
   roundsReached Int?
 
@@ -229,8 +232,8 @@ model RankingEntry {
   ageCategory   AgeCategory
   discipline    Discipline
   format        Format
-  athleteId     String?     // solo leaderboards
-  partnershipId String?     // couple leaderboards (rank shown per active couple)
+  athleteId     String? // solo leaderboards
+  partnershipId String? // couple leaderboards (rank shown per active couple)
   totalPoints   Int
   position      Int
   prevPosition  Int?
@@ -255,13 +258,14 @@ model User {
   region       String? // REGIONAL_REP scope
   isActive     Boolean @default(true)
 
-  club    Club?    @relation(fields: [clubId], references: [id])
-  athlete Athlete? @relation(fields: [athleteId], references: [id])
-  auditLogs AuditLog[]
-  news      News[]
-  mailAccount MailAccount?
-  athleteDocs AthleteDocument[]
-  adminTasks AdminTask[]
+  club               Club?                 @relation(fields: [clubId], references: [id])
+  athlete            Athlete?              @relation(fields: [athleteId], references: [id])
+  auditLogs          AuditLog[]
+  news               News[]
+  mailAccount        MailAccount?
+  athleteDocs        AthleteDocument[]
+  adminTasks         AdminTask[]
+  requestedTransfers ClubTransferRequest[]
 }
 
 model News {
@@ -282,13 +286,13 @@ model News {
 }
 
 model CalendarEvent {
-  id       String   @id @default(uuid())
-  title    String
-  titleEn  String?
-  city     String
-  date     DateTime
-  isIntl   Boolean  @default(false)
-  link     String?
+  id      String   @id @default(uuid())
+  title   String
+  titleEn String?
+  city    String
+  date    DateTime
+  isIntl  Boolean  @default(false)
+  link    String?
 }
 
 model Document {
@@ -355,29 +359,45 @@ model AdminTask {
 }
 
 model AthleteRegistration {
-  id                   String   @id @default(uuid())
-  status               RegistrationStatus @default(PENDING)
-  firstName            String
-  lastName             String
-  firstNameEn          String?
-  lastNameEn           String?
-  birthDate            DateTime
-  gender               Gender
-  personalNumber       String
-  email                String
-  phone                String?
-  clubId               String?
-  
-  profilePictureUrl    String?
-  idDocumentUrl        String?
-  
-  isParentConsentRequired Boolean @default(false)
-  parentName           String?
-  parentSignature      String?
-  agreedToTermsAt      DateTime
+  id             String             @id @default(uuid())
+  status         RegistrationStatus @default(PENDING)
+  firstName      String
+  lastName       String
+  firstNameEn    String?
+  lastNameEn     String?
+  birthDate      DateTime
+  gender         Gender
+  personalNumber String
+  email          String
+  phone          String?
+  clubId         String?
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  club                 Club?    @relation(fields: [clubId], references: [id])
+  profilePictureUrl String?
+  idDocumentUrl     String?
+
+  isParentConsentRequired Boolean  @default(false)
+  parentName              String?
+  parentSignature         String?
+  agreedToTermsAt         DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  club Club? @relation(fields: [clubId], references: [id])
+}
+
+model ClubTransferRequest {
+  id            String             @id @default(uuid())
+  athleteId     String
+  fromClubId    String?
+  toClubId      String
+  status        RegistrationStatus @default(PENDING)
+  requestedById String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  athlete     Athlete @relation(fields: [athleteId], references: [id])
+  fromClub    Club?   @relation("TransferFrom", fields: [fromClubId], references: [id])
+  toClub      Club    @relation("TransferTo", fields: [toClubId], references: [id])
+  requestedBy User    @relation(fields: [requestedById], references: [id])
 }

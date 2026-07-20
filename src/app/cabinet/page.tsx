@@ -11,7 +11,7 @@ import {
   fmtDate,
 } from "@/lib/labels";
 import { uploadPhoto } from "./actions";
-import { changeOwnPassword } from "@/app/admin/settings/actions";
+import { changeOwnPassword } from "@/app/portal/settings/actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "სპორტსმენის კაბინეტი" };

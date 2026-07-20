@@ -28,7 +28,7 @@ export const authConfig = {
     },
     authorized({ auth, request }) {
       const path = request.nextUrl.pathname;
-      const isAdminArea = path.startsWith("/admin") || path.startsWith("/cabinet");
+      const isAdminArea = path.startsWith("/portal") || path.startsWith("/cabinet");
       if (!isAdminArea) return true;
       return !!auth?.user;
     },

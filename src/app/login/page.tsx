@@ -12,7 +12,7 @@ export default async function LoginPage({
 }) {
   const session = await auth();
   if (session?.user) {
-    redirect((session.user as { role?: string }).role === "ATHLETE" ? "/cabinet" : "/admin");
+    redirect((session.user as { role?: string }).role === "ATHLETE" ? "/cabinet" : "/portal");
   }
   const { error } = await searchParams;
 
@@ -22,7 +22,7 @@ export default async function LoginPage({
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
-        redirectTo: "/admin",
+        redirectTo: "/portal",
       });
     } catch (e) {
       if (e instanceof AuthError) redirect("/login?error=1");

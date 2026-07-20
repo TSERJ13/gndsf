@@ -37,13 +37,13 @@ export async function requireStaff(): Promise<SessionUser> {
 
 export async function requireAthlete(): Promise<SessionUser & { athleteId: string }> {
   const user = await requireUser();
-  if (user.role !== "ATHLETE" || !user.athleteId) redirect("/admin");
+  if (user.role !== "ATHLETE" || !user.athleteId) redirect("/portal");
   return user as SessionUser & { athleteId: string };
 }
 
 export async function requireRole(roles: Role[]): Promise<SessionUser> {
   const user = await requireUser();
-  if (!roles.includes(user.role)) redirect("/admin");
+  if (!roles.includes(user.role)) redirect("/portal");
   return user;
 }
 
