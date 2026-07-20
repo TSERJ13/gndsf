@@ -76,15 +76,16 @@ model Athlete {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user             User?
-  clubMemberships  ClubMembership[]
-  asLeader         Partnership[]         @relation("leader")
-  asFollower       Partnership[]         @relation("follower")
-  soloEntries      Entry[]
-  rankingPoints    RankingPoint[]
-  rankingEntries   RankingEntry[]
-  documents        AthleteDocument[]
-  transferRequests ClubTransferRequest[]
+  user                User?
+  clubMemberships     ClubMembership[]
+  asLeader            Partnership[]         @relation("leader")
+  asFollower          Partnership[]         @relation("follower")
+  soloEntries         Entry[]
+  rankingPoints       RankingPoint[]
+  rankingEntries      RankingEntry[]
+  documents           AthleteDocument[]
+  transferRequests    ClubTransferRequest[]
+  athleteEditRequests AthleteEditRequest[]
 
   @@index([lastName, firstName])
 }
@@ -258,14 +259,15 @@ model User {
   region       String? // REGIONAL_REP scope
   isActive     Boolean @default(true)
 
-  club               Club?                 @relation(fields: [clubId], references: [id])
-  athlete            Athlete?              @relation(fields: [athleteId], references: [id])
-  auditLogs          AuditLog[]
-  news               News[]
-  mailAccount        MailAccount?
-  athleteDocs        AthleteDocument[]
-  adminTasks         AdminTask[]
-  requestedTransfers ClubTransferRequest[]
+  club                Club?                 @relation(fields: [clubId], references: [id])
+  athlete             Athlete?              @relation(fields: [athleteId], references: [id])
+  auditLogs           AuditLog[]
+  news                News[]
+  mailAccount         MailAccount?
+  athleteDocs         AthleteDocument[]
+  adminTasks          AdminTask[]
+  requestedTransfers  ClubTransferRequest[]
+  athleteEditRequests AthleteEditRequest[]
 }
 
 model News {
@@ -399,5 +401,21 @@ model ClubTransferRequest {
   athlete     Athlete @relation(fields: [athleteId], references: [id])
   fromClub    Club?   @relation("TransferFrom", fields: [fromClubId], references: [id])
   toClub      Club    @relation("TransferTo", fields: [toClubId], references: [id])
+  requestedBy User    @relation(fields: [requestedById], references: [id])
+}
+
+model AthleteEditRequest {
+  id            String             @id @default(uuid())
+  athleteId     String
+  firstName     String
+  lastName      String
+  firstNameEn   String?
+  lastNameEn    String?
+  status        RegistrationStatus @default(PENDING)
+  requestedById String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  athlete     Athlete @relation(fields: [athleteId], references: [id])
   requestedBy User    @relation(fields: [requestedById], references: [id])
 }

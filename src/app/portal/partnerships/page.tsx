@@ -71,17 +71,17 @@ export default async function AdminPartnerships({
       <h1 className="text-2xl font-semibold">წყვილები</h1>
       <p className="mt-1 text-sm text-neutral-500">
         {scope ? "თქვენ ხედავთ მხოლოდ თქვენი კლუბის წყვილებს. " : ""}
-        გაყრა წყვილს არ შლის — პერიოდი იხურება და ისტორია უცვლელი რჩება.
+        დაშლა წყვილს არ შლის — პერიოდი იხურება და ისტორია უცვლელი რჩება.
       </p>
       {ok && (
         <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
-          {ok === "formed" ? "წყვილი შეიქმნა." : "წყვილი გაიყარა — ისტორია შენარჩუნებულია."}
+          {ok === "formed" ? "წყვილი შეიქმნა." : "წყვილი დაიშალა — ისტორია შენარჩუნებულია."}
         </p>
       )}
       {error && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           {error === "busy"
-            ? "ერთ-ერთ სპორტსმენს უკვე ჰყავს მოქმედი პარტნიორი — ჯერ არსებული წყვილი გაყარეთ."
+            ? "ერთ-ერთ სპორტსმენს უკვე ჰყავს მოქმედი პარტნიორი — ჯერ არსებული წყვილი დაშალეთ."
             : "აირჩიეთ ორი განსხვავებული სპორტსმენი."}
         </p>
       )}
@@ -118,15 +118,11 @@ export default async function AdminPartnerships({
                   <div className="text-[13px] text-gray-500 mb-4 tabular-nums">
                     Joined: {fmtDate(p.startDate)}
                   </div>
-                  <div className="text-[13px] font-bold text-black mb-4 leading-tight">
-                    <span className="block text-[#005eb8]">{p.leader.firstName} {p.leader.lastName}</span>
-                    <span className="block text-[#e31837] mt-0.5">{p.follower.firstName} {p.follower.lastName}</span>
-                  </div>
                   <div className="mt-auto pt-4 border-t border-gray-100">
                     <form action={splitPartnership} className="w-full">
                       <input type="hidden" name="id" value={p.id} />
                       <button className="w-full rounded bg-red-50 py-2.5 text-center text-[13px] font-semibold text-red-700 transition hover:bg-red-100">
-                        გაყრა
+                        დაშლა
                       </button>
                     </form>
                   </div>
@@ -139,7 +135,7 @@ export default async function AdminPartnerships({
           </div>
 
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-neutral-400">
-            ბოლო გაყრილი
+            ბოლო დაშლილი
           </h2>
           <div className="mt-3 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {past.map((p) => (
@@ -167,10 +163,6 @@ export default async function AdminPartnerships({
                   </div>
                   <div className="text-[13px] text-gray-400 mb-4 tabular-nums">
                     {fmtDate(p.startDate)} – {p.endDate ? fmtDate(p.endDate) : ""}
-                  </div>
-                  <div className="text-[13px] font-bold text-gray-500 mb-2 leading-tight">
-                    <span className="block">{p.leader.firstName} {p.leader.lastName}</span>
-                    <span className="block mt-0.5">{p.follower.firstName} {p.follower.lastName}</span>
                   </div>
                 </div>
               </div>

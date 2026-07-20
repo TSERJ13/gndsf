@@ -26,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/portal/athletes", label: "სპორტსმენები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/partnerships", label: "წყვილები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/transfers", label: "ტრანსფერები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
+    { href: "/portal/edit-requests", label: "პროფილის მოთხოვნები", show: isRegistryAdmin },
     { href: "/portal/clubs", label: "კლუბები", show: isRegistryAdmin },
     { href: "/portal/competitions", label: "შეჯიბრებები", show: isRegistryAdmin },
     { href: "/portal/news", label: "სიახლეები", show: isRegistryAdmin },

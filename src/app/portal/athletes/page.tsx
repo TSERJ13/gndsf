@@ -74,7 +74,7 @@ export default async function AdminAthletes({
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 content-start">
           {athletes.map((a) => (
-            <div key={a.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative transition-transform hover:-translate-y-1">
+            <Link key={a.id} href={`/portal/athletes/${a.id}`} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative transition-transform hover:-translate-y-1">
               <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
                 {a.gender === "FEMALE" ? (
                   <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
@@ -101,16 +101,8 @@ export default async function AdminAthletes({
                 <div className="text-[13px] font-bold text-black mb-4 line-clamp-2 leading-snug">
                   {a.clubMemberships[0]?.club.name ?? "—"}
                 </div>
-                <div className="mt-auto pt-4 border-t border-gray-100">
-                  <Link
-                    href={`/portal/athletes/${a.id}/documents`}
-                    className="block w-full rounded bg-gray-50 py-2.5 text-center text-[13px] font-semibold text-gray-700 transition hover:bg-gray-100"
-                  >
-                    დოკუმენტები
-                  </Link>
-                </div>
               </div>
-            </div>
+            </Link>
           ))}
           {athletes.length === 0 && (
             <div className="col-span-full py-12 text-center text-neutral-500">

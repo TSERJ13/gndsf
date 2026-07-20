@@ -44,6 +44,7 @@ const ICONS: Record<string, React.ElementType> = {
   "/portal/mail": Mail,
   "/portal/e-cards": CreditCard,
   "/portal/settings": Settings,
+  "/portal/edit-requests": FileText,
 };
 
 export default function AdminSidebar({ 
