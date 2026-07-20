@@ -21,8 +21,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const nav = [
     { href: "/admin", label: "დაფა", show: true },
     { href: "/admin/workspace", label: "სამუშაო სივრცე", show: true },
-    { href: "/admin/mail", label: "ფოსტა", show: true },
-    { href: "/admin/athletes", label: "სპორტსმენები", show: true },
+    { href: "/admin/mail", label: "ფოსტა", show: ["SUPER_ADMIN", "GENERAL_SECRETARY"].includes(user.role) },
+    { href: "/admin/e-cards", label: "E-Cards", show: ["SUPER_ADMIN", "VICE_PRESIDENT"].includes(user.role) },
+    { href: "/admin/athletes", label: "სპორტსმენები", show: isRegistryAdmin },
     { href: "/admin/partnerships", label: "წყვილები", show: isRegistryAdmin },
     { href: "/admin/clubs", label: "კლუბები", show: isRegistryAdmin },
     { href: "/admin/competitions", label: "შეჯიბრებები", show: isRegistryAdmin },
@@ -30,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/calendar", label: "კალენდარი", show: isRegistryAdmin },
     { href: "/admin/documents", label: "დოკუმენტები", show: isRegistryAdmin },
     { href: "/admin/users", label: "მომხმარებლები", show: user.role === "SUPER_ADMIN" },
-    { href: "/admin/settings", label: "პარამეტრები", show: true },
+    { href: "/admin/settings", label: "პარამეტრები", show: user.role === "SUPER_ADMIN" },
   ].filter((n) => n.show);
 
   const showCalc = ["PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY", "SUPER_ADMIN"].includes(user.role);

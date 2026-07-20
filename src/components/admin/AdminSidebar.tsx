@@ -18,7 +18,8 @@ import {
   Menu,
   ChevronLeft,
   LogOut,
-  Briefcase
+  Briefcase,
+  CreditCard
 } from "lucide-react";
 
 export type NavItem = {
@@ -39,6 +40,7 @@ const ICONS: Record<string, React.ElementType> = {
   "/admin/documents": FileText,
   "/admin/users": Users, // generic for users
   "/admin/mail": Mail,
+  "/admin/e-cards": CreditCard,
   "/admin/settings": Settings,
 };
 

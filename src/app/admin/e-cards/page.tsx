@@ -1,7 +1,10 @@
 import { db } from '@/lib/db';
+import { requireRole } from '@/lib/rbac';
 import Link from 'next/link';
 
 export default async function ECardsAdminPage() {
+  await requireRole(["SUPER_ADMIN", "VICE_PRESIDENT"]);
+
   const registrations = await db.athleteRegistration.findMany({
     orderBy: { createdAt: 'desc' },
     include: { club: true }
