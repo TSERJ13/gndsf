@@ -91,36 +91,45 @@ export default async function AdminPartnerships({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
             მოქმედი ({active.length})
           </h2>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {active.map((p) => (
-              <div key={p.id} className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-                    <svg className="h-6 w-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative transition-transform hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center relative">
+                  <div className="flex items-center justify-center gap-4">
+                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 20 26 C 20 44, 44 44, 44 26" />
+                      <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
+                    </svg>
+                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 22 32 C 22 46, 42 46, 42 32" />
+                      <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
                     </svg>
                   </div>
-                  <span className="rounded border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700">
+                  <span className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded px-2 py-1 text-[10px] font-bold text-green-700 uppercase tracking-wider border border-green-200">
                     აქტიური
                   </span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-neutral-900 leading-snug">
+                <div className="p-5 flex-1 flex flex-col">
+                  <div className="font-bold text-[16px] text-black mb-1">
+                    {p.leader.lastName} & {p.follower.lastName}
+                  </div>
+                  <div className="text-[13px] text-gray-500 mb-4 tabular-nums">
+                    Joined: {fmtDate(p.startDate)}
+                  </div>
+                  <div className="text-[13px] font-bold text-black mb-4 leading-tight">
                     <span className="block text-[#005eb8]">{p.leader.firstName} {p.leader.lastName}</span>
-                    <span className="block text-xs font-normal text-neutral-400 my-0.5">და</span>
-                    <span className="block text-[#e31837]">{p.follower.firstName} {p.follower.lastName}</span>
-                  </h3>
-                  <p className="mt-2 text-xs text-neutral-500 tabular-nums">
-                    {fmtDate(p.startDate)}-დან
-                  </p>
-                </div>
-                <div className="mt-4 pt-4 border-t border-neutral-100">
-                  <form action={splitPartnership} className="w-full">
-                    <input type="hidden" name="id" value={p.id} />
-                    <button className="w-full rounded bg-red-50 py-2 text-center text-xs font-semibold text-red-700 transition hover:bg-red-100">
-                      გაყრა
-                    </button>
-                  </form>
+                    <span className="block text-[#e31837] mt-0.5">{p.follower.firstName} {p.follower.lastName}</span>
+                  </div>
+                  <div className="mt-auto pt-4 border-t border-gray-100">
+                    <form action={splitPartnership} className="w-full">
+                      <input type="hidden" name="id" value={p.id} />
+                      <button className="w-full rounded bg-red-50 py-2.5 text-center text-[13px] font-semibold text-red-700 transition hover:bg-red-100">
+                        გაყრა
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             ))}
@@ -132,28 +141,37 @@ export default async function AdminPartnerships({
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-neutral-400">
             ბოლო გაყრილი
           </h2>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {past.map((p) => (
-              <div key={p.id} className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm opacity-70">
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-                    <svg className="h-6 w-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative opacity-60 grayscale transition-transform hover:-translate-y-1">
+                <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center relative">
+                  <div className="flex items-center justify-center gap-4">
+                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 20 26 C 20 44, 44 44, 44 26" />
+                      <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
+                    </svg>
+                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
+                      <path d="M 22 32 C 22 46, 42 46, 42 32" />
+                      <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
                     </svg>
                   </div>
-                  <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                  <span className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider border border-gray-200">
                     დაშლილი
                   </span>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-neutral-700 leading-snug">
-                    <span className="block">{p.leader.firstName} {p.leader.lastName}</span>
-                    <span className="block text-xs font-normal text-neutral-400 my-0.5">და</span>
-                    <span className="block">{p.follower.firstName} {p.follower.lastName}</span>
-                  </h3>
-                  <p className="mt-2 text-xs text-neutral-400 tabular-nums">
+                <div className="p-5 flex-1 flex flex-col">
+                  <div className="font-bold text-[16px] text-gray-600 mb-1">
+                    {p.leader.lastName} & {p.follower.lastName}
+                  </div>
+                  <div className="text-[13px] text-gray-400 mb-4 tabular-nums">
                     {fmtDate(p.startDate)} – {p.endDate ? fmtDate(p.endDate) : ""}
-                  </p>
+                  </div>
+                  <div className="text-[13px] font-bold text-gray-500 mb-2 leading-tight">
+                    <span className="block">{p.leader.firstName} {p.leader.lastName}</span>
+                    <span className="block mt-0.5">{p.follower.firstName} {p.follower.lastName}</span>
+                  </div>
                 </div>
               </div>
             ))}
