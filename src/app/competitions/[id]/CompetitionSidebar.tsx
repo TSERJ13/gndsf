@@ -111,7 +111,7 @@ export function CompetitionSidebar({
                       key={ev.id}
                       className={`block px-6 py-3 text-white text-[11px] font-bold uppercase tracking-wider hover:opacity-90 transition-colors ${bgColor}`}
                     >
-                      {DISCIPLINE_LABELS[ev.discipline]} {FORMAT_LABELS[ev.format]}
+                      {DISCIPLINE_LABELS[ev.discipline as keyof typeof DISCIPLINE_LABELS]} {FORMAT_LABELS[ev.format as keyof typeof FORMAT_LABELS]}
                     </Link>
                   );
                 })}
