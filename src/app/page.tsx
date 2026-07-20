@@ -26,7 +26,7 @@ export default async function Home() {
       {/* ══ LATEST NEWS ══ */}
       <section className="mx-auto max-w-[1400px] px-6 pt-16 lg:pt-24 pb-16">
         <h1 className="heading-display text-center text-4xl lg:text-5xl mb-14 motion-fade-up">
-          LATEST NEWS
+          ბოლო სიახლეები
         </h1>
 
         <div className="grid gap-8 md:grid-cols-2">
@@ -84,7 +84,7 @@ export default async function Home() {
           ))}
           {news.length === 0 && (
             <p className="col-span-full text-center text-sm font-medium text-gray-400">
-              News will be updated soon.
+              სიახლეები მალე დაემატება.
             </p>
           )}
         </div>
@@ -95,7 +95,7 @@ export default async function Home() {
             href="/news"
             className="flex items-center gap-2 text-[14px] font-bold uppercase tracking-widest text-black transition-colors hover:text-[#B83A14]"
           >
-            See all news
+            ყველა სიახლე
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m9 18 6-6-6-6" />
             </svg>
@@ -120,7 +120,7 @@ export default async function Home() {
       <section className="bg-gray-50/50 py-16 lg:py-24 border-t border-gray-100">
         <div className="mx-auto max-w-[1400px] px-6">
           <h2 className="heading-display text-center text-4xl lg:text-5xl mb-14 motion-fade-up">
-            UPCOMING EVENTS
+            მომავალი ღონისძიებები
           </h2>
 
           <div className="grid gap-y-3 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-5">
@@ -163,7 +163,7 @@ export default async function Home() {
             ))}
             {events.length === 0 && (
               <p className="col-span-full text-center text-sm font-medium text-gray-400">
-                No upcoming events announced yet.
+                მომავალი ღონისძიებები ჯერ არ არის გამოცხადებული.
               </p>
             )}
           </div>
@@ -173,7 +173,7 @@ export default async function Home() {
               href="/calendar"
               className="rounded-full border-2 border-black bg-transparent px-10 py-3.5 text-[14px] font-bold uppercase tracking-widest text-black transition-all hover:bg-black hover:text-white"
             >
-              Full Calendar
+              სრული კალენდარი
             </Link>
           </div>
         </div>
@@ -184,17 +184,17 @@ export default async function Home() {
         <div className="mx-auto max-w-[1000px] px-6 text-center motion-fade-up">
           <Image src="/brand/logo.png" alt="" width={64} height={64} className="mx-auto mb-8 grayscale opacity-80" />
           <h2 className="heading-display text-3xl md:text-4xl mb-6">
-            JOIN THE DANCESPORT FAMILY
+            შემოუერთდი სპორტცეკვების ოჯახს
           </h2>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto mb-10 text-[15px] leading-relaxed">
-            Register your club, license athletes, and receive a global GID number.
-            Experience the standard of international dancesport right here in Georgia.
+            დაარეგისტრირე შენი კლუბი, აიღე სპორტსმენის ლიცენზია და მიიღე გლობალური GID ნომერი. 
+            გამოცადე საერთაშორისო სპორტცეკვების სტანდარტი საქართველოში.
           </p>
           <Link
             href="/contact"
             className="inline-block rounded-full bg-gradient-to-r from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] px-10 py-4 text-[14px] font-bold uppercase tracking-widest text-white shadow-lg transition-transform hover:-translate-y-1 hover:shadow-xl"
           >
-            Get Started
+            დაწყება
           </Link>
         </div>
       </section>
