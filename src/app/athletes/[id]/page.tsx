@@ -209,7 +209,7 @@ export default async function AthletePage({
                         {DISCIPLINE_LABELS[e.event.discipline]}
                       </td>
                       <td className="px-4 py-4 text-black">
-                        {CATEGORY_LABELS[e.event.category]}
+                        {CATEGORY_LABELS[e.event.ageCategory]}
                       </td>
                       <td className="px-4 py-4 text-black">
                         {e.event.competition.city}
