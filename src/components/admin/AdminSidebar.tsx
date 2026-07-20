@@ -75,14 +75,11 @@ export default function AdminSidebar({
         />
       )}
 
-      {/* Spacer for fixed sidebar to prevent main content overlap */}
-      <div 
-        className={`hidden md:block shrink-0 transition-all duration-300 ${isCollapsed ? "w-20" : "w-64"}`}
-      />
+
 
       <aside 
-        className={`fixed left-0 z-40 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:!fixed top-[100px] lg:top-[190px] h-[calc(100vh-100px)] lg:h-[calc(100vh-190px)] ${
-          isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"
+        className={`fixed left-0 z-40 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:sticky md:top-[100px] lg:top-[190px] md:h-[calc(100vh-100px)] lg:h-[calc(100vh-190px)] ${
+          isMobileOpen ? "translate-x-0 w-64 top-[100px] h-[calc(100vh-100px)]" : "-translate-x-full md:translate-x-0"
         } ${isCollapsed && !isMobileOpen ? "md:w-20" : "md:w-64"}`}
       >
         <div className="flex h-16 items-center justify-between border-b border-neutral-100 px-4">
