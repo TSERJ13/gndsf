@@ -12,25 +12,36 @@ export default async function AdminDashboard() {
   const athleteWhere = scope
     ? { clubMemberships: { some: { clubId: scope.clubId, endDate: null } } }
     : {};
+    
+  const coupleWhere = scope
+    ? { 
+        OR: [
+          { leader: { clubMemberships: { some: { clubId: scope.clubId, endDate: null } } } },
+          { follower: { clubMemberships: { some: { clubId: scope.clubId, endDate: null } } } }
+        ]
+      }
+    : {};
 
   const [athletes, activeCouples, clubs, competitions, audit] = await Promise.all([
     db.athlete.count({ where: { isActive: true, ...athleteWhere } }),
-    db.partnership.count({ where: { endDate: null } }),
-    db.club.count({ where: { isActive: true } }),
-    db.competition.count(),
-    db.auditLog.findMany({
+    db.partnership.count({ where: { endDate: null, ...coupleWhere } }),
+    !scope ? db.club.count({ where: { isActive: true } }) : Promise.resolve(0),
+    !scope ? db.competition.count() : Promise.resolve(0),
+    !scope ? db.auditLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 8,
       include: { user: true },
-    }),
+    }) : Promise.resolve([]),
   ]);
 
   const stats = [
     { label: scope ? "თქვენი კლუბის სპორტსმენები" : "აქტიური სპორტსმენი", value: athletes },
-    { label: "მოქმედი წყვილი", value: activeCouples },
-    { label: "კლუბი", value: clubs },
-    { label: "შეჯიბრება", value: competitions },
+    { label: scope ? "თქვენი კლუბის წყვილები" : "მოქმედი წყვილი", value: activeCouples },
   ];
+  if (!scope) {
+    stats.push({ label: "კლუბი", value: clubs });
+    stats.push({ label: "შეჯიბრება", value: competitions });
+  }
 
   return (
     <div>
@@ -45,36 +56,36 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <h2 className="heading-display mt-14 text-2xl">ბოლო ცვლილებები</h2>
-      <div className="mt-6 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-[#8B1E0F]/5 text-left text-xs uppercase tracking-wider text-[#8B1E0F]">
-            <tr>
-              <th className="px-6 py-4 font-black">მოქმედება</th>
-              <th className="px-6 py-4 font-black">დეტალი</th>
-              <th className="px-6 py-4 font-black">ვინ</th>
-              <th className="px-6 py-4 font-black">როდის</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-neutral-100">
-            {audit.map((a) => (
-              <tr key={a.id} className="transition-colors hover:bg-neutral-50">
-                <td className="px-6 py-4 font-mono text-xs">{a.action}</td>
-                <td className="px-6 py-4 text-neutral-600">{a.detail ?? "—"}</td>
-                <td className="px-6 py-4 font-semibold text-neutral-800">{a.user?.name ?? "სისტემა"}</td>
-                <td className="px-6 py-4 tabular-nums text-neutral-500">{fmtDate(a.createdAt)}</td>
-              </tr>
-            ))}
-            {audit.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-neutral-500">
-                  ცვლილებები ჯერ არ არის — ყველა ოპერაცია აქ დაფიქსირდება.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {!scope && (
+        <>
+          <h2 className="heading-display mt-14 text-2xl">ბოლო ცვლილებები</h2>
+          <div className="mt-6 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-[#8B1E0F]/5 text-left text-xs uppercase tracking-wider text-[#8B1E0F]">
+                <tr>
+                  <th className="px-6 py-4 font-black">მოქმედება</th>
+                  <th className="px-6 py-4 font-black">დეტალი</th>
+                  <th className="px-6 py-4 font-black">ვინ</th>
+                  <th className="px-6 py-4 font-black">როდის</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100">
+                {audit.map((a) => (
+                  <tr key={a.id} className="hover:bg-neutral-50/50">
+                    <td className="px-6 py-3 font-medium text-neutral-800">{a.action}</td>
+                    <td className="px-6 py-3 text-neutral-500">{a.detail}</td>
+                    <td className="px-6 py-3 font-medium text-neutral-800">{a.user?.role === "CLUB_MANAGER" ? "კლუბის მენეჯერი" : "ფედერაციის პრეზიდენტი"}</td>
+                    <td className="px-6 py-3 text-neutral-400">{fmtDate(a.createdAt)}</td>
+                  </tr>
+                ))}
+                {audit.length === 0 && (
+                  <tr><td colSpan={4} className="px-6 py-8 text-center text-neutral-400">ინფორმაცია არ არის.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

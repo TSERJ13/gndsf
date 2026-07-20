@@ -91,46 +91,76 @@ export default async function AdminPartnerships({
           <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-500">
             მოქმედი ({active.length})
           </h2>
-          <ul className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
             {active.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
-                <div>
-                  <span className="font-medium">
-                    {p.leader.firstName} {p.leader.lastName} · {p.follower.firstName} {p.follower.lastName}
-                  </span>
-                  <span className="ml-3 tabular-nums text-neutral-500">
-                    {fmtDate(p.startDate)}-დან
+              <div key={p.id} className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+                    <svg className="h-6 w-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <span className="rounded border border-green-200 bg-green-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700">
+                    აქტიური
                   </span>
                 </div>
-                <form action={splitPartnership}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <button className="rounded border border-red-200 px-3 py-1 text-xs text-red-700 transition-colors hover:bg-red-50">
-                    გაყრა
-                  </button>
-                </form>
-              </li>
+                <div className="flex-1">
+                  <h3 className="font-bold text-neutral-900 leading-snug">
+                    <span className="block text-[#005eb8]">{p.leader.firstName} {p.leader.lastName}</span>
+                    <span className="block text-xs font-normal text-neutral-400 my-0.5">და</span>
+                    <span className="block text-[#e31837]">{p.follower.firstName} {p.follower.lastName}</span>
+                  </h3>
+                  <p className="mt-2 text-xs text-neutral-500 tabular-nums">
+                    {fmtDate(p.startDate)}-დან
+                  </p>
+                </div>
+                <div className="mt-4 pt-4 border-t border-neutral-100">
+                  <form action={splitPartnership} className="w-full">
+                    <input type="hidden" name="id" value={p.id} />
+                    <button className="w-full rounded bg-red-50 py-2 text-center text-xs font-semibold text-red-700 transition hover:bg-red-100">
+                      გაყრა
+                    </button>
+                  </form>
+                </div>
+              </div>
             ))}
             {active.length === 0 && (
-              <li className="px-4 py-6 text-sm text-neutral-500">მოქმედი წყვილი არ არის.</li>
+              <div className="col-span-full py-8 text-center text-sm text-neutral-500">ინფორმაცია არ მოიძებნა.</div>
             )}
-          </ul>
+          </div>
 
           <h2 className="mt-8 text-sm font-semibold uppercase tracking-wider text-neutral-400">
             ბოლო გაყრილი
           </h2>
-          <ul className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white opacity-70">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
             {past.map((p) => (
-              <li key={p.id} className="px-4 py-3 text-sm">
-                {p.leader.firstName} {p.leader.lastName} · {p.follower.firstName} {p.follower.lastName}
-                <span className="ml-3 tabular-nums text-neutral-500">
-                  {fmtDate(p.startDate)} — {p.endDate && fmtDate(p.endDate)}
-                </span>
-              </li>
+              <div key={p.id} className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm opacity-70">
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
+                    <svg className="h-6 w-6 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                    დაშლილი
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-neutral-700 leading-snug">
+                    <span className="block">{p.leader.firstName} {p.leader.lastName}</span>
+                    <span className="block text-xs font-normal text-neutral-400 my-0.5">და</span>
+                    <span className="block">{p.follower.firstName} {p.follower.lastName}</span>
+                  </h3>
+                  <p className="mt-2 text-xs text-neutral-400 tabular-nums">
+                    {fmtDate(p.startDate)} – {p.endDate ? fmtDate(p.endDate) : ""}
+                  </p>
+                </div>
+              </div>
             ))}
             {past.length === 0 && (
-              <li className="px-4 py-6 text-sm text-neutral-500">ჯერ არავინ გაყრილა.</li>
+              <div className="col-span-full py-8 text-center text-sm text-neutral-500">ინფორმაცია არ მოიძებნა.</div>
             )}
-          </ul>
+          </div>
         </div>
 
         <form action={formPartnership} className="h-fit rounded-lg border border-neutral-200 bg-white p-5">

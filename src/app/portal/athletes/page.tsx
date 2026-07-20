@@ -72,41 +72,41 @@ export default async function AdminAthletes({
       )}
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="border-b border-neutral-200 text-left text-xs uppercase tracking-wider text-neutral-500">
-              <tr>
-                <th className="px-4 py-3">GID</th>
-                <th className="px-4 py-3">სახელი</th>
-                <th className="px-4 py-3">კატეგორია</th>
-                <th className="px-4 py-3">კლუბი</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-neutral-100">
-              {athletes.map((a) => (
-                <tr key={a.id}>
-                  <td className="px-4 py-3 tabular-nums text-neutral-500">{a.gid}</td>
-                  <td className="px-4 py-3 font-medium">
-                    <div className="flex items-center justify-between gap-4">
-                      <span>{a.firstName} {a.lastName}</span>
-                      <Link
-                        href={`/portal/athletes/${a.id}/documents`}
-                        className="rounded border border-neutral-300 px-2.5 py-1 text-xs hover:bg-neutral-50 font-normal text-neutral-700"
-                      >
-                        დოკ.
-                      </Link>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 content-start">
+          {athletes.map((a) => (
+            <div key={a.id} className="flex flex-col rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+              <div className="mb-4 flex h-24 items-center justify-center rounded-lg bg-neutral-50 border border-neutral-100">
+                <svg className="h-10 w-10 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-xs font-mono font-bold tracking-wider text-neutral-400">{a.gid}</span>
+                  <span className="rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
                     {CATEGORY_LABELS[categoryFor(a.birthDate)]}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-600">
-                    {a.clubMemberships[0]?.club.name ?? "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>
+                </div>
+                <h3 className="font-bold text-neutral-900">{a.firstName} {a.lastName}</h3>
+                <p className="mt-1 text-xs text-neutral-500 truncate">
+                  {a.clubMemberships[0]?.club.name ?? "—"}
+                </p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-neutral-100">
+                <Link
+                  href={`/portal/athletes/${a.id}/documents`}
+                  className="block w-full rounded bg-neutral-50 py-2 text-center text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                >
+                  დოკუმენტები
+                </Link>
+              </div>
+            </div>
+          ))}
+          {athletes.length === 0 && (
+            <div className="col-span-full py-12 text-center text-neutral-500">
+              სპორტსმენები არ მოიძებნა.
+            </div>
+          )}
         </div>
 
         {canCreate && (
