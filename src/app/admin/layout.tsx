@@ -38,9 +38,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const rates = showCalc ? await getExchangeRates() : {};
 
   return (
-    <div className="min-h-screen bg-[#f6f5f3] text-neutral-900">
-      <div className="flex w-full">
-        <AdminSidebar nav={nav} userRole={ROLE_LABELS[user.role]} />
+    <div className="min-h-screen bg-[#f6f5f3] text-neutral-900 flex flex-col">
+      <div className="flex w-full flex-1">
+        <div className="shrink-0 bg-white border-r border-neutral-200 hidden md:block">
+          <AdminSidebar nav={nav} userRole={ROLE_LABELS[user.role]} />
+        </div>
+        <div className="md:hidden">
+          <AdminSidebar nav={nav} userRole={ROLE_LABELS[user.role]} />
+        </div>
         <main className="min-w-0 flex-1 px-4 py-8 md:px-8 pb-24 md:pb-8">
           <div className="max-w-7xl mx-auto">
             {children}
