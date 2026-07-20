@@ -202,7 +202,7 @@ export default async function AthletePage({
                       </td>
                       <td className="px-4 py-4">
                         <Link href={`/competitions/${e.event.competitionId}`} className="text-[#c49a5b] hover:underline transition-colors">
-                          {e.event.competition.title || e.event.competition.name}
+                          {e.event.competition.name}
                         </Link>
                       </td>
                       <td className="px-4 py-4 text-black">
@@ -212,7 +212,7 @@ export default async function AthletePage({
                         {CATEGORY_LABELS[e.event.category]}
                       </td>
                       <td className="px-4 py-4 text-black">
-                        {e.event.competition.city}{e.event.competition.country ? `, ${e.event.competition.country}` : ""}
+                        {e.event.competition.city}
                       </td>
                     </tr>
                   ))}

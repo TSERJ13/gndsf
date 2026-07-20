@@ -149,7 +149,7 @@ export default async function CouplePage({
                       </td>
                       <td className="px-4 py-4">
                         <Link href={`/competitions/${e.event.competition.id}`} className="text-[#c49a5b] hover:underline transition-colors">
-                          {e.event.competition.name || e.event.competition.title}
+                          {e.event.competition.name}
                         </Link>
                       </td>
                       <td className="px-4 py-4 text-black">
@@ -159,7 +159,7 @@ export default async function CouplePage({
                         {CATEGORY_LABELS[e.ageCategorySnapshot]}
                       </td>
                       <td className="px-4 py-4 text-black">
-                        {e.event.competition.city}{e.event.competition.country ? `, ${e.event.competition.country}` : ""}
+                        {e.event.competition.city}
                       </td>
                     </tr>
                   ))}
