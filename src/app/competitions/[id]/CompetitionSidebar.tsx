@@ -78,7 +78,7 @@ export function CompetitionSidebar({
                 isOpen ? "bg-black" : "bg-[#B83A14]"
               }`}
             >
-              <span>{CATEGORY_LABELS[ageCategory] || ageCategory}</span>
+              <span>{CATEGORY_LABELS[ageCategory as keyof typeof CATEGORY_LABELS] || ageCategory}</span>
               <svg 
                 className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`}
                 fill="none" 
