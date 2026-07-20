@@ -37,8 +37,9 @@ export default async function AdminDashboard() {
       <h1 className="heading-display text-3xl md:text-4xl">დაფა</h1>
       <div className="mt-8 grid grid-cols-2 gap-6 lg:grid-cols-4">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-            <div className="text-4xl font-black tabular-nums text-[#005eb8]">{s.value}</div>
+          <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md group">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8B1E0F] to-[#c49a5b] opacity-75 group-hover:opacity-100 transition-opacity"></div>
+            <div className="text-4xl font-black tabular-nums text-[#8B1E0F]">{s.value}</div>
             <div className="mt-2 text-xs font-bold uppercase tracking-wider text-neutral-500">{s.label}</div>
           </div>
         ))}
@@ -47,12 +48,12 @@ export default async function AdminDashboard() {
       <h2 className="heading-display mt-14 text-2xl">ბოლო ცვლილებები</h2>
       <div className="mt-6 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-[#f8f8f8] text-left text-xs uppercase tracking-wider text-[#555]">
+          <thead className="bg-[#8B1E0F]/5 text-left text-xs uppercase tracking-wider text-[#8B1E0F]">
             <tr>
-              <th className="px-6 py-4 font-bold">მოქმედება</th>
-              <th className="px-6 py-4 font-bold">დეტალი</th>
-              <th className="px-6 py-4 font-bold">ვინ</th>
-              <th className="px-6 py-4 font-bold">როდის</th>
+              <th className="px-6 py-4 font-black">მოქმედება</th>
+              <th className="px-6 py-4 font-black">დეტალი</th>
+              <th className="px-6 py-4 font-black">ვინ</th>
+              <th className="px-6 py-4 font-black">როდის</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-100">
