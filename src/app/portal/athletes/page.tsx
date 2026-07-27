@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
 import { CATEGORY_LABELS, categoryFor, fmtDate } from "@/lib/labels";
 import { createAthlete, createPortalAccount } from "./actions";
+import DeleteAthleteCardButton from "./DeleteAthleteCardButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "სპორტსმენები · ადმინი" };
@@ -75,8 +76,10 @@ export default async function AdminAthletes({
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 content-start">
           {athletes.map((a) => (
             <Link key={a.id} href={`/portal/athletes/${a.id}`} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative transition-transform hover:-translate-y-1">
-              <div className="aspect-square bg-gray-100 flex items-center justify-center relative">
-                {a.gender === "FEMALE" ? (
+              <div className="aspect-square bg-gray-100 flex items-center justify-center relative group">
+                {a.photoUrl ? (
+                  <img src={a.photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : a.gender === "FEMALE" ? (
                   <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
                     <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
                     <path d="M 22 32 C 22 46, 42 46, 42 32" />
@@ -89,7 +92,14 @@ export default async function AdminAthletes({
                     <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
                   </svg>
                 )}
-                <span className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded px-2 py-1 text-[10px] font-bold text-gray-700 uppercase tracking-wider">{a.gid}</span>
+                
+                {["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role) && (
+                  <div className="absolute top-3 left-3">
+                    <DeleteAthleteCardButton athleteId={a.id} />
+                  </div>
+                )}
+                
+                <span className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded px-2 py-1 text-[10px] font-bold text-gray-700 uppercase tracking-wider shadow-sm">{a.gid}</span>
               </div>
               <div className="p-5 flex-1 flex flex-col">
                 <div className="font-bold text-[16px] text-black mb-1">

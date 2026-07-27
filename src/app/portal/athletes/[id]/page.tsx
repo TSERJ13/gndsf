@@ -69,6 +69,12 @@ export default async function AthleteProfile({
               </span>
             </div>
 
+            {athlete.photoUrl && (
+              <div className="mb-6 flex justify-center">
+                <img src={athlete.photoUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover border border-gray-200 shadow-sm" />
+              </div>
+            )}
+
             <div className="grid gap-y-4 sm:grid-cols-2">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider text-neutral-500">სახელი გვარი</div>
