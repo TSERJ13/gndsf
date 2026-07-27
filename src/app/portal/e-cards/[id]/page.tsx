@@ -5,11 +5,13 @@ import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon } from "lucide-react";
 import ActionButtons from "./ActionButtons";
 
-export default async function ECardDetailPage({ params }: { params: { id: string } }) {
+export default async function ECardDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(["SUPER_ADMIN", "VICE_PRESIDENT", "PRESIDENT"]);
+  
+  const { id } = await params;
 
   const reg = await db.athleteRegistration.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     include: { club: true }
   });
 

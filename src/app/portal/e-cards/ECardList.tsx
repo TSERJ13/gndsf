@@ -102,9 +102,6 @@ export default function ECardList({
           </tbody>
         </table>
       </div>
-
-        </table>
-      </div>
     </>
   );
 }
