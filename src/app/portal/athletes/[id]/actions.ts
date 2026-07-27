@@ -58,3 +58,28 @@ export async function requestAthleteEdit(formData: FormData) {
   revalidatePath(`/portal/athletes/${athleteId}`);
   redirect(`/portal/athletes/${athleteId}?ok=requested`);
 }
+
+export async function deleteAthlete(athleteId: string) {
+  const user = await requireStaff();
+  
+  if (!["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role)) {
+    return { success: false, error: "უფლება არ გაქვთ" };
+  }
+
+  try {
+    // Attempt to delete athlete and all safe related records
+    await db.$transaction([
+      db.clubMembership.deleteMany({ where: { athleteId } }),
+      db.athleteDocument.deleteMany({ where: { athleteId } }),
+      db.athleteEditRequest.deleteMany({ where: { athleteId } }),
+      db.clubTransferRequest.deleteMany({ where: { athleteId } }),
+      db.user.deleteMany({ where: { athleteId } }),
+      db.partnership.deleteMany({ where: { OR: [{ leaderId: athleteId }, { followerId: athleteId }] } }),
+      db.athlete.delete({ where: { id: athleteId } })
+    ]);
+    return { success: true };
+  } catch (e: any) {
+    console.error("Delete athlete error", e);
+    return { success: false, error: "სპორტსმენის წაშლა შეუძლებელია, რადგან ის ფიქსირდება ტურნირებზე ან სხვა მნიშვნელოვან ჩანაწერებში." };
+  }
+}

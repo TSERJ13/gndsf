@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/rbac";
 import { fmtDate, CATEGORY_LABELS, categoryFor } from "@/lib/labels";
 import { requestAthleteEdit } from "./actions";
+import DeleteAthleteButton from "./DeleteAthleteButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "სპორტსმენის პროფილი" };
@@ -45,6 +46,7 @@ export default async function AthleteProfile({
 
   return (
     <div>
+    <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
         <Link
           href="/portal/athletes"
@@ -56,6 +58,11 @@ export default async function AthleteProfile({
         </Link>
         <h1 className="text-2xl font-semibold">სპორტსმენის პროფილი</h1>
       </div>
+      
+      {["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role) && (
+        <DeleteAthleteButton athleteId={athlete.id} />
+      )}
+    </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
         {/* Left Column: Current Details */}
