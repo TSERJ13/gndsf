@@ -18,7 +18,7 @@ type Registration = {
   idDocumentUrl: string | null;
   isParentConsentRequired: boolean;
   parentName: string | null;
-  parentSignature: string | null;
+  signedAgreementUrl: string | null;
   createdAt: Date;
   club?: { name: string } | null;
 };
@@ -204,14 +204,6 @@ export default function ECardList({
                         <dt className="text-yellow-700">მშობლის სახელი</dt>
                         <dd className="font-medium text-yellow-900">{selectedReg.parentName}</dd>
                       </div>
-                      <div>
-                        <dt className="text-yellow-700 text-xs mb-1">ხელმოწერა</dt>
-                        <dd className="bg-white p-2 rounded border border-yellow-200 min-h-16">
-                          {selectedReg.parentSignature ? (
-                            <img src={selectedReg.parentSignature} alt="Signature" className="max-h-16 object-contain" />
-                          ) : "არ არის"}
-                        </dd>
-                      </div>
                     </dl>
                   </div>
                 )}
@@ -241,6 +233,23 @@ export default function ECardList({
                       {selectedReg.idDocumentUrl ? (
                         <a href={selectedReg.idDocumentUrl} target="_blank" rel="noreferrer" className="block w-full">
                           <img src={selectedReg.idDocumentUrl} alt="ID Document" className="w-full h-48 object-cover rounded hover:opacity-90 transition-opacity" />
+                        </a>
+                      ) : (
+                        <div className="text-sm text-gray-400 py-4 text-center">არ არის ატვირთული</div>
+                      )}
+                    </div>
+
+                    <div className="bg-gray-50 p-3 rounded border">
+                      <span className="text-xs font-medium text-gray-500 mb-2 block flex items-center gap-1"><ImageIcon className="w-3 h-3"/> ხელმოწერილი წესდება</span>
+                      {selectedReg.signedAgreementUrl ? (
+                        <a href={selectedReg.signedAgreementUrl} target="_blank" rel="noreferrer" className="block w-full">
+                          {selectedReg.signedAgreementUrl.endsWith('.pdf') ? (
+                            <div className="w-full h-24 bg-gray-200 flex items-center justify-center rounded hover:bg-gray-300">
+                               <span className="font-bold text-gray-600">PDF დოკუმენტის ნახვა</span>
+                            </div>
+                          ) : (
+                            <img src={selectedReg.signedAgreementUrl} alt="Signed Agreement" className="w-full h-48 object-cover rounded hover:opacity-90 transition-opacity" />
+                          )}
                         </a>
                       ) : (
                         <div className="text-sm text-gray-400 py-4 text-center">არ არის ატვირთული</div>

@@ -19,25 +19,24 @@ export async function submitRegistration(formData: FormData) {
     
     const profilePictureUrl = formData.get('profilePictureUrl') as string;
     const idDocumentUrl = formData.get('idDocumentUrl') as string;
+    const signedAgreementUrl = formData.get('signedAgreementUrl') as string;
     
     const parentName = formData.get('parentName') as string | null;
-    const parentSignature = formData.get('parentSignature') as string | null;
-    const digitalSignature = formData.get('digitalSignature') as string;
 
     const birthDate = new Date(birthDateStr);
     const age = new Date().getFullYear() - birthDate.getFullYear();
     const isUnder18 = age < 18;
 
-    if (!firstName || !lastName || !birthDate || !gender || !personalNumber || !email || !digitalSignature) {
+    if (!firstName || !lastName || !birthDate || !gender || !personalNumber || !email) {
       return { success: false, error: 'აუცილებელი ველები ცარიელია' };
     }
 
-    if (isUnder18 && (!parentName || !parentSignature)) {
-      return { success: false, error: 'არასრულწლოვანთათვის აუცილებელია მშობლის თანხმობა' };
+    if (isUnder18 && !parentName) {
+      return { success: false, error: 'არასრულწლოვანთათვის აუცილებელია მშობლის სახელის მითითება' };
     }
 
-    if (!profilePictureUrl || !idDocumentUrl) {
-      return { success: false, error: 'აუცილებელია ფოტოს და პირადობის ატვირთვა' };
+    if (!profilePictureUrl || !idDocumentUrl || !signedAgreementUrl) {
+      return { success: false, error: 'აუცილებელია ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა' };
     }
 
     const reg = await db.athleteRegistration.create({
@@ -54,9 +53,9 @@ export async function submitRegistration(formData: FormData) {
         clubId: clubId || null,
         profilePictureUrl,
         idDocumentUrl,
+        signedAgreementUrl,
         isParentConsentRequired: isUnder18,
         parentName: parentName || null,
-        parentSignature: parentSignature || null,
         agreedToTermsAt: new Date(),
         status: 'PENDING'
       }

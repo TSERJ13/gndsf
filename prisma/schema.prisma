@@ -72,6 +72,7 @@ model Athlete {
   lastNameEn  String?
   birthDate   DateTime
   gender      Gender
+  personalNumber String?  @unique
   photoUrl    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -377,6 +378,7 @@ model AthleteRegistration {
 
   profilePictureUrl String?
   idDocumentUrl     String?
+  signedAgreementUrl String?
 
   isParentConsentRequired Boolean  @default(false)
   parentName              String?

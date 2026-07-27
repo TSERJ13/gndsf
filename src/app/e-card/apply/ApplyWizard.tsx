@@ -29,12 +29,14 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
     digitalSignature: "",
     parentName: "",
     parentSignature: "",
+    signedAgreementUrl: "",
     agreedToRules: false,
     agreedToAntiDoping: false,
   });
 
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
+  const [agreementFile, setAgreementFile] = useState<File | null>(null);
 
   const transliterateToGeorgian = (text: string) => {
     const geoMap: Record<string, string> = {
@@ -82,12 +84,12 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
   };
 
   const handleSubmit = async () => {
-    if (!formData.agreedToRules || !formData.agreedToAntiDoping || !formData.digitalSignature) {
-      setErrorMsg("გთხოვთ დაეთანხმოთ წესებს და მოაწეროთ ხელი.");
+    if (!formData.agreedToRules || !formData.agreedToAntiDoping || !agreementFile) {
+      setErrorMsg("გთხოვთ დაეთანხმოთ წესებს და ატვირთოთ ხელმოწერილი დოკუმენტი.");
       return;
     }
-    if (isUnder18() && (!formData.parentName || !formData.parentSignature)) {
-      setErrorMsg("არასრულწლოვანთათვის აუცილებელია მშობლის თანხმობა.");
+    if (isUnder18() && !formData.parentName) {
+      setErrorMsg("არასრულწლოვანთათვის აუცილებელია მშობლის სახელის მითითება.");
       return;
     }
 
@@ -98,12 +100,15 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
       let profileUrl = formData.profilePictureUrl;
       let idUrl = formData.idDocumentUrl;
 
+      let agreementUrl = formData.signedAgreementUrl;
+
       // Upload if files selected
       if (profileFile) profileUrl = await uploadFile(profileFile);
       if (idFile) idUrl = await uploadFile(idFile);
+      if (agreementFile) agreementUrl = await uploadFile(agreementFile);
 
-      if (!profileUrl || !idUrl) {
-        setErrorMsg("ფოტოს და პირადობის ატვირთვა აუცილებელია.");
+      if (!profileUrl || !idUrl || !agreementUrl) {
+        setErrorMsg("ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა აუცილებელია.");
         setIsSubmitting(false);
         return;
       }
@@ -112,6 +117,7 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
       Object.entries(formData).forEach(([k, v]) => fd.append(k, String(v)));
       fd.set("profilePictureUrl", profileUrl);
       fd.set("idDocumentUrl", idUrl);
+      fd.set("signedAgreementUrl", agreementUrl);
 
       const res = await submitRegistration(fd);
       if (res.success) {
@@ -253,27 +259,31 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
           </div>
 
           <div className="border-t pt-6">
-            <h3 className="font-bold mb-2">ციფრული ხელმოწერა</h3>
-            <p className="text-sm text-gray-500 mb-4">თქვენი სრული სახელის და გვარის ჩაწერა წარმოადგენს იურიდიული ძალის მქონე ციფრულ ხელმოწერას.</p>
+            <h3 className="font-bold mb-4">წესდების თანხმობა და ხელმოწერა</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-6">
+              <p className="text-sm text-blue-800 mb-3">
+                1. გთხოვთ ჩამოტვირთოთ თანხმობის ფორმა.<br/>
+                2. ამობეჭდეთ და მოაწერეთ ხელი (არასრულწლოვანის შემთხვევაში მშობელმა).<br/>
+                3. დაასკანერეთ ან გადაუღეთ სურათი და ატვირთეთ ქვემოთ.
+              </p>
+              <a href="/dummy-agreement-form.pdf" download className="inline-block bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-blue-700 transition-colors">
+                ⬇️ ფორმის ჩამოტვირთვა (PDF)
+              </a>
+            </div>
             
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">სპორტსმენის ხელმოწერა (სახელი გვარი)</label>
-              <input type="text" placeholder="მაგ. გიორგი მაისურაძე" className="w-full border rounded px-3 py-2 italic font-serif" value={formData.digitalSignature} onChange={(e) => setFormData({ ...formData, digitalSignature: e.target.value })} />
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2">ატვირთეთ ხელმოწერილი დოკუმენტი</label>
+              <input type="file" accept="image/*,.pdf" onChange={(e) => setAgreementFile(e.target.files?.[0] || null)} className="w-full border rounded p-2 bg-gray-50" />
+              {agreementFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {agreementFile.name}</p>}
             </div>
 
             {isUnder18() && (
               <div className="bg-yellow-50 p-4 border border-yellow-200 rounded mt-4">
                 <h4 className="font-bold text-yellow-800 mb-2">მშობლის / მეურვის თანხმობა</h4>
-                <p className="text-sm text-yellow-700 mb-4">რადგან სპორტსმენი არასრულწლოვანია, სავალდებულოა მშობლის ან კანონიერი მეურვის დასტური.</p>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">მშობლის სახელი და გვარი</label>
-                    <input type="text" className="w-full border border-yellow-300 rounded px-3 py-2" value={formData.parentName} onChange={(e) => setFormData({ ...formData, parentName: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">მშობლის ციფრული ხელმოწერა</label>
-                    <input type="text" className="w-full border border-yellow-300 rounded px-3 py-2 italic font-serif" value={formData.parentSignature} onChange={(e) => setFormData({ ...formData, parentSignature: e.target.value })} />
-                  </div>
+                <p className="text-sm text-yellow-700 mb-4">რადგან სპორტსმენი არასრულწლოვანია, ფორმაზე ხელი უნდა მოაწეროს მშობელმა.</p>
+                <div>
+                  <label className="block text-sm font-medium mb-1">მშობლის სახელი და გვარი</label>
+                  <input type="text" className="w-full border border-yellow-300 rounded px-3 py-2" value={formData.parentName} onChange={(e) => setFormData({ ...formData, parentName: e.target.value })} />
                 </div>
               </div>
             )}
@@ -314,7 +324,7 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
             <p><strong>სპორტსმენი:</strong> {formData.firstName} {formData.lastName}</p>
             <p><strong>პირადი ნომერი:</strong> {formData.personalNumber}</p>
             <p><strong>სტატუსი:</strong> {isUnder18() ? "არასრულწლოვანი (აუცილებელია მშობლის დასტური)" : "სრულწლოვანი"}</p>
-            <p><strong>დოკუმენტები:</strong> {profileFile && idFile ? "არჩეულია ✅" : "აკლია ❌"}</p>
+            <p><strong>დოკუმენტები:</strong> {profileFile && idFile && agreementFile ? "არჩეულია ✅" : "აკლია ❌"}</p>
           </div>
 
           <p className="text-gray-600 text-sm py-4">
