@@ -26,10 +26,9 @@ export default function DeleteAthleteButton({ athleteId }: { athleteId: string }
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex h-8 w-8 items-center justify-center rounded-md border border-red-200 text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
-        title="სპორტსმენის წაშლა"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 border border-red-200"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="w-4 h-4" /> სპორტსმენის წაშლა
       </button>
 
       {isOpen && (

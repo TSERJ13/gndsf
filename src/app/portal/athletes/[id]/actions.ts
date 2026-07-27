@@ -59,6 +59,40 @@ export async function requestAthleteEdit(formData: FormData) {
   redirect(`/portal/athletes/${athleteId}?ok=requested`);
 }
 
+export async function updateAthleteDirectly(formData: FormData) {
+  const user = await requireStaff();
+  
+  const isRegistry = ["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY"].includes(user.role);
+  if (!isRegistry) {
+    throw new Error("Unauthorized");
+  }
+
+  const athleteId = formData.get("athleteId") as string;
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const firstNameEn = formData.get("firstNameEn") as string | null;
+  const lastNameEn = formData.get("lastNameEn") as string | null;
+  const birthDateStr = formData.get("birthDate") as string;
+
+  if (!athleteId || !firstName || !lastName || !birthDateStr) {
+    redirect(`/portal/athletes/${athleteId}?error=missing_fields`);
+  }
+
+  await db.athlete.update({
+    where: { id: athleteId },
+    data: {
+      firstName,
+      lastName,
+      firstNameEn: firstNameEn || null,
+      lastNameEn: lastNameEn || null,
+      birthDate: new Date(birthDateStr),
+    }
+  });
+
+  revalidatePath(`/portal/athletes/${athleteId}`);
+  redirect(`/portal/athletes/${athleteId}?ok=updated`);
+}
+
 export async function deleteAthlete(athleteId: string) {
   const user = await requireStaff();
   

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/rbac";
 import { fmtDate, CATEGORY_LABELS, categoryFor } from "@/lib/labels";
-import { requestAthleteEdit } from "./actions";
+import { requestAthleteEdit, updateAthleteDirectly } from "./actions";
 import DeleteAthleteButton from "./DeleteAthleteButton";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,6 @@ export default async function AthleteProfile({
 
   return (
     <div>
-    <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
         <Link
           href="/portal/athletes"
@@ -58,11 +57,6 @@ export default async function AthleteProfile({
         </Link>
         <h1 className="text-2xl font-semibold">სპორტსმენის პროფილი</h1>
       </div>
-      
-      {["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role) && (
-        <DeleteAthleteButton athleteId={athlete.id} />
-      )}
-    </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
         {/* Left Column: Current Details */}
@@ -132,13 +126,19 @@ export default async function AthleteProfile({
               </div>
             )}
             
+            {ok === "updated" && (
+              <div className="mt-4 rounded bg-green-50 px-3 py-2 text-sm text-green-800 border border-green-200">
+                მონაცემები წარმატებით განახლდა!
+              </div>
+            )}
+            
             {error && (
               <div className="mt-4 rounded bg-red-50 px-3 py-2 text-sm text-red-800 border border-red-200">
                 შეცდომა! გთხოვთ შეავსოთ ველები სწორად.
               </div>
             )}
 
-            {pendingRequest ? (
+            {pendingRequest && !isRegistry ? (
               <div className="mt-6 rounded-lg bg-orange-50 p-4 border border-orange-200">
                 <h3 className="font-semibold text-orange-900">მოთხოვნა განხილვაშია</h3>
                 <p className="mt-1 text-sm text-orange-800">
@@ -152,7 +152,7 @@ export default async function AthleteProfile({
                 </p>
               </div>
             ) : (
-              <form action={requestAthleteEdit} className="mt-6 space-y-4">
+              <form action={isRegistry ? updateAthleteDirectly : requestAthleteEdit} className="mt-6 space-y-4">
                 <input type="hidden" name="athleteId" value={athlete.id} />
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -229,9 +229,18 @@ export default async function AthleteProfile({
                   type="submit"
                   className="mt-6 w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-800"
                 >
-                  მოთხოვნის გაგზავნა
+                  {isRegistry ? "ცვლილებების შენახვა" : "მოთხოვნის გაგზავნა"}
                 </button>
               </form>
+            )}
+
+            {/* Delete button below the form for Admins */}
+            {["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role) && (
+              <div className="mt-12 pt-6 border-t border-red-100">
+                <h3 className="text-sm font-semibold text-red-900 mb-2">სპორტსმენის წაშლა</h3>
+                <p className="text-xs text-red-700 mb-4">თუ სპორტსმენი შეცდომით დაემატა სისტემაში.</p>
+                <DeleteAthleteButton athleteId={athlete.id} />
+              </div>
             )}
           </div>
         </div>
