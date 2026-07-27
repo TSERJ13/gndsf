@@ -22,7 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/portal", label: "დაფა", show: true },
     { href: "/portal/workspace", label: "სამუშაო სივრცე", show: true },
     { href: "/portal/mail", label: "ფოსტა", show: ["SUPER_ADMIN", "GENERAL_SECRETARY"].includes(user.role) },
-    { href: "/portal/e-cards", label: "E-Cards", show: ["SUPER_ADMIN", "VICE_PRESIDENT"].includes(user.role) },
+    { href: "/portal/e-cards", label: "E-Cards", show: ["SUPER_ADMIN", "VICE_PRESIDENT", "PRESIDENT"].includes(user.role) },
     { href: "/portal/athletes", label: "სპორტსმენები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/partnerships", label: "წყვილები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/transfers", label: "ტრანსფერები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
