@@ -31,10 +31,6 @@ export async function submitRegistration(formData: FormData) {
       return { success: false, error: 'აუცილებელი ველები ცარიელია' };
     }
 
-    if (isUnder18 && !parentName) {
-      return { success: false, error: 'არასრულწლოვანთათვის აუცილებელია მშობლის სახელის მითითება' };
-    }
-
     if (!profilePictureUrl || !idDocumentUrl || !signedAgreementUrl) {
       return { success: false, error: 'აუცილებელია ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა' };
     }
