@@ -283,6 +283,14 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
               {agreementFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {agreementFile.name}</p>}
             </div>
 
+            {isUnder18() && (
+              <div className="border border-yellow-300 rounded p-4 bg-yellow-50/50 mt-4">
+                <h4 className="font-bold text-yellow-800 mb-2">მშობლის / მეურვის პირადობის მოწმობა</h4>
+                <p className="text-sm text-yellow-700 mb-4">რადგან სპორტსმენი არასრულწლოვანია, სავალდებულოა მშობლის პირადობის მოწმობის ატვირთვაც.</p>
+                <input type="file" accept="image/*,.pdf" onChange={(e) => setParentIdFile(e.target.files?.[0] || null)} className="w-full border rounded p-2 bg-white" />
+                {parentIdFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {parentIdFile.name}</p>}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -308,15 +316,6 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
             <input type="file" accept="image/*,.pdf" onChange={(e) => setIdFile(e.target.files?.[0] || null)} className="mx-auto block" />
             {idFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {idFile.name}</p>}
           </div>
-
-          {isUnder18() && (
-            <div className="border-2 border-dashed border-yellow-300 rounded p-6 text-center hover:bg-yellow-50 bg-yellow-50/30">
-              <h3 className="font-bold mb-2 text-yellow-800">მშობლის / მეურვის პირადობის მოწმობა</h3>
-              <p className="text-sm text-yellow-700 mb-4">რადგან სპორტსმენი არასრულწლოვანია, სავალდებულოა მშობლის პირადობის მოწმობის ატვირთვაც.</p>
-              <input type="file" accept="image/*,.pdf" onChange={(e) => setParentIdFile(e.target.files?.[0] || null)} className="mx-auto block" />
-              {parentIdFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {parentIdFile.name}</p>}
-            </div>
-          )}
         </div>
       )}
 
