@@ -13,8 +13,9 @@ export async function requestAthleteEdit(formData: FormData) {
   const lastName = formData.get("lastName") as string;
   const firstNameEn = formData.get("firstNameEn") as string | null;
   const lastNameEn = formData.get("lastNameEn") as string | null;
+  const birthDateStr = formData.get("birthDate") as string;
 
-  if (!athleteId || !firstName || !lastName) {
+  if (!athleteId || !firstName || !lastName || !birthDateStr) {
     redirect(`/portal/athletes/${athleteId}?error=missing_fields`);
   }
 
@@ -48,6 +49,7 @@ export async function requestAthleteEdit(formData: FormData) {
       lastName,
       firstNameEn: firstNameEn || null,
       lastNameEn: lastNameEn || null,
+      birthDate: new Date(birthDateStr),
       status: "PENDING",
       requestedById: user.id,
     },

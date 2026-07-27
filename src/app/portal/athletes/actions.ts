@@ -6,18 +6,13 @@ import { db } from "@/lib/db";
 import { requireUser, REGISTRY_ADMINS } from "@/lib/rbac";
 import type { Gender } from "@prisma/client";
 
-// CLUB_MANAGER may register athletes ONLY into their own club;
-// registry admins may register into any club.
+// ONLY registry admins may register athletes into any club.
 export async function createAthlete(formData: FormData) {
   const user = await requireUser();
 
-  const requestedClubId = String(formData.get("clubId") ?? "");
-  const clubId =
-    user.role === "CLUB_MANAGER"
-      ? user.clubId // scope override — form value is ignored on purpose
-      : requestedClubId;
+  const clubId = String(formData.get("clubId") ?? "");
 
-  if (!REGISTRY_ADMINS.includes(user.role) && user.role !== "CLUB_MANAGER") {
+  if (!REGISTRY_ADMINS.includes(user.role)) {
     redirect("/portal");
   }
   if (!clubId) redirect("/portal/athletes?error=club");

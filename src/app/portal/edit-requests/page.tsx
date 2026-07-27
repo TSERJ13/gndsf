@@ -34,7 +34,7 @@ export default async function EditRequestsPage() {
           <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wider text-neutral-500 border-b border-neutral-200">
             <tr>
               <th className="px-6 py-4 font-semibold">სპორტსმენი</th>
-              <th className="px-6 py-4 font-semibold">მოთხოვნილი სახელი/გვარი</th>
+              <th className="px-6 py-4 font-semibold">მოთხოვნილი შეცვლა</th>
               <th className="px-6 py-4 font-semibold">ვინ ითხოვს</th>
               <th className="px-6 py-4 font-semibold text-right">მოქმედება</th>
             </tr>
@@ -51,6 +51,11 @@ export default async function EditRequestsPage() {
                   {(req.firstNameEn || req.lastNameEn) && (
                     <div className="text-xs text-orange-500 mt-0.5">
                       {req.firstNameEn || ""} {req.lastNameEn || ""}
+                    </div>
+                  )}
+                  {req.birthDate && (
+                    <div className="text-xs text-orange-500 mt-1 font-medium">
+                      დაბადების თარიღი: {fmtDate(req.birthDate)}
                     </div>
                   )}
                 </td>

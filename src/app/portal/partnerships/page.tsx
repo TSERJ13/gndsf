@@ -3,6 +3,7 @@ import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
 import { formPartnership, splitPartnership } from "./actions";
+import SearchableAthleteSelect from "./SearchableAthleteSelect";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "წყვილები · პორტალი" };
@@ -18,6 +19,7 @@ export default async function AdminPartnerships({
   if (!isRegistryAdmin && user.role !== "CLUB_MANAGER") {
     redirect("/portal");
   }
+  const canManageCouples = ["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role);
   const { ok, error } = await searchParams;
 
   const clubFilter = scope ? {
@@ -118,14 +120,16 @@ export default async function AdminPartnerships({
                   <div className="text-[13px] text-gray-500 mb-4 tabular-nums">
                     Joined: {fmtDate(p.startDate)}
                   </div>
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <form action={splitPartnership} className="w-full">
-                      <input type="hidden" name="id" value={p.id} />
-                      <button className="w-full rounded bg-red-50 py-2.5 text-center text-[13px] font-semibold text-red-700 transition hover:bg-red-100">
-                        დაშლა
-                      </button>
-                    </form>
-                  </div>
+                  {canManageCouples && (
+                    <div className="mt-auto pt-4 border-t border-gray-100">
+                      <form action={splitPartnership} className="w-full">
+                        <input type="hidden" name="id" value={p.id} />
+                        <button className="w-full rounded bg-red-50 py-2.5 text-center text-[13px] font-semibold text-red-700 transition hover:bg-red-100">
+                          დაშლა
+                        </button>
+                      </form>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -173,37 +177,35 @@ export default async function AdminPartnerships({
           </div>
         </div>
 
-        <form action={formPartnership} className="h-fit rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="font-semibold">ახალი წყვილი</h2>
-          <p className="mt-1 text-xs text-neutral-500">
-            სიაში მხოლოდ თავისუფალი სპორტსმენები ჩანან.
-          </p>
-          <div className="mt-4 space-y-3">
-            <div>
-              <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="leaderId">
-                პარტნიორი
-              </label>
-              <select id="leaderId" name="leaderId" required className={input}>
-                {freeMales.map((a) => (
-                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.gid})</option>
-                ))}
-              </select>
+        {canManageCouples && (
+          <form action={formPartnership} className="h-fit rounded-lg border border-neutral-200 bg-white p-5">
+            <h2 className="font-semibold">ახალი წყვილი</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              სიაში მხოლოდ თავისუფალი სპორტსმენები ჩანან.
+            </p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="leaderId">
+                  პარტნიორი
+                </label>
+                <div className="mt-1">
+                  <SearchableAthleteSelect name="leaderId" options={freeMales} placeholder="აირჩიეთ კაცი პარტნიორი..." />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="followerId">
+                  პარტნიორი ქალი
+                </label>
+                <div className="mt-1">
+                  <SearchableAthleteSelect name="followerId" options={freeFemales} placeholder="აირჩიეთ ქალი პარტნიორი..." />
+                </div>
+              </div>
+              <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
+                წყვილის შექმნა
+              </button>
             </div>
-            <div>
-              <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="followerId">
-                პარტნიორი ქალი
-              </label>
-              <select id="followerId" name="followerId" required className={input}>
-                {freeFemales.map((a) => (
-                  <option key={a.id} value={a.id}>{a.firstName} {a.lastName} ({a.gid})</option>
-                ))}
-              </select>
-            </div>
-            <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
-              წყვილის შექმნა
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

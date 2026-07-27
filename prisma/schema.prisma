@@ -412,6 +412,7 @@ model AthleteEditRequest {
   lastName      String
   firstNameEn   String?
   lastNameEn    String?
+  birthDate     DateTime?
   status        RegistrationStatus @default(PENDING)
   requestedById String
   createdAt     DateTime           @default(now())

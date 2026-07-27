@@ -15,7 +15,7 @@ export default async function AdminAthletes({
   const user = await requireUser();
   const scope = clubScope(user);
   const { created, error } = await searchParams;
-  const canCreate = REGISTRY_ADMINS.includes(user.role) || user.role === "CLUB_MANAGER";
+  const canCreate = REGISTRY_ADMINS.includes(user.role);
 
   const withoutPortal = await db.athlete.findMany({
     where: { isActive: true, user: null },
@@ -141,7 +141,6 @@ export default async function AdminAthletes({
                   <option value="FEMALE">მდედრობითი</option>
                 </select>
               </div>
-              {user.role !== "CLUB_MANAGER" && (
                 <div>
                   <label className={label} htmlFor="clubId">კლუბი</label>
                   <select id="clubId" name="clubId" required className={input}>
@@ -150,7 +149,6 @@ export default async function AdminAthletes({
                     ))}
                   </select>
                 </div>
-              )}
               <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
                 რეგისტრაცია
               </button>

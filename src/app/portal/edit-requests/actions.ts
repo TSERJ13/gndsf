@@ -29,6 +29,7 @@ export async function approveEditRequest(formData: FormData) {
         lastName: req.lastName,
         ...(req.firstNameEn && { firstNameEn: req.firstNameEn }),
         ...(req.lastNameEn && { lastNameEn: req.lastNameEn }),
+        ...(req.birthDate && { birthDate: req.birthDate }),
       },
     }),
     db.auditLog.create({

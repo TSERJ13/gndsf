@@ -135,8 +135,13 @@ export default async function AthleteProfile({
               <div className="mt-6 rounded-lg bg-orange-50 p-4 border border-orange-200">
                 <h3 className="font-semibold text-orange-900">მოთხოვნა განხილვაშია</h3>
                 <p className="mt-1 text-sm text-orange-800">
-                  მოთხოვნილია შეცვლა:<br/>
+                  მოთხოვნილია მონაცემების შეცვლა:<br/>
                   <b>{pendingRequest.firstName} {pendingRequest.lastName}</b>
+                  {pendingRequest.birthDate && (
+                    <>
+                      <br/>დაბადების თარიღი: <b>{fmtDate(pendingRequest.birthDate)}</b>
+                    </>
+                  )}
                 </p>
               </div>
             ) : (
@@ -197,6 +202,20 @@ export default async function AthleteProfile({
                       className="w-full rounded border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-neutral-700" htmlFor="birthDate">
+                    დაბადების თარიღი
+                  </label>
+                  <input
+                    id="birthDate"
+                    name="birthDate"
+                    type="date"
+                    defaultValue={athlete.birthDate.toISOString().split('T')[0]}
+                    required
+                    className="w-full rounded border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+                  />
                 </div>
 
                 <button

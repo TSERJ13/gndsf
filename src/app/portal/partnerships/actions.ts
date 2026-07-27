@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole, REGISTRY_ADMINS } from "@/lib/rbac";
 
-// Forming a couple: only registry admins (cross-club operation).
+// Forming a couple: only SUPER_ADMIN, PRESIDENT, VICE_PRESIDENT.
 export async function formPartnership(formData: FormData) {
-  const user = await requireRole(REGISTRY_ADMINS);
+  const user = await requireRole(["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"]);
   const leaderId = String(formData.get("leaderId") ?? "");
   const followerId = String(formData.get("followerId") ?? "");
   if (!leaderId || !followerId || leaderId === followerId) {
@@ -47,7 +47,7 @@ export async function formPartnership(formData: FormData) {
 
 // Splitting NEVER deletes — it closes the period. History stays intact.
 export async function splitPartnership(formData: FormData) {
-  const user = await requireRole(REGISTRY_ADMINS);
+  const user = await requireRole(["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"]);
   const id = String(formData.get("id") ?? "");
 
   const p = await db.partnership.update({

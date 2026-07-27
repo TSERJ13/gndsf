@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+const s3Client = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT!,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
 
 export async function POST(request: Request) {
   try {
@@ -19,20 +27,19 @@ export async function POST(request: Request) {
     const filename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const savedName = `${uniqueSuffix}-${filename}`;
 
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-    
-    // Ensure directory exists
-    try {
-      await mkdir(uploadDir, { recursive: true });
-    } catch (e) {
-      // Ignore if exists
-    }
+    // Upload to Cloudflare R2
+    const command = new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: savedName,
+      Body: buffer,
+      ContentType: file.type || 'application/octet-stream',
+    });
 
-    const filePath = path.join(uploadDir, savedName);
-    await writeFile(filePath, buffer);
+    await s3Client.send(command);
 
-    // Return the URL path
-    return NextResponse.json({ url: `/uploads/${savedName}` });
+    // Return the public URL path
+    const url = `${process.env.R2_PUBLIC_URL}/${savedName}`;
+    return NextResponse.json({ url });
   } catch (error) {
     console.error('Error uploading file:', error);
     return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
