@@ -30,31 +30,33 @@ export default function ECardList({
 }) {
   const [selectedReg, setSelectedReg] = useState<Registration | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'reject', id: string } | null>(null);
 
-  async function handleApprove(id: string) {
-    if (!confirm("ნამდვილად გსურთ დადასტურება?")) return;
+  async function handleConfirm() {
+    if (!confirmAction) return;
+    
     setIsUpdating(true);
     try {
-      await approveRegistration(id);
+      if (confirmAction.type === 'approve') {
+        await approveRegistration(confirmAction.id);
+      } else {
+        await rejectRegistration(confirmAction.id);
+      }
       setSelectedReg(null);
     } catch (e) {
       alert("დაფიქსირდა შეცდომა");
     } finally {
       setIsUpdating(false);
+      setConfirmAction(null);
     }
   }
 
-  async function handleReject(id: string) {
-    if (!confirm("ნამდვილად გსურთ უარყოფა?")) return;
-    setIsUpdating(true);
-    try {
-      await rejectRegistration(id);
-      setSelectedReg(null);
-    } catch (e) {
-      alert("დაფიქსირდა შეცდომა");
-    } finally {
-      setIsUpdating(false);
-    }
+  function promptApprove(id: string) {
+    setConfirmAction({ type: 'approve', id });
+  }
+
+  function promptReject(id: string) {
+    setConfirmAction({ type: 'reject', id });
   }
 
   return (
@@ -262,21 +264,54 @@ export default function ECardList({
               {selectedReg.status === "PENDING" && (
                 <>
                   <button
-                    onClick={() => handleReject(selectedReg.id)}
+                    onClick={() => promptReject(selectedReg.id)}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1"
                     disabled={isUpdating}
                   >
-                    <X className="w-4 h-4" /> {isUpdating ? '...' : 'უარყოფა'}
+                    <X className="w-4 h-4" /> უარყოფა
                   </button>
                   <button
-                    onClick={() => handleApprove(selectedReg.id)}
+                    onClick={() => promptApprove(selectedReg.id)}
                     className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1 shadow-sm"
                     disabled={isUpdating}
                   >
-                    <Check className="w-4 h-4" /> {isUpdating ? '...' : 'დადასტურება'}
+                    <Check className="w-4 h-4" /> დადასტურება
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm bg-white rounded-xl shadow-2xl p-6 m-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              ნამდვილად გსურთ {confirmAction.type === 'approve' ? 'დადასტურება' : 'უარყოფა'}?
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              ეს ქმედება შეცვლის განაცხადის სტატუსს ბაზაში.
+            </p>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                disabled={isUpdating}
+              >
+                გაუქმება
+              </button>
+              <button
+                onClick={handleConfirm}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg flex items-center gap-2 ${
+                  confirmAction.type === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                }`}
+                disabled={isUpdating}
+              >
+                {isUpdating ? 'მიმდინარეობს...' : 'დიახ'}
+              </button>
             </div>
           </div>
         </div>
