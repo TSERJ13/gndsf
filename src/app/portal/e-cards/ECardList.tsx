@@ -18,6 +18,7 @@ type Registration = {
   idDocumentUrl: string | null;
   isParentConsentRequired: boolean;
   parentName: string | null;
+  parentIdDocumentUrl: string | null;
   signedAgreementUrl: string | null;
   createdAt: Date;
   club?: { name: string } | null;
@@ -238,6 +239,19 @@ export default function ECardList({
                         <div className="text-sm text-gray-400 py-4 text-center">არ არის ატვირთული</div>
                       )}
                     </div>
+                    
+                    {selectedReg.isParentConsentRequired && (
+                      <div className="bg-gray-50 p-3 rounded border border-yellow-200">
+                        <span className="text-xs font-medium text-yellow-700 mb-2 block flex items-center gap-1"><ImageIcon className="w-3 h-3"/> მშობლის პირადობა</span>
+                        {selectedReg.parentIdDocumentUrl ? (
+                          <a href={selectedReg.parentIdDocumentUrl} target="_blank" rel="noreferrer" className="block w-full">
+                            <img src={selectedReg.parentIdDocumentUrl} alt="Parent ID Document" className="w-full h-48 object-cover rounded hover:opacity-90 transition-opacity" />
+                          </a>
+                        ) : (
+                          <div className="text-sm text-gray-400 py-4 text-center">არ არის ატვირთული</div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="bg-gray-50 p-3 rounded border">
                       <span className="text-xs font-medium text-gray-500 mb-2 block flex items-center gap-1"><ImageIcon className="w-3 h-3"/> ხელმოწერილი წესდება</span>

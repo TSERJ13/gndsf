@@ -383,6 +383,7 @@ model AthleteRegistration {
   isParentConsentRequired Boolean  @default(false)
   parentName              String?
   parentSignature         String?
+  parentIdDocumentUrl     String?
   agreedToTermsAt         DateTime
 
   createdAt DateTime @default(now())

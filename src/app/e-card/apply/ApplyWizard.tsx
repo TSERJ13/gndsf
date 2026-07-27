@@ -30,6 +30,7 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
     parentName: "",
     parentSignature: "",
     signedAgreementUrl: "",
+    parentIdDocumentUrl: "",
     agreedToRules: false,
     agreedToAntiDoping: false,
   });
@@ -37,6 +38,7 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
   const [agreementFile, setAgreementFile] = useState<File | null>(null);
+  const [parentIdFile, setParentIdFile] = useState<File | null>(null);
 
   const transliterateToGeorgian = (text: string) => {
     const geoMap: Record<string, string> = {
@@ -95,16 +97,23 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
     try {
       let profileUrl = formData.profilePictureUrl;
       let idUrl = formData.idDocumentUrl;
-
       let agreementUrl = formData.signedAgreementUrl;
+      let parentIdUrl = formData.parentIdDocumentUrl;
 
       // Upload if files selected
       if (profileFile) profileUrl = await uploadFile(profileFile);
       if (idFile) idUrl = await uploadFile(idFile);
       if (agreementFile) agreementUrl = await uploadFile(agreementFile);
+      if (parentIdFile) parentIdUrl = await uploadFile(parentIdFile);
 
       if (!profileUrl || !idUrl || !agreementUrl) {
         setErrorMsg("ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა აუცილებელია.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (isUnder18() && !parentIdUrl) {
+        setErrorMsg("არასრულწლოვანთათვის აუცილებელია მშობლის პირადობის მოწმობის ატვირთვა.");
         setIsSubmitting(false);
         return;
       }
@@ -114,6 +123,7 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
       fd.set("profilePictureUrl", profileUrl);
       fd.set("idDocumentUrl", idUrl);
       fd.set("signedAgreementUrl", agreementUrl);
+      if (parentIdUrl) fd.set("parentIdDocumentUrl", parentIdUrl);
 
       const res = await submitRegistration(fd);
       if (res.success) {
@@ -298,6 +308,15 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
             <input type="file" accept="image/*,.pdf" onChange={(e) => setIdFile(e.target.files?.[0] || null)} className="mx-auto block" />
             {idFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {idFile.name}</p>}
           </div>
+
+          {isUnder18() && (
+            <div className="border-2 border-dashed border-yellow-300 rounded p-6 text-center hover:bg-yellow-50 bg-yellow-50/30">
+              <h3 className="font-bold mb-2 text-yellow-800">მშობლის / მეურვის პირადობის მოწმობა</h3>
+              <p className="text-sm text-yellow-700 mb-4">რადგან სპორტსმენი არასრულწლოვანია, სავალდებულოა მშობლის პირადობის მოწმობის ატვირთვაც.</p>
+              <input type="file" accept="image/*,.pdf" onChange={(e) => setParentIdFile(e.target.files?.[0] || null)} className="mx-auto block" />
+              {parentIdFile && <p className="text-sm text-green-600 mt-2 font-bold">არჩეულია: {parentIdFile.name}</p>}
+            </div>
+          )}
         </div>
       )}
 
@@ -309,8 +328,8 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
           <div className="bg-gray-50 p-6 rounded text-left space-y-2">
             <p><strong>სპორტსმენი:</strong> {formData.firstName} {formData.lastName}</p>
             <p><strong>პირადი ნომერი:</strong> {formData.personalNumber}</p>
-            <p><strong>სტატუსი:</strong> {isUnder18() ? "არასრულწლოვანი (აუცილებელია მშობლის დასტური)" : "სრულწლოვანი"}</p>
-            <p><strong>დოკუმენტები:</strong> {profileFile && idFile && agreementFile ? "არჩეულია ✅" : "აკლია ❌"}</p>
+            <p><strong>სტატუსი:</strong> {isUnder18() ? "არასრულწლოვანი (აუცილებელია მშობლის დოკუმენტი)" : "სრულწლოვანი"}</p>
+            <p><strong>დოკუმენტები:</strong> {profileFile && idFile && agreementFile && (!isUnder18() || parentIdFile) ? "არჩეულია ✅" : "აკლია ❌"}</p>
           </div>
 
           <p className="text-gray-600 text-sm py-4">

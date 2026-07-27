@@ -20,8 +20,7 @@ export async function submitRegistration(formData: FormData) {
     const profilePictureUrl = formData.get('profilePictureUrl') as string;
     const idDocumentUrl = formData.get('idDocumentUrl') as string;
     const signedAgreementUrl = formData.get('signedAgreementUrl') as string;
-    
-    const parentName = formData.get('parentName') as string | null;
+    const parentIdDocumentUrl = formData.get('parentIdDocumentUrl') as string | null;
 
     const birthDate = new Date(birthDateStr);
     const age = new Date().getFullYear() - birthDate.getFullYear();
@@ -33,6 +32,10 @@ export async function submitRegistration(formData: FormData) {
 
     if (!profilePictureUrl || !idDocumentUrl || !signedAgreementUrl) {
       return { success: false, error: 'აუცილებელია ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა' };
+    }
+    
+    if (isUnder18 && !parentIdDocumentUrl) {
+      return { success: false, error: 'არასრულწლოვანთათვის აუცილებელია მშობლის პირადობის მოწმობის ატვირთვა' };
     }
 
     const reg = await db.athleteRegistration.create({
@@ -50,8 +53,8 @@ export async function submitRegistration(formData: FormData) {
         profilePictureUrl,
         idDocumentUrl,
         signedAgreementUrl,
+        parentIdDocumentUrl: parentIdDocumentUrl || null,
         isParentConsentRequired: isUnder18,
-        parentName: parentName || null,
         agreedToTermsAt: new Date(),
         status: 'PENDING'
       }
