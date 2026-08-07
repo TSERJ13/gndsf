@@ -1,8 +1,27 @@
-import NextAuth from "next-auth";
-import { authConfig } from "@/auth.config";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default NextAuth(authConfig).auth;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Allow main page, api, static files, and brand assets
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/brand") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // Redirect everything else to home page
+  return NextResponse.redirect(new URL("/", request.url));
+}
 
 export const config = {
-  matcher: ["/portal/:path*", "/cabinet/:path*"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
+
