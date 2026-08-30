@@ -7,7 +7,7 @@ import { recomputeRankings } from "./rankings";
 
 export async function commitEventResults(
   eventId: string,
-  placements: { entryId: string; placement: number }[],
+  placements: { entryId: string; placement: number; roundsReached?: number }[],
   userId: string | null,
   recompute: boolean = true,
 ) {
@@ -34,10 +34,16 @@ export async function commitEventResults(
     const earnedAt = event.competition.startDate;
     const validUntil = validUntilFrom(earnedAt);
 
-    for (const { entryId, placement } of placements) {
+    for (const { entryId, placement, roundsReached } of placements) {
       const entry = byId.get(entryId);
       if (!entry || placement < 1) continue;
-      const result = await tx.result.create({ data: { entryId, placement } });
+      const result = await tx.result.create({
+        data: {
+          entryId,
+          placement,
+          roundsReached: roundsReached && roundsReached > 0 ? roundsReached : null,
+        },
+      });
 
       let pts: number;
       if (event.format === "SOLO") {

@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { requireRole, RESULT_ADMINS } from "@/lib/rbac";
 import { categoryFor } from "@/lib/labels";
 import { commitEventResults } from "@/lib/results";
+import { parseTopturnier, type TopturnierParticipant } from "@/lib/topturnierParse";
+import { bestMatch, type MatchCandidate } from "@/lib/nameMatch";
 import type { AgeCategory, Discipline, Format, DanceClass, CoupleCategory } from "@prisma/client";
 
 export async function addEvent(formData: FormData) {
@@ -102,11 +104,18 @@ export async function commitResults(formData: FormData) {
     select: { competitionId: true, entries: { select: { id: true } } },
   });
 
-  const placements: { entryId: string; placement: number }[] = [];
+  const placements: { entryId: string; placement: number; roundsReached?: number }[] = [];
   for (const e of event.entries) {
     const raw = formData.get(`placement_${e.id}`);
     const n = Number(raw);
-    if (raw && Number.isInteger(n) && n >= 1) placements.push({ entryId: e.id, placement: n });
+    if (!raw || !Number.isInteger(n) || n < 1) continue;
+    const rawRounds = formData.get(`roundsReached_${e.id}`);
+    const r = Number(rawRounds);
+    placements.push({
+      entryId: e.id,
+      placement: n,
+      roundsReached: rawRounds && Number.isInteger(r) && r >= 1 ? r : undefined,
+    });
   }
 
   try {
@@ -145,4 +154,104 @@ export async function publishCompetition(formData: FormData) {
   });
   revalidatePath(`/portal/competitions/${id}`);
   redirect(`/portal/competitions/${id}`);
+}
+
+// ── TopTurnier results import ──
+// Called directly from the client component (not a <form action>), so
+// these return data / throw instead of redirecting.
+
+export interface TopturnierPreviewRow extends TopturnierParticipant {
+  suggestedEntryId: string | null;
+  suggestedLabel: string | null;
+  matchScore: number;
+}
+
+export interface TopturnierEntryOption {
+  entryId: string;
+  label: string;
+}
+
+function entryDisplayLabel(e: {
+  athlete: { firstName: string; lastName: string } | null;
+  partnership: { leader: { firstName: string; lastName: string }; follower: { firstName: string; lastName: string } } | null;
+}): string {
+  if (e.athlete) return `${e.athlete.firstName} ${e.athlete.lastName}`;
+  if (e.partnership) return `${e.partnership.leader.lastName} · ${e.partnership.follower.lastName}`;
+  return "—";
+}
+
+function entryMatchLabels(e: {
+  athlete: { firstName: string; lastName: string } | null;
+  partnership: { leader: { firstName: string; lastName: string }; follower: { firstName: string; lastName: string } } | null;
+}): string[] {
+  if (e.athlete) return [`${e.athlete.firstName} ${e.athlete.lastName}`, `${e.athlete.lastName} ${e.athlete.firstName}`];
+  if (e.partnership) {
+    const { leader: l, follower: f } = e.partnership;
+    return [
+      `${l.firstName} ${l.lastName} ${f.firstName} ${f.lastName}`,
+      `${l.lastName} ${f.lastName}`,
+      `${f.firstName} ${f.lastName} ${l.firstName} ${l.lastName}`,
+    ];
+  }
+  return [];
+}
+
+export async function previewTopturnierImport(eventId: string, rawText: string) {
+  await requireRole(RESULT_ADMINS);
+  const event = await db.compEvent.findUniqueOrThrow({
+    where: { id: eventId },
+    include: {
+      entries: {
+        include: {
+          athlete: true,
+          partnership: { include: { leader: true, follower: true } },
+        },
+      },
+    },
+  });
+
+  const candidates: MatchCandidate[] = event.entries.map((e) => ({
+    entryId: e.id,
+    labels: entryMatchLabels(e),
+  }));
+  const entryOptions: TopturnierEntryOption[] = event.entries.map((e) => ({
+    entryId: e.id,
+    label: entryDisplayLabel(e),
+  }));
+
+  const parsed = parseTopturnier(rawText);
+  const rows: TopturnierPreviewRow[] = parsed.participants.map((p) => {
+    const match = bestMatch(p.name, candidates);
+    return {
+      ...p,
+      suggestedEntryId: match?.entryId ?? null,
+      suggestedLabel: match?.label ?? null,
+      matchScore: match?.score ?? 0,
+    };
+  });
+
+  return { rows, entryOptions, warnings: parsed.warnings, source: parsed.source };
+}
+
+export async function commitTopturnierImport(
+  eventId: string,
+  rows: { entryId: string; placement: number; roundsReached: number }[],
+) {
+  const user = await requireRole(RESULT_ADMINS);
+  const event = await db.compEvent.findUniqueOrThrow({
+    where: { id: eventId },
+    select: { competitionId: true },
+  });
+  await commitEventResults(eventId, rows, user.id);
+  await db.auditLog.create({
+    data: {
+      userId: user.id,
+      action: "RESULT_IMPORT_TOPTURNIER",
+      entity: "CompEvent",
+      entityId: eventId,
+      detail: `${rows.length} მონაწილის შედეგი შემოტანილია TopTurnier ექსპორტიდან`,
+    },
+  });
+  revalidatePath(`/portal/competitions/${event.competitionId}`);
+  return { ok: true, count: rows.length };
 }

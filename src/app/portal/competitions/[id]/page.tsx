@@ -13,6 +13,7 @@ import {
   fmtDate,
 } from "@/lib/labels";
 import { addEvent, addEntry, commitResults, publishCompetition } from "./actions";
+import { TopturnierImport } from "./TopturnierImport";
 
 export const dynamic = "force-dynamic";
 
@@ -206,6 +207,9 @@ export default async function CompetitionAdmin({
                       <th className="px-4 py-2">კატეგორია (სნეფშოთი)</th>
                       <th className="px-4 py-2">კლუბი (სნეფშოთი)</th>
                       <th className="w-28 px-4 py-2 text-right">ადგილი</th>
+                      <th className="w-24 px-4 py-2 text-right">
+                        ტური <span className="normal-case text-neutral-400">(არჩ.)</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100">
@@ -233,6 +237,19 @@ export default async function CompetitionAdmin({
                             <span className="tabular-nums">{e.result?.placement ?? "—"}</span>
                           )}
                         </td>
+                        <td className="px-4 py-2.5 text-right">
+                          {canManage ? (
+                            <input
+                              type="number"
+                              name={`roundsReached_${e.id}`}
+                              min={1}
+                              defaultValue={e.result?.roundsReached ?? ""}
+                              className={`${input} w-16 text-right tabular-nums`}
+                            />
+                          ) : (
+                            <span className="tabular-nums">{e.result?.roundsReached ?? "—"}</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -246,6 +263,7 @@ export default async function CompetitionAdmin({
                 )}
               </form>
             )}
+            {canManage && ev.entries.length > 0 && <TopturnierImport eventId={ev.id} />}
           </section>
         ))}
         {comp.events.length === 0 && (
