@@ -8,18 +8,25 @@ export const dynamic = "force-dynamic";
 const KA_MONTHS_SHORT = ["IAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 export default async function Home() {
-  const [news, events] = await Promise.all([
-    db.news.findMany({
-      where: { publishedAt: { not: null } },
-      orderBy: { publishedAt: "desc" },
-      take: 2,
-    }),
-    db.calendarEvent.findMany({
-      where: { date: { gte: new Date(Date.now() - 864e5) } },
-      orderBy: { date: "asc" },
-      take: 5,
-    }),
-  ]);
+  let news: any[] = [];
+  let events: any[] = [];
+
+  try {
+    [news, events] = await Promise.all([
+      db.news.findMany({
+        where: { publishedAt: { not: null } },
+        orderBy: { publishedAt: "desc" },
+        take: 2,
+      }),
+      db.calendarEvent.findMany({
+        where: { date: { gte: new Date(Date.now() - 864e5) } },
+        orderBy: { date: "asc" },
+        take: 5,
+      }),
+    ]);
+  } catch (err) {
+    console.error("Failed to load news/events for home page:", err);
+  }
 
   return (
     <div className="bg-white">
