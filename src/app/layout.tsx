@@ -17,6 +17,8 @@ const notoSerifGeorgian = Noto_Serif_Georgian({
   display: "swap",
 });
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://gndsf.ge"),
   title: {
