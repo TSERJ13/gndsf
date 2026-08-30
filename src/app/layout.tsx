@@ -61,7 +61,12 @@ import { auth } from "@/auth";
 import { doLogout } from "@/app/auth-actions";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("Layout auth check failed:", err);
+  }
   const isLoggedIn = !!session;
   const userRole = (session?.user as { role?: string } | undefined)?.role;
   const dashboardHref = userRole && userRole !== "ATHLETE" ? "/portal" : "/cabinet";
