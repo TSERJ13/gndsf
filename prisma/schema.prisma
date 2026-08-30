@@ -110,6 +110,7 @@ model Club {
   registrations        AthleteRegistration[]
   transferRequestsFrom ClubTransferRequest[] @relation("TransferFrom")
   transferRequestsTo   ClubTransferRequest[] @relation("TransferTo")
+  signupRegistrations  ClubRegistration[]
 }
 
 // Dated history — transfers never overwrite the past.
@@ -270,6 +271,7 @@ model User {
   adminTasks          AdminTask[]
   requestedTransfers  ClubTransferRequest[]
   athleteEditRequests AthleteEditRequest[]
+  reviewedClubSignups ClubRegistration[]
 }
 
 model News {
@@ -390,6 +392,31 @@ model AthleteRegistration {
   updatedAt DateTime @updatedAt
 
   club Club? @relation(fields: [clubId], references: [id])
+}
+
+// Public self-service studio signup. Applicant sets their own email +
+// password up front (hashed immediately — never stored in plain text);
+// approval creates the Club + a CLUB_MANAGER User in one step, using
+// that same passwordHash, so no separate "temporary password" step is
+// needed. Rejecting/leaving PENDING creates nothing.
+model ClubRegistration {
+  id             String             @id @default(uuid())
+  status         RegistrationStatus @default(PENDING)
+  name           String
+  nameEn         String?
+  city           String
+  address        String?
+  phone          String?
+  contactName    String
+  email          String             @unique
+  passwordHash   String
+  createdAt      DateTime           @default(now())
+  reviewedAt     DateTime?
+  reviewedById   String?
+  createdClubId  String? // set once approved
+
+  reviewedBy User? @relation(fields: [reviewedById], references: [id])
+  createdClub Club? @relation(fields: [createdClubId], references: [id])
 }
 
 model ClubTransferRequest {

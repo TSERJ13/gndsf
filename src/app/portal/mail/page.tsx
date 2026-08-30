@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireCapability } from "@/lib/permissions";
 import { decrypt } from "@/lib/crypto";
 import { listMessages, type MailListItem } from "@/lib/mailbox";
 import { connectMailbox, disconnectMailbox, composeMail } from "./actions";
@@ -16,7 +16,7 @@ export default async function AdminMail({
 }: {
   searchParams: Promise<{ box?: string; ok?: string; error?: string }>;
 }) {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   const { box: boxParam, ok, error } = await searchParams;
   const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : boxParam === "trash" ? "trash" : "inbox";
 

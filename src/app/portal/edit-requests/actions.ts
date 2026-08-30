@@ -2,13 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
-
-const REGISTRY = ["SUPER_ADMIN", "PRESIDENT", "GENERAL_SECRETARY"];
+import { requireStaff, can } from "@/lib/rbac";
 
 export async function approveEditRequest(formData: FormData) {
   const user = await requireStaff();
-  if (!REGISTRY.includes(user.role)) throw new Error("Unauthorized");
+  if (!can(user, "ATHLETE_EDIT_REVIEW")) throw new Error("Unauthorized");
 
   const id = formData.get("id") as string;
   if (!id) return;
@@ -51,7 +49,7 @@ export async function approveEditRequest(formData: FormData) {
 
 export async function rejectEditRequest(formData: FormData) {
   const user = await requireStaff();
-  if (!REGISTRY.includes(user.role)) throw new Error("Unauthorized");
+  if (!can(user, "ATHLETE_EDIT_REVIEW")) throw new Error("Unauthorized");
 
   const id = formData.get("id") as string;
   if (!id) return;

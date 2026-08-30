@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireStaff, can } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
 import { approveEditRequest, rejectEditRequest } from "./actions";
@@ -7,12 +7,10 @@ import { approveEditRequest, rejectEditRequest } from "./actions";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "პროფილის შეცვლის მოთხოვნები" };
 
-const REGISTRY = ["SUPER_ADMIN", "PRESIDENT", "GENERAL_SECRETARY"];
-
 export default async function EditRequestsPage() {
   const user = await requireStaff();
-  
-  if (!REGISTRY.includes(user.role)) {
+
+  if (!can(user, "ATHLETE_EDIT_REVIEW")) {
     redirect("/portal");
   }
 

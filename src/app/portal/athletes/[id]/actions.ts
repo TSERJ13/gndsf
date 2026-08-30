@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireStaff, can } from "@/lib/rbac";
 
 export async function requestAthleteEdit(formData: FormData) {
   const user = await requireStaff();
@@ -27,9 +27,11 @@ export async function requestAthleteEdit(formData: FormData) {
 
   if (!athlete) throw new Error("Athlete not found");
 
-  const isRegistry = ["SUPER_ADMIN", "PRESIDENT", "GENERAL_SECRETARY"].includes(user.role);
+  const isRegistry = can(user, "ATHLETE_EDIT_REQUEST");
   if (!isRegistry) {
-    const allowed = user.role === "CLUB_MANAGER" && athlete.clubMemberships.some((m) => m.clubId === user.clubId);
+    const allowed =
+      can(user, "ATHLETE_EDIT_REQUEST_OWN_CLUB") &&
+      athlete.clubMemberships.some((m) => m.clubId === user.clubId);
     if (!allowed) throw new Error("Unauthorized");
   }
 
@@ -62,8 +64,7 @@ export async function requestAthleteEdit(formData: FormData) {
 export async function updateAthleteDirectly(formData: FormData) {
   const user = await requireStaff();
   
-  const isRegistry = ["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY"].includes(user.role);
-  if (!isRegistry) {
+  if (!can(user, "ATHLETE_EDIT_DIRECT")) {
     throw new Error("Unauthorized");
   }
 
@@ -96,7 +97,7 @@ export async function updateAthleteDirectly(formData: FormData) {
 export async function deleteAthlete(athleteId: string) {
   const user = await requireStaff();
   
-  if (!["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role)) {
+  if (!can(user, "ATHLETE_DELETE")) {
     return { success: false, error: "უფლება არ გაქვთ" };
   }
 

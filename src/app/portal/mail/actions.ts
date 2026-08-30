@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireCapability } from "@/lib/permissions";
 import { encrypt } from "@/lib/crypto";
 import { verifyLogin, sendFromMailbox, deleteMessage } from "@/lib/mailbox";
 import { decrypt } from "@/lib/crypto";
 
 export async function connectMailbox(formData: FormData) {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const password = String(formData.get("password") ?? "");
   if (!email.endsWith("@gndsf.ge") || !password) redirect("/portal/mail?error=fields");
@@ -31,7 +31,7 @@ export async function connectMailbox(formData: FormData) {
 }
 
 export async function disconnectMailbox() {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   await db.mailAccount.deleteMany({ where: { userId: user.id } });
   await db.auditLog.create({
     data: { userId: user.id, action: "MAILBOX_DISCONNECT", entity: "MailAccount" },
@@ -41,7 +41,7 @@ export async function disconnectMailbox() {
 }
 
 export async function composeMail(formData: FormData) {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   const to = String(formData.get("to") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
@@ -63,7 +63,7 @@ export async function composeMail(formData: FormData) {
 }
 
 export async function deleteMailAction(uid: number, box: "inbox" | "sent" | "spam" | "trash") {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   const acc = await db.mailAccount.findUnique({ where: { userId: user.id } });
   if (!acc) redirect("/portal/mail");
 

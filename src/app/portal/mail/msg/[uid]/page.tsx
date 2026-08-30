@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireCapability } from "@/lib/permissions";
 import { decrypt } from "@/lib/crypto";
 import { readMessage } from "@/lib/mailbox";
 import { composeMail, deleteMailAction } from "../../actions";
@@ -20,7 +20,7 @@ export default async function MailMessage({
   params: Promise<{ uid: string }>;
   searchParams: Promise<{ box?: string }>;
 }) {
-  const user = await requireStaff();
+  const user = await requireCapability("MAIL_ACCESS");
   const { uid } = await params;
   const { box: boxParam } = await searchParams;
   const box = boxParam === "sent" ? "sent" : boxParam === "spam" ? "spam" : boxParam === "trash" ? "trash" : "inbox";

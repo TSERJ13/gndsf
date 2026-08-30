@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
+import { rolesWithCapability, can as canCapability, requireCapability } from "@/lib/permissions";
+import type { Capability } from "@/lib/permissions";
 
 export type SessionUser = {
   id: string;
@@ -11,16 +13,20 @@ export type SessionUser = {
   athleteId?: string | null;
 };
 
-// Roles allowed to manage the athlete registry (full scope)
-export const REGISTRY_ADMINS: Role[] = [
-  "SUPER_ADMIN",
-  "PRESIDENT",
-  "VICE_PRESIDENT",
-  "GENERAL_SECRETARY",
-];
+// Roles allowed to manage the athlete registry (full scope).
+// Derived from src/lib/permissions.ts — that file is now the single
+// source of truth; these two arrays exist for backward compatibility
+// with the many files that already import them by name.
+export const REGISTRY_ADMINS: Role[] = rolesWithCapability("CLUB_MANAGE");
 
 // Roles allowed to enter competition results
-export const RESULT_ADMINS: Role[] = ["SUPER_ADMIN", "GENERAL_SECRETARY"];
+export const RESULT_ADMINS: Role[] = rolesWithCapability("COMPETITION_RESULT_MANAGE");
+
+// Re-exported so call sites can `import { can } from "@/lib/rbac"` alongside
+// the existing requireRole/requireStaff helpers, without a second import line.
+export const can = canCapability;
+export type { Capability };
+export { requireCapability };
 
 export async function requireUser(): Promise<SessionUser> {
   const session = await auth();

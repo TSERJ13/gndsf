@@ -1,4 +1,5 @@
-import { requireStaff, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireStaff, REGISTRY_ADMINS, can } from "@/lib/rbac";
+import { db } from "@/lib/db";
 import AdminSidebar from "@/components/portal/AdminSidebar";
 import FloatingCalculator from "@/components/portal/FloatingCalculator";
 import { getExchangeRates } from "@/lib/nbg";
@@ -16,24 +17,33 @@ const ROLE_LABELS: Record<string, string> = {
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
+  const canReviewSignups = can(user, "CLUB_SIGNUP_REVIEW");
+  const pendingSignups = canReviewSignups
+    ? await db.clubRegistration.count({ where: { status: "PENDING" } })
+    : 0;
 
   // Moved "ფოსტა" higher up below the main dashboard
   const nav = [
     { href: "/portal", label: "დაფა", show: true },
     { href: "/portal/workspace", label: "სამუშაო სივრცე", show: true },
-    { href: "/portal/mail", label: "ფოსტა", show: ["SUPER_ADMIN", "GENERAL_SECRETARY"].includes(user.role) },
-    { href: "/portal/e-cards", label: "E-Cards", show: ["SUPER_ADMIN", "VICE_PRESIDENT", "PRESIDENT"].includes(user.role) },
+    { href: "/portal/mail", label: "ფოსტა", show: can(user, "MAIL_ACCESS") },
+    { href: "/portal/e-cards", label: "E-Cards", show: can(user, "ECARD_REVIEW") },
+    {
+      href: "/portal/club-registrations",
+      label: pendingSignups > 0 ? `სტუდიის მოთხოვნები (${pendingSignups})` : "სტუდიის მოთხოვნები",
+      show: canReviewSignups,
+    },
     { href: "/portal/athletes", label: "სპორტსმენები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/partnerships", label: "წყვილები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/transfers", label: "ტრანსფერები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
-    { href: "/portal/edit-requests", label: "პროფილის მოთხოვნები", show: isRegistryAdmin },
+    { href: "/portal/edit-requests", label: "პროფილის მოთხოვნები", show: can(user, "ATHLETE_EDIT_REVIEW") },
     { href: "/portal/clubs", label: "კლუბები", show: isRegistryAdmin },
     { href: "/portal/competitions", label: "შეჯიბრებები", show: isRegistryAdmin },
     { href: "/portal/news", label: "სიახლეები", show: isRegistryAdmin },
     { href: "/portal/calendar", label: "კალენდარი", show: isRegistryAdmin },
     { href: "/portal/documents", label: "დოკუმენტები", show: isRegistryAdmin },
-    { href: "/portal/users", label: "მომხმარებლები", show: user.role === "SUPER_ADMIN" },
-    { href: "/portal/settings", label: "პარამეტრები", show: user.role === "SUPER_ADMIN" },
+    { href: "/portal/users", label: "მომხმარებლები", show: can(user, "USER_MANAGE") },
+    { href: "/portal/settings", label: "პარამეტრები", show: can(user, "SETTINGS_ACCESS") },
   ].filter((n) => n.show);
 
   const showCalc = ["PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY", "SUPER_ADMIN"].includes(user.role);

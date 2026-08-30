@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireUser, clubScope, can } from "@/lib/rbac";
 import { CATEGORY_LABELS, categoryFor, fmtDate } from "@/lib/labels";
 import { createAthlete, createPortalAccount } from "./actions";
 import DeleteAthleteCardButton from "./DeleteAthleteCardButton";
@@ -16,7 +16,12 @@ export default async function AdminAthletes({
   const user = await requireUser();
   const scope = clubScope(user);
   const { created, error } = await searchParams;
-  const canCreate = REGISTRY_ADMINS.includes(user.role);
+  const canCreateAny = can(user, "ATHLETE_MANAGE_ALL");
+  const canCreateOwnClub = can(user, "ATHLETE_MANAGE_OWN_CLUB");
+  const canCreate = canCreateAny || canCreateOwnClub;
+  const ownClub = scope && canCreateOwnClub
+    ? await db.club.findUnique({ where: { id: scope.clubId } })
+    : null;
 
   const withoutPortal = await db.athlete.findMany({
     where: { isActive: true, user: null },
@@ -93,7 +98,7 @@ export default async function AdminAthletes({
                   </svg>
                 )}
                 
-                {["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role) && (
+                {can(user, "ATHLETE_DELETE") && (
                   <div className="absolute top-3 left-3">
                     <DeleteAthleteCardButton athleteId={a.id} />
                   </div>
@@ -151,49 +156,60 @@ export default async function AdminAthletes({
                   <option value="FEMALE">მდედრობითი</option>
                 </select>
               </div>
-                <div>
-                  <label className={label} htmlFor="clubId">კლუბი</label>
-                  <select id="clubId" name="clubId" required className={input}>
-                    {clubs.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {canCreateAny ? (
+                  <div>
+                    <label className={label} htmlFor="clubId">კლუბი</label>
+                    <select id="clubId" name="clubId" required className={input}>
+                      {clubs.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={label}>კლუბი</label>
+                    <div className={`${input} bg-neutral-50 text-neutral-600`}>
+                      {ownClub?.name ?? "—"}
+                    </div>
+                  </div>
+                )}
               <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
                 რეგისტრაცია
               </button>
             </div>
           </form>
 
-          <form action={createPortalAccount} className="rounded-lg border border-neutral-200 bg-white p-5">
-            <h2 className="font-semibold">კაბინეტის ანგარიში</h2>
-            <p className="mt-1 text-xs text-neutral-500">
-              სპორტსმენს ეძლევა წვდომა პორტალზე (/cabinet).
-            </p>
-            <div className="mt-4 space-y-3">
-              <div>
-                <label className={label} htmlFor="pa-athlete">სპორტსმენი</label>
-                <select id="pa-athlete" name="athleteId" required className={input}>
-                  {withoutPortal.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.firstName} {a.lastName} ({a.gid})
-                    </option>
-                  ))}
-                </select>
+          {canCreateAny && (
+            <form action={createPortalAccount} className="rounded-lg border border-neutral-200 bg-white p-5">
+              <h2 className="font-semibold">კაბინეტის ანგარიში</h2>
+              <p className="mt-1 text-xs text-neutral-500">
+                სპორტსმენს ეძლევა წვდომა პორტალზე (/cabinet).
+              </p>
+              <div className="mt-4 space-y-3">
+                <div>
+                  <label className={label} htmlFor="pa-athlete">სპორტსმენი</label>
+                  <select id="pa-athlete" name="athleteId" required className={input}>
+                    {withoutPortal.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.firstName} {a.lastName} ({a.gid})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={label} htmlFor="pa-email">ელფოსტა</label>
+                  <input id="pa-email" name="email" type="email" required className={input} />
+                </div>
+                <div>
+                  <label className={label} htmlFor="pa-pass">დროებითი პაროლი</label>
+                  <input id="pa-pass" name="password" type="text" minLength={8} required className={input} />
+                </div>
+                <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
+                  ანგარიშის შექმნა
+                </button>
               </div>
-              <div>
-                <label className={label} htmlFor="pa-email">ელფოსტა</label>
-                <input id="pa-email" name="email" type="email" required className={input} />
-              </div>
-              <div>
-                <label className={label} htmlFor="pa-pass">დროებითი პაროლი</label>
-                <input id="pa-pass" name="password" type="text" minLength={8} required className={input} />
-              </div>
-              <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
-                ანგარიშის შექმნა
-              </button>
-            </div>
-          </form>
+            </form>
+          )}
           </div>
         )}
       </div>

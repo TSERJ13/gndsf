@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { signIn, auth } from "@/auth";
@@ -76,6 +77,12 @@ export default async function LoginPage({
             შესვლა
           </button>
         </form>
+        <p className="mt-6 text-center text-xs text-smoke">
+          ჯერ არ ხართ დარეგისტრირებული სტუდია?{" "}
+          <Link href="/studio/apply" className="font-semibold underline underline-offset-2">
+            დარეგისტრირდით აქ
+          </Link>
+        </p>
       </div>
     </div>
   );

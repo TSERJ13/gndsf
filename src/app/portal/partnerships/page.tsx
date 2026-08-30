@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { requireUser, clubScope, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireUser, clubScope, can, REGISTRY_ADMINS } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
 import { formPartnership, splitPartnership } from "./actions";
@@ -15,11 +15,15 @@ export default async function AdminPartnerships({
 }) {
   const user = await requireUser();
   const scope = clubScope(user);
+  // View access: same as before — any registry admin (incl. secretary,
+  // read-only here) or a club manager (their own club's couples).
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
   if (!isRegistryAdmin && user.role !== "CLUB_MANAGER") {
     redirect("/portal");
   }
-  const canManageCouples = ["SUPER_ADMIN", "PRESIDENT", "VICE_PRESIDENT"].includes(user.role);
+  const canManageAny = can(user, "PARTNERSHIP_MANAGE_ALL");
+  const canManageOwnClub = can(user, "PARTNERSHIP_MANAGE_OWN_CLUB");
+  const canManageCouples = canManageAny || canManageOwnClub;
   const { ok, error } = await searchParams;
 
   const clubFilter = scope ? {

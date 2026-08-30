@@ -6,4 +6,3 @@ export default NextAuth(authConfig).auth;
 export const config = {
   matcher: ["/portal/:path*", "/cabinet/:path*"],
 };
-

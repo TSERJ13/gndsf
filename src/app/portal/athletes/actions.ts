@@ -3,18 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireUser, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireUser, can } from "@/lib/rbac";
 import type { Gender } from "@prisma/client";
 
-// ONLY registry admins may register athletes into any club.
+// Registry admins (SuperAdmin/President/VP/Secretary) may register an
+// athlete into ANY club. Club managers may register one too, but ONLY
+// into their own club — the clubId they submit is ignored and replaced
+// with their own, so a tampered request can't register into another club.
 export async function createAthlete(formData: FormData) {
   const user = await requireUser();
 
-  const clubId = String(formData.get("clubId") ?? "");
-
-  if (!REGISTRY_ADMINS.includes(user.role)) {
+  const canAny = can(user, "ATHLETE_MANAGE_ALL");
+  const canOwnClub = can(user, "ATHLETE_MANAGE_OWN_CLUB");
+  if (!canAny && !canOwnClub) {
     redirect("/portal");
   }
+
+  const clubId = canAny ? String(formData.get("clubId") ?? "") : user.clubId ?? "";
   if (!clubId) redirect("/portal/athletes?error=club");
 
   const firstName = String(formData.get("firstName") ?? "").trim();
