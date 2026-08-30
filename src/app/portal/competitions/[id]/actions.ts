@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireRole, RESULT_ADMINS } from "@/lib/rbac";
 import { categoryFor } from "@/lib/labels";
 import { commitEventResults } from "@/lib/results";
-import type { AgeCategory, Discipline, Format } from "@prisma/client";
+import type { AgeCategory, Discipline, Format, DanceClass, CoupleCategory } from "@prisma/client";
 
 export async function addEvent(formData: FormData) {
   await requireRole(RESULT_ADMINS);
@@ -14,15 +14,23 @@ export async function addEvent(formData: FormData) {
   const ageCategory = String(formData.get("ageCategory")) as AgeCategory;
   const discipline = String(formData.get("discipline")) as Discipline;
   const format = String(formData.get("format")) as Format;
+  // Only one of these applies depending on `format` — the unused select
+  // is ignored below. Both are required for scoring at result-commit time
+  // (see commitResults), but left optional here so an event can still be
+  // created and entries registered before the class/category is decided.
+  const danceClassRaw = String(formData.get("danceClass") ?? "");
+  const coupleCategoryRaw = String(formData.get("coupleCategory") ?? "");
+  const danceClass = (format === "SOLO" && danceClassRaw ? danceClassRaw : null) as DanceClass | null;
+  const coupleCategory = (format === "COUPLE" && coupleCategoryRaw ? coupleCategoryRaw : null) as CoupleCategory | null;
 
   await db.compEvent.upsert({
     where: {
-      competitionId_ageCategory_discipline_format: {
-        competitionId, ageCategory, discipline, format,
+      CompEventScoring: {
+        competitionId, ageCategory, discipline, format, danceClass, coupleCategory,
       },
     },
-    create: { competitionId, ageCategory, discipline, format },
-    update: {},
+    create: { competitionId, ageCategory, discipline, format, danceClass, coupleCategory },
+    update: { danceClass, coupleCategory },
   });
   revalidatePath(`/portal/competitions/${competitionId}`);
   redirect(`/portal/competitions/${competitionId}`);
@@ -96,7 +104,18 @@ export async function commitResults(formData: FormData) {
     if (raw && Number.isInteger(n) && n >= 1) placements.push({ entryId: e.id, placement: n });
   }
 
-  await commitEventResults(eventId, placements, user.id);
+  try {
+    await commitEventResults(eventId, placements, user.id);
+  } catch (err) {
+    // getSoloScore/getCoupleScore throw a descriptive message when the
+    // event is missing its class/category, or the place/class/field-size
+    // combination isn't in the federation's confirmed points table —
+    // surface that to the admin instead of a raw 500.
+    const detail = err instanceof Error ? err.message : "უცნობი შეცდომა ქულების დათვლისას.";
+    redirect(
+      `/portal/competitions/${event.competitionId}?error=scoring&detail=${encodeURIComponent(detail)}`,
+    );
+  }
 
   // public pages read live data (force-dynamic), admin path revalidated
   revalidatePath(`/portal/competitions/${event.competitionId}`);

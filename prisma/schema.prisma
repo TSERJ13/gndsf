@@ -45,6 +45,31 @@ enum Format {
   COUPLE
 }
 
+// Solo scoring class, per the federation's confirmed points table
+// ("axali soloebi.pdf", page 1). Only set on SOLO events.
+enum DanceClass {
+  A
+  B
+  C
+  D
+}
+
+// Couple scoring category, per the federation's confirmed points table
+// ("წყვილების რეიტინგი.pdf"). Only set on COUPLE events. Distinct from
+// AgeCategory: "6 dance" and "rizing star" are special formats that cut
+// across ages, so they can't be derived from ageCategory alone —
+// JUVENILE_1_2/JUNIOR_1/JUNIOR_2/YOUTH/ADULT do line up with the age
+// categories but are still an explicit choice, made once per event.
+enum CoupleCategory {
+  SIX_DANCE
+  RIZING_STAR
+  JUVENILE_1_2
+  JUNIOR_1
+  JUNIOR_2
+  YOUTH
+  ADULT
+}
+
 enum CompetitionType {
   NATIONAL
   REGIONAL
@@ -167,16 +192,22 @@ model Competition {
 
 // One judged category inside a competition: "Junior II · Latin · Couples"
 model CompEvent {
-  id            String      @id @default(uuid())
-  competitionId String
-  ageCategory   AgeCategory
-  discipline    Discipline
-  format        Format
+  id             String          @id @default(uuid())
+  competitionId  String
+  ageCategory    AgeCategory
+  discipline     Discipline
+  format         Format
+  danceClass     DanceClass?     // SOLO only — required for scoring at result-commit time
+  coupleCategory CoupleCategory? // COUPLE only — required for scoring at result-commit time
 
   competition Competition @relation(fields: [competitionId], references: [id])
   entries     Entry[]
 
-  @@unique([competitionId, ageCategory, discipline, format])
+  @@unique(
+    [competitionId, ageCategory, discipline, format, danceClass, coupleCategory],
+    name: "CompEventScoring",
+    map: "CompEvent_scoring_key"
+  )
 }
 
 // Frozen snapshot: who competed, as what, for which club, on that day.

@@ -2,7 +2,7 @@
 // One transaction: results + points + ranking rebuild + audit.
 // Re-committing an event replaces its results cleanly (idempotent).
 import { db } from "./db";
-import { pointsFor, validUntilFrom } from "./points";
+import { getSoloScore, getCoupleScore, validUntilFrom, type CoupleCategoryKey } from "./points";
 import { recomputeRankings } from "./rankings";
 
 export async function commitEventResults(
@@ -16,6 +16,7 @@ export async function commitEventResults(
       include: { competition: true, entries: { include: { partnership: true } } },
     });
     const byId = new Map(event.entries.map((e) => [e.id, e]));
+    const participants = event.entries.length;
 
     // wipe previous results for this event (points cascade via resultId)
     const oldResults = await tx.result.findMany({
@@ -36,7 +37,26 @@ export async function commitEventResults(
       const entry = byId.get(entryId);
       if (!entry || placement < 1) continue;
       const result = await tx.result.create({ data: { entryId, placement } });
-      const pts = pointsFor(placement, event.competition.pointsCoefficient);
+
+      let pts: number;
+      if (event.format === "SOLO") {
+        if (!event.danceClass) {
+          throw new Error(
+            `ივენთს ("${event.ageCategory}") არ აქვს მითითებული ცეკვის კლასი (A/B/C/D) — ` +
+              `ქულების დათვლა ვერ მოხერხდება. დაარედაქტირეთ ივენთი და აირჩიეთ კლასი.`,
+          );
+        }
+        pts = getSoloScore(participants, event.ageCategory, event.danceClass, placement);
+      } else {
+        if (!event.coupleCategory) {
+          throw new Error(
+            `ივენთს ("${event.ageCategory}") არ აქვს მითითებული წყვილების კატეგორია — ` +
+              `ქულების დათვლა ვერ მოხერხდება. დაარედაქტირეთ ივენთი და აირჩიეთ კატეგორია.`,
+          );
+        }
+        pts = getCoupleScore(event.coupleCategory as CoupleCategoryKey, placement);
+      }
+
       const athleteIds = entry.partnership
         ? [entry.partnership.leaderId, entry.partnership.followerId]
         : entry.athleteId

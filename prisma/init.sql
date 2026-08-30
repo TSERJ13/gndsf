@@ -2,7 +2,8 @@
 -- Prisma schema engine is unavailable). On a normal machine, prefer:
 --   npx prisma migrate dev
 -- Includes the Entry XOR check constraint mentioned in the schema comments.
--- Kept in sync through v0.13 (all 23 models, including ClubRegistration) —
+-- Kept in sync through v0.14 (all 23 models; CompEvent now also carries
+-- danceClass/coupleCategory for the confirmed scoring table) —
 -- if this drifts from schema.prisma again, `prisma migrate diff` will show
 -- the gap once the schema engine is reachable.
 
@@ -11,6 +12,8 @@ CREATE TYPE "Gender" AS ENUM ('MALE','FEMALE');
 CREATE TYPE "AgeCategory" AS ENUM ('JUVENILE_I','JUVENILE_II','JUNIOR_I','JUNIOR_II','YOUTH','ADULT');
 CREATE TYPE "Discipline" AS ENUM ('STANDARD','LATIN');
 CREATE TYPE "Format" AS ENUM ('SOLO','COUPLE');
+CREATE TYPE "DanceClass" AS ENUM ('A','B','C','D');
+CREATE TYPE "CoupleCategory" AS ENUM ('SIX_DANCE','RIZING_STAR','JUVENILE_1_2','JUNIOR_1','JUNIOR_2','YOUTH','ADULT');
 CREATE TYPE "CompetitionType" AS ENUM ('NATIONAL','REGIONAL','INTERNATIONAL');
 CREATE TYPE "Role" AS ENUM ('ATHLETE','SUPER_ADMIN','PRESIDENT','VICE_PRESIDENT','GENERAL_SECRETARY','REGIONAL_REP','CLUB_MANAGER');
 
@@ -84,7 +87,10 @@ CREATE TABLE "CompEvent" (
   "ageCategory" "AgeCategory" NOT NULL,
   "discipline" "Discipline" NOT NULL,
   "format" "Format" NOT NULL,
-  UNIQUE ("competitionId","ageCategory","discipline","format")
+  "danceClass" "DanceClass", -- SOLO only, required for scoring at result-commit time
+  "coupleCategory" "CoupleCategory", -- COUPLE only, required for scoring at result-commit time
+  CONSTRAINT "CompEvent_scoring_key"
+    UNIQUE ("competitionId","ageCategory","discipline","format","danceClass","coupleCategory")
 );
 
 CREATE TABLE "Entry" (
