@@ -100,8 +100,8 @@ async function main() {
 
   console.log('Generating 48 Athletes (24 Males & 24 Females)...');
 
-  const maleAthletes = [];
-  const femaleAthletes = [];
+  const maleAthletes: any[] = [];
+  const femaleAthletes: any[] = [];
 
   for (let i = 0; i < 24; i++) {
     const club = clubs[i % 3];
@@ -140,7 +140,7 @@ async function main() {
 
   // 3. Form 24 Active Partnerships
   console.log('Forming 24 Active Partnerships...');
-  const partnerships = [];
+  const partnerships: any[] = [];
   for (let i = 0; i < 24; i++) {
     const p = await prisma.partnership.create({
       data: {
@@ -226,7 +226,7 @@ async function main() {
       },
     });
 
-    const entries = [];
+    const entries: any[] = [];
 
     if (format === Format.COUPLE) {
       for (let i = 0; i < coupleList.length; i++) {

@@ -78,7 +78,7 @@ async function main() {
       },
     });
 
-    const entries = [];
+    const entries: any[] = [];
 
     if (format === Format.COUPLE) {
       for (let i = 0; i < coupleList.length; i++) {
