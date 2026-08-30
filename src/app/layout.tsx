@@ -68,8 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="ka">
-      <body className={`${notoSansGeorgian.className} min-h-screen flex flex-col bg-white text-black`}>
-        {/* Header disabled for under construction page
+      <body className={`${notoSansGeorgian.className} min-h-screen flex flex-col bg-white text-black pt-[100px] lg:pt-[190px]`}>
         <header className="fixed left-0 right-0 top-0 z-50 bg-white/95 backdrop-blur-2xl transition-all duration-500" translate="no">
           <div className="mx-auto max-w-[1400px]">
             <div className="flex h-[80px] lg:h-[95px] items-center justify-between px-6 relative">
@@ -160,11 +159,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </ul>
           </nav>
         </header>
-        */}
 
-        <main className="flex-1 flex flex-col min-h-screen">{children}</main>
+        <main className="motion-fade-up flex-1 min-h-[calc(100vh-200px)] lg:min-h-[calc(100vh-350px)]">{children}</main>
 
-        {/* Footer disabled for under construction page
         <footer className="mt-auto bg-gradient-to-b from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] text-white">
           <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-center gap-10 px-6 py-16 text-[13px] font-medium text-white/80">
             <div className="flex items-center justify-center gap-5 text-left">
@@ -198,7 +195,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </div>
         </footer>
-        */}
       </body>
     </html>
   );
