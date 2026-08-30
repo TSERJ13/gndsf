@@ -18,9 +18,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await requireStaff();
   const isRegistryAdmin = REGISTRY_ADMINS.includes(user.role);
   const canReviewSignups = can(user, "CLUB_SIGNUP_REVIEW");
-  const pendingSignups = canReviewSignups
-    ? await db.clubRegistration.count({ where: { status: "PENDING" } })
-    : 0;
+  let pendingSignups = 0;
+  if (canReviewSignups) {
+    try {
+      pendingSignups = await db.clubRegistration.count({ where: { status: "PENDING" } });
+    } catch (err) {
+      console.error("Failed to count pending club registrations:", err);
+    }
+  }
 
   // Moved "ფოსტა" higher up below the main dashboard
   const nav = [
@@ -47,7 +52,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ].filter((n) => n.show);
 
   const showCalc = ["PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY", "SUPER_ADMIN"].includes(user.role);
-  const rates = showCalc ? await getExchangeRates() : {};
+  let rates = {};
+  if (showCalc) {
+    try {
+      rates = await getExchangeRates();
+    } catch (err) {
+      console.error("Failed to fetch exchange rates:", err);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f5f3] text-neutral-900 flex flex-col">

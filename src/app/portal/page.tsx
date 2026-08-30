@@ -22,17 +22,29 @@ export default async function AdminDashboard() {
       }
     : {};
 
-  const [athletes, activeCouples, clubs, competitions, audit] = await Promise.all([
-    db.athlete.count({ where: { isActive: true, ...athleteWhere } }),
-    db.partnership.count({ where: { endDate: null, ...coupleWhere } }),
-    !scope ? db.club.count({ where: { isActive: true } }) : Promise.resolve(0),
-    !scope ? db.competition.count() : Promise.resolve(0),
-    !scope ? db.auditLog.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 8,
-      include: { user: true },
-    }) : Promise.resolve([]),
-  ]);
+  let athletes = 0;
+  let activeCouples = 0;
+  let clubs = 0;
+  let competitions = 0;
+  let audit: any[] = [];
+
+  try {
+    [athletes, activeCouples, clubs, competitions, audit] = await Promise.all([
+      db.athlete.count({ where: { isActive: true, ...athleteWhere } }),
+      db.partnership.count({ where: { endDate: null, ...coupleWhere } }),
+      !scope ? db.club.count({ where: { isActive: true } }) : Promise.resolve(0),
+      !scope ? db.competition.count() : Promise.resolve(0),
+      !scope
+        ? db.auditLog.findMany({
+            orderBy: { createdAt: "desc" },
+            take: 8,
+            include: { user: true },
+          })
+        : Promise.resolve([]),
+    ]);
+  } catch (err) {
+    console.error("Portal dashboard DB queries failed:", err);
+  }
 
   const stats = [
     { label: scope ? "თქვენი კლუბის სპორტსმენები" : "აქტიური სპორტსმენი", value: athletes },
