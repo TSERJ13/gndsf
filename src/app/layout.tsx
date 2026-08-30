@@ -78,6 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${notoSansGeorgian.className} min-h-screen flex flex-col bg-white text-black pt-[100px] lg:pt-[190px]`}>
         <header className="fixed left-0 right-0 top-0 z-50 bg-white/95 backdrop-blur-2xl transition-all duration-500" translate="no">
           <div className="mx-auto max-w-[1400px]">
+            {/* ── row 1: Logo & Federation Name ── */}
             <div className="flex h-[80px] lg:h-[95px] items-center justify-between px-6 relative">
               <Link href="/" className="flex items-center gap-4 transition-transform hover:scale-[1.02]">
                   <Image
@@ -96,11 +97,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </div>
                 </Link>
 
+                {/* Mobile Nav Button */}
                 <div className="lg:hidden">
                   <MobileNav items={NAV_FLAT} isLoggedIn={isLoggedIn} dashboardHref={dashboardHref} />
                 </div>
               </div>
 
+            {/* ── row 2: Top Nav + Search (Desktop Only) ── */}
             <div className="hidden lg:flex h-[45px] items-center justify-between px-6">
               <nav>
                   <ul className="flex items-center gap-8">
@@ -139,6 +142,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </ul>
                 </nav>
 
+                {/* Right Side: Search */}
                 <div className="flex h-[28px] w-[220px] items-center border border-gray-300 bg-white">
                   <input 
                     type="text" 
@@ -151,6 +155,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </div>
           </div>
+          {/* ── row 3: Main Navigation Tier ── */}
           <nav className="hidden lg:block border-t border-gray-200 bg-white">
             <ul className="mx-auto flex h-[50px] max-w-[1400px] items-center justify-center gap-10 px-6">
               {MAIN_NAV.map((g) => (
@@ -169,8 +174,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
         <main className="motion-fade-up flex-1 min-h-[calc(100vh-200px)] lg:min-h-[calc(100vh-350px)]">{children}</main>
 
+        {/* ── Footer ── */}
         <footer className="mt-auto bg-gradient-to-b from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] text-white">
           <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-center gap-10 px-6 py-16 text-[13px] font-medium text-white/80">
+            {/* Logo and Name Side-by-Side */}
             <div className="flex items-center justify-center gap-5 text-left">
               <Image src="/brand/logo-header@2x.png" alt="GNDSF" width={60} height={60} className="brightness-0 invert opacity-90 shrink-0" />
               <div className="text-white text-[14px] md:text-[15px] font-medium tracking-widest leading-snug">
@@ -179,6 +186,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
             </div>
 
+            {/* Social Icons (Circles) */}
             <div className="flex gap-4 items-center">
               <a href="#" className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-white/80 hover:bg-white/10 transition-colors">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -197,6 +205,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </a>
             </div>
 
+            {/* Copyright */}
             <div className="flex flex-col items-center gap-2 text-center text-white/90 tracking-widest text-[11px] md:text-[12px] mt-4 font-bold">
               <p className="uppercase">© {new Date().getFullYear()} სსცეფ · ყველა უფლება დაცულია.</p>
             </div>
