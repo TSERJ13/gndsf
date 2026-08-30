@@ -203,11 +203,7 @@ model CompEvent {
   competition Competition @relation(fields: [competitionId], references: [id])
   entries     Entry[]
 
-  @@unique(
-    [competitionId, ageCategory, discipline, format, danceClass, coupleCategory],
-    name: "CompEventScoring",
-    map: "CompEvent_scoring_key"
-  )
+  @@unique([competitionId, ageCategory, discipline, format, danceClass, coupleCategory], name: "CompEventScoring", map: "CompEvent_scoring_key")
 }
 
 // Frozen snapshot: who competed, as what, for which club, on that day.

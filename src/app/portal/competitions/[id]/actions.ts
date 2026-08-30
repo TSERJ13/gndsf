@@ -26,7 +26,9 @@ export async function addEvent(formData: FormData) {
   await db.compEvent.upsert({
     where: {
       CompEventScoring: {
-        competitionId, ageCategory, discipline, format, danceClass, coupleCategory,
+        competitionId, ageCategory, discipline, format,
+        danceClass: danceClass as any,
+        coupleCategory: coupleCategory as any,
       },
     },
     create: { competitionId, ageCategory, discipline, format, danceClass, coupleCategory },
