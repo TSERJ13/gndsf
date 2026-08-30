@@ -9,6 +9,7 @@ export async function commitEventResults(
   eventId: string,
   placements: { entryId: string; placement: number }[],
   userId: string | null,
+  recompute: boolean = true,
 ) {
   return db.$transaction(async (tx) => {
     const event = await tx.compEvent.findUniqueOrThrow({
@@ -75,7 +76,9 @@ export async function commitEventResults(
       }
     }
 
-    await recomputeRankings(tx);
+    if (recompute) {
+      await recomputeRankings(tx);
+    }
 
     await tx.auditLog.create({
       data: {
@@ -86,5 +89,5 @@ export async function commitEventResults(
         detail: `${event.competition.name}: ${placements.length} შედეგი, რეიტინგი გადაითვალა`,
       },
     });
-  });
+  }, { timeout: 30000 });
 }

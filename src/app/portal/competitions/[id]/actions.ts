@@ -75,6 +75,9 @@ export async function addEntry(formData: FormData) {
     });
   } else {
     const a = await db.athlete.findUniqueOrThrow({ where: { id } });
+    if (event.format === "SOLO" && a.gender !== "FEMALE") {
+      redirect(`${back}?error=scoring&detail=${encodeURIComponent("სოლო ფორმატში რეგისტრაცია შეუძლიათ მხოლოდ გოგონებს (FEMALE). ვაჟების სოლო აკრძალულია ფედერაციის წესებით.")}`);
+    }
     const club = await db.clubMembership.findFirst({
       where: { athleteId: a.id, endDate: null },
     });

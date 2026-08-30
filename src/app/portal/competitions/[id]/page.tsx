@@ -179,7 +179,7 @@ export default async function CompetitionAdmin({
                             {p.leader.lastName} · {p.follower.lastName}
                           </option>
                         ))
-                      : soloists.map((a) => (
+                      : soloists.filter((a) => a.gender === "FEMALE").map((a) => (
                           <option key={a.id} value={`A:${a.id}`}>
                             {a.firstName} {a.lastName} ({a.gid})
                           </option>
