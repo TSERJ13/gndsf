@@ -6,10 +6,15 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "სიახლეები" };
 
 export default async function NewsPage() {
-  const news = await db.news.findMany({
-    where: { publishedAt: { not: null } },
-    orderBy: { publishedAt: "desc" },
-  });
+  let news: any[] = [];
+  try {
+    news = await db.news.findMany({
+      where: { publishedAt: { not: null } },
+      orderBy: { publishedAt: "desc" },
+    });
+  } catch (err) {
+    console.error("NewsPage DB error:", err);
+  }
   return (
     <div className="bg-white min-h-screen">
       <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">

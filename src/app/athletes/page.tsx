@@ -15,30 +15,35 @@ export default async function AthletesPage({
 }) {
   const { q, cat } = await searchParams;
 
-  const athletes = await db.athlete.findMany({
-    where: {
-      isActive: true,
-      ...(q
-        ? {
-            OR: [
-              { firstName: { contains: q, mode: "insensitive" } },
-              { lastName: { contains: q, mode: "insensitive" } },
-              { firstNameEn: { contains: q, mode: "insensitive" } },
-              { lastNameEn: { contains: q, mode: "insensitive" } },
-              { gid: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    include: {
-      clubMemberships: {
-        where: { endDate: null },
-        include: { club: true },
+  let athletes: any[] = [];
+  try {
+    athletes = await db.athlete.findMany({
+      where: {
+        isActive: true,
+        ...(q
+          ? {
+              OR: [
+                { firstName: { contains: q, mode: "insensitive" } },
+                { lastName: { contains: q, mode: "insensitive" } },
+                { firstNameEn: { contains: q, mode: "insensitive" } },
+                { lastNameEn: { contains: q, mode: "insensitive" } },
+                { gid: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
       },
-    },
-    orderBy: [{ lastName: "asc" }],
-    take: 100,
-  });
+      include: {
+        clubMemberships: {
+          where: { endDate: null },
+          include: { club: true },
+        },
+      },
+      orderBy: [{ lastName: "asc" }],
+      take: 100,
+    });
+  } catch (err) {
+    console.error("AthletesPage DB error:", err);
+  }
 
   const filtered = cat
     ? athletes.filter((a) => categoryFor(a.birthDate) === (cat as AgeCategory))

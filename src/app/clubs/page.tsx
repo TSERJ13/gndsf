@@ -5,11 +5,16 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "კლუბები" };
 
 export default async function ClubsPage() {
-  const clubs = await db.club.findMany({
-    where: { isActive: true },
-    include: { _count: { select: { memberships: { where: { endDate: null } } } } },
-    orderBy: { name: "asc" },
-  });
+  let clubs: any[] = [];
+  try {
+    clubs = await db.club.findMany({
+      where: { isActive: true },
+      include: { _count: { select: { memberships: { where: { endDate: null } } } } },
+      orderBy: { name: "asc" },
+    });
+  } catch (err) {
+    console.error("ClubsPage DB error:", err);
+  }
   
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">

@@ -40,51 +40,59 @@ export default async function AthletePage({
   const { id } = await params;
   const { tab = "general" } = await searchParams;
 
-  const athlete = await db.athlete.findUnique({
-    where: { id },
-    include: {
-      clubMemberships: { include: { club: true }, orderBy: { startDate: "desc" } },
-      asLeader: {
-        include: { follower: true },
-        orderBy: { startDate: "desc" },
+  let athlete: any = null;
+  let entries: any[] = [];
+  try {
+    athlete = await db.athlete.findUnique({
+      where: { id },
+      include: {
+        clubMemberships: { include: { club: true }, orderBy: { startDate: "desc" } },
+        asLeader: {
+          include: { follower: true },
+          orderBy: { startDate: "desc" },
+        },
+        asFollower: {
+          include: { leader: true },
+          orderBy: { startDate: "desc" },
+        },
+        rankingPoints: { 
+          where: { validUntil: { gte: new Date() } },
+          include: { result: { include: { entry: { include: { event: true } } } } }
+        },
       },
-      asFollower: {
-        include: { leader: true },
-        orderBy: { startDate: "desc" },
-      },
-      rankingPoints: { 
-        where: { validUntil: { gte: new Date() } },
-        include: { result: { include: { entry: { include: { event: true } } } } }
-      },
-    },
-  });
+    });
+
+    if (athlete) {
+      entries = await db.entry.findMany({
+        where: {
+          OR: [
+            { athleteId: id },
+            { partnership: { OR: [{ leaderId: id }, { followerId: id }] } },
+          ],
+        },
+        include: {
+          event: { include: { competition: true } },
+          partnership: { include: { leader: true, follower: true } },
+          club: true,
+          result: true,
+        },
+        orderBy: { event: { competition: { startDate: "desc" } } },
+      });
+    }
+  } catch (err) {
+    console.error("AthletePage DB error:", err);
+  }
   if (!athlete) notFound();
 
-  const entries = await db.entry.findMany({
-    where: {
-      OR: [
-        { athleteId: id },
-        { partnership: { OR: [{ leaderId: id }, { followerId: id }] } },
-      ],
-    },
-    include: {
-      event: { include: { competition: true } },
-      partnership: { include: { leader: true, follower: true } },
-      club: true,
-      result: true,
-    },
-    orderBy: { event: { competition: { startDate: "desc" } } },
-  });
-
-  const groupedPoints = athlete.rankingPoints.reduce((acc, rp) => {
+  const groupedPoints = (athlete?.rankingPoints || []).reduce((acc: Record<string, number>, rp: any) => {
     const ev = rp.result?.entry?.event;
     if (!ev) return acc;
-    const key = `${CATEGORY_LABELS[ev.ageCategory]} · ${DISCIPLINE_LABELS[ev.discipline]}`;
+    const key = `${(CATEGORY_LABELS as any)[ev.ageCategory] || ev.ageCategory} · ${(DISCIPLINE_LABELS as any)[ev.discipline] || ev.discipline}`;
     acc[key] = (acc[key] || 0) + rp.points;
     return acc;
   }, {} as Record<string, number>);
 
-  const currentClub = athlete.clubMemberships.find((m) => !m.endDate)?.club;
+  const currentClub = (athlete?.clubMemberships || []).find((m: any) => !m.endDate)?.club;
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 md:px-6 pt-10 pb-20">
@@ -162,7 +170,7 @@ export default async function AthletePage({
                 <div className="flex flex-col gap-1">
                   {Object.entries(groupedPoints).map(([key, pts]) => (
                     <div key={key} className="text-black">
-                      {pts} <span className="text-gray-500">({key})</span>
+                      {pts as any} <span className="text-gray-500">({key})</span>
                     </div>
                   ))}
                 </div>
@@ -206,10 +214,10 @@ export default async function AthletePage({
                         </Link>
                       </td>
                       <td className="px-4 py-4 text-black">
-                        {DISCIPLINE_LABELS[e.event.discipline]}
+                        {(DISCIPLINE_LABELS as any)[e.event.discipline]}
                       </td>
                       <td className="px-4 py-4 text-black">
-                        {CATEGORY_LABELS[e.event.ageCategory]}
+                        {(CATEGORY_LABELS as any)[e.event.ageCategory]}
                       </td>
                       <td className="px-4 py-4 text-black">
                         {e.event.competition.city}

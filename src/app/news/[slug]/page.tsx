@@ -6,7 +6,12 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const a = await db.news.findUnique({ where: { slug } });
+  let a: any = null;
+  try {
+    a = await db.news.findUnique({ where: { slug } });
+  } catch (err) {
+    console.error("NewsArticle metadata error:", err);
+  }
   if (!a) return { title: "სიახლე" };
   return {
     title: a.title,
@@ -17,7 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function NewsArticle({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = await db.news.findUnique({ where: { slug } });
+  let article: any = null;
+  try {
+    article = await db.news.findUnique({ where: { slug } });
+  } catch (err) {
+    console.error("NewsArticle DB error:", err);
+  }
   if (!article || !article.publishedAt) notFound();
   return (
     <article className="mx-auto max-w-3xl px-4 pt-12">

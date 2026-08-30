@@ -4,7 +4,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "დოკუმენტები" };
 
 export default async function DocumentsPage() {
-  const docs = await db.document.findMany({ orderBy: [{ category: "asc" }, { createdAt: "desc" }] });
+  let docs: any[] = [];
+  try {
+    docs = await db.document.findMany({ orderBy: [{ category: "asc" }, { createdAt: "desc" }] });
+  } catch (err) {
+    console.error("DocumentsPage DB error:", err);
+  }
   const groups = new Map<string, typeof docs>();
   for (const d of docs) {
     if (!groups.has(d.category)) groups.set(d.category, []);

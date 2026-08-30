@@ -25,13 +25,17 @@ export default async function CalendarPage({
   const { f, view = "list" } = await searchParams;
   const filter = f === "intl" ? { isIntl: true } : f === "geo" ? { isIntl: false } : {};
 
-  // Fetch manual calendar events
-  const manualEvents = await db.calendarEvent.findMany({
-    where: filter,
-  });
-
-  // Fetch actual competitions (both published and upcoming)
-  const comps = await db.competition.findMany();
+  // Fetch manual calendar events and competitions
+  let manualEvents: any[] = [];
+  let comps: any[] = [];
+  try {
+    [manualEvents, comps] = await Promise.all([
+      db.calendarEvent.findMany({ where: filter }),
+      db.competition.findMany(),
+    ]);
+  } catch (err) {
+    console.error("CalendarPage DB error:", err);
+  }
 
   // Map competitions to calendar format
   const compEvents = comps.map(c => ({

@@ -43,10 +43,15 @@ export default async function CompetitionsPage(props: {
   const searchParams = await props.searchParams;
   const q = searchParams.q;
 
-  const comps = await db.competition.findMany({
-    orderBy: { startDate: "desc" },
-    include: { _count: { select: { events: true } } },
-  });
+  let comps: any[] = [];
+  try {
+    comps = await db.competition.findMany({
+      orderBy: { startDate: "desc" },
+      include: { _count: { select: { events: true } } },
+    });
+  } catch (err) {
+    console.error("CompetitionsPage DB error:", err);
+  }
 
   // Strict substring matching to avoid false positives
   const matchedComps = q ? comps.filter(c => {

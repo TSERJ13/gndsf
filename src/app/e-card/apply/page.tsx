@@ -2,10 +2,15 @@ import { db } from '@/lib/db';
 import ApplyWizard from './ApplyWizard';
 
 export default async function ECardApplyPage() {
-  const clubs = await db.club.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true }
-  });
+  let clubs: any[] = [];
+  try {
+    clubs = await db.club.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true }
+    });
+  } catch (err) {
+    console.error("ECardApplyPage DB error:", err);
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen py-12 pb-24">

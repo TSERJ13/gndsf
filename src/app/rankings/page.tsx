@@ -26,14 +26,19 @@ export default async function RankingsPage({
   const view = sp.view || "grid";
   const showTable = view === "table";
 
-  const rows = await db.rankingEntry.findMany({
-    where: { discipline: disc, format: fmt, ...(cat ? { ageCategory: cat } : {}) },
-    orderBy: [{ ageCategory: "asc" }, { position: "asc" }],
-    include: {
-      athlete: true,
-      partnership: { include: { leader: true, follower: true } },
-    },
-  });
+  let rows: any[] = [];
+  try {
+    rows = await db.rankingEntry.findMany({
+      where: { discipline: disc, format: fmt, ...(cat ? { ageCategory: cat } : {}) },
+      orderBy: [{ ageCategory: "asc" }, { position: "asc" }],
+      include: {
+        athlete: true,
+        partnership: { include: { leader: true, follower: true } },
+      },
+    });
+  } catch (err) {
+    console.error("RankingsPage DB error:", err);
+  }
 
   const link = (patch: Partial<Search>) => {
     const p = new URLSearchParams();

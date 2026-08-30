@@ -6,15 +6,20 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "წყვილები" };
 
 export default async function CouplesPage() {
-  const couples = await db.partnership.findMany({
-    where: { endDate: null },
-    include: {
-      leader: true,
-      follower: true,
-    },
-    orderBy: { startDate: "desc" },
-    take: 100,
-  });
+  let couples: any[] = [];
+  try {
+    couples = await db.partnership.findMany({
+      where: { endDate: null },
+      include: {
+        leader: true,
+        follower: true,
+      },
+      orderBy: { startDate: "desc" },
+      take: 100,
+    });
+  } catch (err) {
+    console.error("CouplesPage DB error:", err);
+  }
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">
