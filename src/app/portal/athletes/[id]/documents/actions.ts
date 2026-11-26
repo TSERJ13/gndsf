@@ -64,7 +64,9 @@ export async function registerAthleteDoc(input: {
 }
 
 // ── AI verification core (extractor injectable for tests) ──
-export async function runDocVerification(
+// Not exported: every export of a "use server" file is a public endpoint,
+// and this one has no access check of its own (callers do assertAccess).
+async function runDocVerification(
   docId: string,
   extractor: (url: string, contentType: string) => Promise<Extraction> = extractBirthDate,
 ) {
