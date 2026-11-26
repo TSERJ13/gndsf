@@ -10,11 +10,11 @@ async function main() {
   console.log('Testing authentication comparison for all 5 admin role accounts...');
 
   const accountsToTest = [
-    { email: 'admin@gndsf.ge', pass: 'gndsf2026!' },
-    { email: 'president@gndsf.ge', pass: 'gndsf2026!' },
-    { email: 'vicepresident@gndsf.ge', pass: 'gndsf2026!' },
-    { email: 'secretary@gndsf.ge', pass: 'gndsf2026!' },
-    { email: 'ritmi@gndsf.ge', pass: 'gndsf2026!' },
+    { email: 'admin@gndsf.ge', pass: process.env.TEST_LOGIN_PASSWORD ?? '' },
+    { email: 'president@gndsf.ge', pass: process.env.TEST_LOGIN_PASSWORD ?? '' },
+    { email: 'vicepresident@gndsf.ge', pass: process.env.TEST_LOGIN_PASSWORD ?? '' },
+    { email: 'secretary@gndsf.ge', pass: process.env.TEST_LOGIN_PASSWORD ?? '' },
+    { email: 'ritmi@gndsf.ge', pass: process.env.TEST_LOGIN_PASSWORD ?? '' },
   ];
 
   for (const acc of accountsToTest) {

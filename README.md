@@ -51,7 +51,7 @@ npm run dev                          # http://localhost:3000
     ხედავს/არეგისტრირებს მხოლოდ თავისი კლუბის ფარგლებში (server-side enforced)
   - წყვილები: შექმნა/გაყრა lifecycle-წესებით (ერთი მოქმედი პარტნიორობა
     სპორტსმენზე; გაყრა მხოლოდ პერიოდს ხურავს); ყველა ოპერაცია აუდიტ-ლოგში
-- **სატესტო ანგარიშები** (პაროლი: `gndsf2026!`):
+- **სატესტო ანგარიშები** (პაროლი: `SEED_PASSWORD` env-დან, მხოლოდ ლოკალურად):
   - admin@gndsf.ge — SuperAdmin
   - secretary@gndsf.ge — გენერალური მდივანი
   - ritmi@gndsf.ge — კლუბ „რიტმის“ მენეჯერი (შეზღუდული scope)
@@ -71,7 +71,7 @@ npm run dev                          # http://localhost:3000
   ხედავს ყველაფერს რედაქტირების გარეშე; კლუბის მენეჯერს ეს განყოფილება არ უჩანს.
 - **ქულების რეგლამენტი** ერთ ფაილშია: `src/lib/points.ts` — ოფიციალური
   ცხრილის მიღებისას მხოლოდ ეს იცვლება.
-- ანგარიშები: admin@ / **president@** / secretary@ / ritmi@ gndsf.ge (პაროლი: gndsf2026!)
+- ანგარიშები: admin@ / **president@** / secretary@ / ritmi@ gndsf.ge (პაროლი: `SEED_PASSWORD`)
 
 ## v0.4 — სპორტსმენის კაბინეტი (Athlete Portal)
 
@@ -85,7 +85,7 @@ npm run dev                          # http://localhost:3000
 - **ფოტოს ატვირთვა**: Vercel-ზე → Vercel Blob (დაშბორდში შექმენით Blob store,
   ტოკენი ავტომატურად ჩაჯდება); ლოკალურად → /public/uploads fallback.
 - **ანგარიშების გაცემა**: ადმინი → სპორტსმენები → „კაბინეტის ანგარიში“
-  (ელფოსტა + დროებითი პაროლი). Demo: giorgi@demo.ge / tamar@demo.ge (gndsf2026!).
+  (ელფოსტა + დროებითი პაროლი). Demo: giorgi@demo.ge / tamar@demo.ge (`SEED_PASSWORD`).
 - **დაცვა**: სპორტსმენი /admin-ში ვერ შედის (→/cabinet), პერსონალი /cabinet-ში
   ვერ შედის (→/admin), ანონიმი → /login.
 

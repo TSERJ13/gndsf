@@ -9,8 +9,12 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Ensuring all admin role accounts exist in DB with active status...');
 
-  const defaultPasswordHash = await hash('gndsf2026!', 10);
-  const adminPasswordHash = await hash('Admin2026!', 10);
+  // Never hardcode passwords: this repository is public.
+  const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  if (!initialPassword || initialPassword.length < 12) {
+    throw new Error('Set ADMIN_INITIAL_PASSWORD (12+ chars) before running this script.');
+  }
+  const defaultPasswordHash = await hash(initialPassword, 10);
 
   const accounts = [
     {
@@ -65,7 +69,7 @@ async function main() {
     console.log(`✓ Account ready: ${user.email} (${user.role})`);
   }
 
-  console.log('All 5 admin role accounts created/updated successfully with password: gndsf2026!');
+  console.log('All 5 admin role accounts created/updated successfully. Each user must change the initial password in /portal/settings.');
 }
 
 main()
