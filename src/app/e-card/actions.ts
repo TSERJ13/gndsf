@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { Gender } from '@prisma/client';
+import { isOwnPublicPhotoUrl, isPrivateRef } from '@/lib/storage';
 
 export async function submitRegistration(formData: FormData) {
   try {
@@ -34,6 +35,18 @@ export async function submitRegistration(formData: FormData) {
       return { success: false, error: 'აუცილებელია ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა' };
     }
     
+    // These values come from the browser: only accept what /api/upload issues.
+    // (Otherwise a "javascript:" or third-party URL would end up as a link
+    // in the staff portal.)
+    if (
+      !isOwnPublicPhotoUrl(profilePictureUrl) ||
+      !isPrivateRef(idDocumentUrl) ||
+      !isPrivateRef(signedAgreementUrl) ||
+      (parentIdDocumentUrl && !isPrivateRef(parentIdDocumentUrl))
+    ) {
+      return { success: false, error: 'ფაილების ატვირთვა ვერ დადასტურდა, სცადეთ თავიდან' };
+    }
+
     if (isUnder18 && !parentIdDocumentUrl) {
       return { success: false, error: 'არასრულწლოვანთათვის აუცილებელია მშობლის პირადობის მოწმობის ატვირთვა' };
     }

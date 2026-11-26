@@ -4,6 +4,25 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon } from "lucide-react";
 import ActionButtons from "./ActionButtons";
+import { resolveStoredFile, type ResolvedDoc } from "@/lib/storage";
+
+function FilePreview({ file, alt }: { file: ResolvedDoc; alt: string }) {
+  if (!file) {
+    return <div className="text-sm text-gray-400 py-6 text-center bg-white rounded border border-dashed">არ არის ატვირთული</div>;
+  }
+  return (
+    <a href={file.url} target="_blank" rel="noreferrer noopener" className="block w-full">
+      {file.isPdf ? (
+        <div className="w-full h-32 bg-white border flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
+          <span className="font-bold text-gray-600">PDF დოკუმენტის ნახვა</span>
+        </div>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={file.url} alt={alt} className="w-full h-56 object-cover rounded hover:opacity-90 transition-opacity border" />
+      )}
+    </a>
+  );
+}
 
 export default async function ECardDetailPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(["SUPER_ADMIN", "VICE_PRESIDENT", "PRESIDENT"]);
@@ -18,6 +37,14 @@ export default async function ECardDetailPage({ params }: { params: Promise<{ id
   if (!reg) {
     return notFound();
   }
+
+  // Documents live in a private bucket: links below expire after 10 minutes.
+  const [photo, idDoc, agreement, parentId] = await Promise.all([
+    resolveStoredFile(reg.profilePictureUrl),
+    resolveStoredFile(reg.idDocumentUrl),
+    resolveStoredFile(reg.signedAgreementUrl),
+    resolveStoredFile(reg.parentIdDocumentUrl),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8">
@@ -106,53 +133,23 @@ export default async function ECardDetailPage({ params }: { params: Promise<{ id
               <div className="space-y-5">
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <span className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2"><ImageIcon className="w-4 h-4"/> ფოტოსურათი</span>
-                  {reg.profilePictureUrl ? (
-                    <a href={reg.profilePictureUrl} target="_blank" rel="noreferrer" className="block w-full">
-                      <img src={reg.profilePictureUrl} alt="Profile" className="w-full h-56 object-cover rounded hover:opacity-90 transition-opacity border" />
-                    </a>
-                  ) : (
-                    <div className="text-sm text-gray-400 py-6 text-center bg-white rounded border border-dashed">არ არის ატვირთული</div>
-                  )}
+                  <FilePreview file={photo} alt="Profile" />
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <span className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2"><ImageIcon className="w-4 h-4"/> პირადობა / დაბადების მოწმობა</span>
-                  {reg.idDocumentUrl ? (
-                    <a href={reg.idDocumentUrl} target="_blank" rel="noreferrer" className="block w-full">
-                      <img src={reg.idDocumentUrl} alt="ID Document" className="w-full h-56 object-cover rounded hover:opacity-90 transition-opacity border" />
-                    </a>
-                  ) : (
-                    <div className="text-sm text-gray-400 py-6 text-center bg-white rounded border border-dashed">არ არის ატვირთული</div>
-                  )}
+                  <FilePreview file={idDoc} alt="ID Document" />
                 </div>
                 
                 <div className="bg-gray-50 p-4 rounded-lg border">
                   <span className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2"><ImageIcon className="w-4 h-4"/> ხელმოწერილი წესდება</span>
-                  {reg.signedAgreementUrl ? (
-                    <a href={reg.signedAgreementUrl} target="_blank" rel="noreferrer" className="block w-full">
-                      {reg.signedAgreementUrl.endsWith('.pdf') ? (
-                        <div className="w-full h-32 bg-white border flex items-center justify-center rounded hover:bg-gray-100 transition-colors">
-                           <span className="font-bold text-gray-600">PDF დოკუმენტის ნახვა</span>
-                        </div>
-                      ) : (
-                        <img src={reg.signedAgreementUrl} alt="Signed Agreement" className="w-full h-56 object-cover rounded hover:opacity-90 transition-opacity border" />
-                      )}
-                    </a>
-                  ) : (
-                    <div className="text-sm text-gray-400 py-6 text-center bg-white rounded border border-dashed">არ არის ატვირთული</div>
-                  )}
+                  <FilePreview file={agreement} alt="Signed Agreement" />
                 </div>
 
                 {reg.isParentConsentRequired && (
                   <div className="bg-yellow-50/30 p-4 rounded-lg border border-yellow-200">
                     <span className="text-sm font-medium text-yellow-800 mb-3 block flex items-center gap-2"><ImageIcon className="w-4 h-4"/> მშობლის პირადობა</span>
-                    {reg.parentIdDocumentUrl ? (
-                      <a href={reg.parentIdDocumentUrl} target="_blank" rel="noreferrer" className="block w-full">
-                        <img src={reg.parentIdDocumentUrl} alt="Parent ID Document" className="w-full h-56 object-cover rounded hover:opacity-90 transition-opacity border" />
-                      </a>
-                    ) : (
-                      <div className="text-sm text-gray-400 py-6 text-center bg-white rounded border border-dashed">არ არის ატვირთული</div>
-                    )}
+                    <FilePreview file={parentId} alt="Parent ID Document" />
                   </div>
                 )}
               </div>
