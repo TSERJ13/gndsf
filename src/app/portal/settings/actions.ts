@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/rbac";
+import { requireUser, requireRole } from "@/lib/rbac";
+import { sendMail } from "@/lib/mail";
 
 // Shared by staff (/portal/settings) and athletes (/cabinet):
 // verify current password, set a new one, audit it.
@@ -27,4 +28,22 @@ export async function changeOwnPassword(formData: FormData) {
     data: { userId: user.id, action: "PASSWORD_CHANGE", entity: "User", entityId: user.id, detail: dbUser.email },
   });
   redirect(`${back}?pok=1`);
+}
+
+// Admin/President: send a test email to check that outgoing mail works.
+export async function sendTestMail(formData: FormData) {
+  const user = await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
+  const to = String(formData.get("to") ?? "").trim();
+  if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(to)) redirect("/portal/settings?mail=bad");
+  try {
+    await sendMail({
+      to,
+      subject: "GNDSF — სატესტო წერილი",
+      text: `ეს სატესტო წერილია gndsf.ge-დან.\nგაგზავნა: ${user.email}\n\nთუ ამას კითხულობთ, ავტომატური ფოსტა მუშაობს.`,
+    });
+  } catch (e) {
+    console.error("test mail failed:", e);
+    redirect("/portal/settings?mail=fail");
+  }
+  redirect("/portal/settings?mail=ok");
 }
