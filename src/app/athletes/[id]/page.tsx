@@ -144,7 +144,7 @@ export default async function AthletePage({
               <div className="font-bold text-black">Dancing for</div>
               <div className="text-black">Georgia</div>
 
-              <div className="font-bold text-black">MIN</div>
+              <div className="font-bold text-black">GID</div>
               <div className="text-black">{athlete.gid}</div>
 
               <div className="font-bold text-black">Current status</div>

@@ -113,26 +113,14 @@ export default async function AthletesPage({
           />
           <div className="flex items-center gap-2">
             <button className="rounded-full bg-[#B83A14] hover:bg-[#8B1E0F] transition-colors px-6 py-2.5 text-[14px] font-bold text-white shadow-sm">
-              Go
+              ძებნა
             </button>
             <Link href="/athletes" className="rounded-full bg-[#B83A14] hover:bg-[#8B1E0F] transition-colors px-6 py-2.5 text-[14px] font-bold text-white shadow-sm inline-block">
-              Clear
+              გასუფთავება
             </Link>
           </div>
         </div>
         
-        <div className="flex items-center gap-6 self-start md:self-auto">
-          <label className="flex items-center gap-2 cursor-pointer text-[14px] font-bold text-black">
-            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[#B83A14] focus:ring-[#B83A14]" />
-            Show as table
-          </label>
-          <button type="button" className="text-[14px] font-medium text-black flex items-center gap-1 hover:text-[#B83A14]">
-            Advanced filter
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </div>
       </form>
 
       {tab === "couples" && (
