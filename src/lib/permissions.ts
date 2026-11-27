@@ -52,7 +52,8 @@ export type Capability =
   | "MAIL_ACCESS"
   // ადმინისტრირება
   | "USER_MANAGE"
-  | "SETTINGS_ACCESS";
+  | "SETTINGS_ACCESS"
+  | "ATHLETE_APPROVE"; // კლუბის მიერ დამატებული ათლეტის დამტკიცება/დაბრუნება
 
 const ALL_STAFF: Role[] = [
   "SUPER_ADMIN",
@@ -84,6 +85,7 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "MAIL_ACCESS",
     "USER_MANAGE",
     "SETTINGS_ACCESS",
+    "ATHLETE_APPROVE",
   ],
   PRESIDENT: [
     "CLUB_MANAGE",
@@ -97,11 +99,15 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "TRANSFER_REQUEST",
     "TRANSFER_REVIEW",
     "COMPETITION_VIEW",
+    "COMPETITION_RESULT_MANAGE",
     "NEWS_MANAGE",
     "CALENDAR_MANAGE",
     "DOCUMENT_MANAGE",
     "ECARD_REVIEW",
+    "MAIL_ACCESS",
+    "USER_MANAGE",
     "SETTINGS_ACCESS",
+    "ATHLETE_APPROVE",
   ],
   VICE_PRESIDENT: [
     "CLUB_MANAGE",

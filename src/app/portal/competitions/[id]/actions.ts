@@ -8,7 +8,7 @@ import { categoryFor } from "@/lib/labels";
 import { commitEventResults } from "@/lib/results";
 import { parseTopturnier, type TopturnierParticipant } from "@/lib/topturnierParse";
 import { bestMatch, type MatchCandidate } from "@/lib/nameMatch";
-import type { AgeCategory, Discipline, Format, DanceClass, CoupleCategory } from "@prisma/client";
+import type { AgeCategory, Discipline, Format, CoupleCategory } from "@prisma/client";
 
 export async function addEvent(formData: FormData) {
   await requireRole(RESULT_ADMINS);
@@ -16,25 +16,22 @@ export async function addEvent(formData: FormData) {
   const ageCategory = String(formData.get("ageCategory")) as AgeCategory;
   const discipline = String(formData.get("discipline")) as Discipline;
   const format = String(formData.get("format")) as Format;
-  // Only one of these applies depending on `format` — the unused select
-  // is ignored below. Both are required for scoring at result-commit time
-  // (see commitResults), but left optional here so an event can still be
-  // created and entries registered before the class/category is decided.
-  const danceClassRaw = String(formData.get("danceClass") ?? "");
-  const coupleCategoryRaw = String(formData.get("coupleCategory") ?? "");
-  const danceClass = (format === "SOLO" && danceClassRaw ? danceClassRaw : null) as DanceClass | null;
-  const coupleCategory = (format === "COUPLE" && coupleCategoryRaw ? coupleCategoryRaw : null) as CoupleCategory | null;
+  // No dancer classes (WDSF has none). The only extra marker is the
+  // 6-dance programme for couples, which uses its own points column;
+  // every other event is scored by its age category (src/lib/points.ts).
+  const sixDance = format === "COUPLE" && formData.get("sixDance") === "on";
+  const coupleCategory = (sixDance ? "SIX_DANCE" : null) as CoupleCategory | null;
 
   await db.compEvent.upsert({
     where: {
       CompEventScoring: {
         competitionId, ageCategory, discipline, format,
-        danceClass: danceClass as any,
+        danceClass: null as any,
         coupleCategory: coupleCategory as any,
       },
     },
-    create: { competitionId, ageCategory, discipline, format, danceClass, coupleCategory },
-    update: { danceClass, coupleCategory },
+    create: { competitionId, ageCategory, discipline, format, danceClass: null, coupleCategory },
+    update: {},
   });
   revalidatePath(`/portal/competitions/${competitionId}`);
   redirect(`/portal/competitions/${competitionId}`);
@@ -64,19 +61,21 @@ export async function addEntry(formData: FormData) {
     const cat = categoryFor(
       new Date(Math.min(+p.leader.birthDate, +p.follower.birthDate)),
     );
-    const leaderClub = await db.clubMembership.findFirst({
-      where: { athleteId: p.leaderId, endDate: null },
-    });
+    // The couple represents the club chosen when it was formed.
+    const leaderClub = p.clubId
+      ? null
+      : await db.clubMembership.findFirst({ where: { athleteId: p.leaderId, endDate: null } });
     await db.entry.create({
       data: {
         eventId,
         partnershipId: p.id,
         ageCategorySnapshot: cat,
-        clubIdSnapshot: leaderClub?.clubId ?? null,
+        clubIdSnapshot: p.clubId ?? leaderClub?.clubId ?? null,
       },
     });
   } else {
     const a = await db.athlete.findUniqueOrThrow({ where: { id } });
+    if (a.status !== "APPROVED") redirect(`${back}?error=pick`);
     if (event.format === "SOLO" && a.gender !== "FEMALE") {
       redirect(`${back}?error=scoring&detail=${encodeURIComponent("სოლო ფორმატში რეგისტრაცია შეუძლიათ მხოლოდ გოგონებს (FEMALE). ვაჟების სოლო აკრძალულია ფედერაციის წესებით.")}`);
     }

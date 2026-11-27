@@ -89,19 +89,36 @@ enum Role {
 // ─────────────────────── Identity & clubs ───────────────────────
 
 model Athlete {
-  id          String   @id @default(uuid())
-  gid         String   @unique // federation-wide athlete ID (GID)
-  firstName   String
-  lastName    String
-  firstNameEn String?
-  lastNameEn  String?
-  birthDate   DateTime
-  gender      Gender
+  id             String   @id @default(uuid())
+  gid            String   @unique // federation-wide athlete ID (GID)
+  firstName      String
+  lastName       String
+  firstNameEn    String?
+  lastNameEn     String?
+  birthDate      DateTime
+  gender         Gender
   personalNumber String?  @unique
-  photoUrl    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  photoUrl       String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Registration workflow: a club submits → PENDING; federation
+  // (president or admin) approves → APPROVED, or returns it with a note
+  // (REJECTED = "returned for correction"). Only APPROVED athletes are
+  // public, get an E-CARD and a cabinet invite.
+  status        RegistrationStatus @default(APPROVED)
+  reviewNote    String?
+  submittedById String?
+  reviewedById  String?
+  reviewedAt    DateTime?
+
+  // Contact for the cabinet invite (parent's for minors)
+  email       String?
+  phone       String?
+  parentName  String?
+  parentEmail String?
+  parentPhone String?
 
   user                User?
   clubMemberships     ClubMembership[]
@@ -115,6 +132,7 @@ model Athlete {
   athleteEditRequests AthleteEditRequest[]
 
   @@index([lastName, firstName])
+  @@index([status])
 }
 
 model Club {
@@ -136,6 +154,8 @@ model Club {
   transferRequestsFrom ClubTransferRequest[] @relation("TransferFrom")
   transferRequestsTo   ClubTransferRequest[] @relation("TransferTo")
   signupRegistrations  ClubRegistration[]
+  partnerships         Partnership[]         @relation("partnershipClub")
+  secondPartnerships   Partnership[]         @relation("partnershipSecondClub")
 }
 
 // Dated history — transfers never overwrite the past.
@@ -156,14 +176,20 @@ model ClubMembership {
 // A couple is a time-bounded relationship. Splitting sets endDate;
 // re-pairing creates a NEW row. Old results stay attached forever.
 model Partnership {
-  id         String    @id @default(uuid())
-  leaderId   String
-  followerId String
-  startDate  DateTime
-  endDate    DateTime? // null = active couple
+  id           String    @id @default(uuid())
+  leaderId     String
+  followerId   String
+  startDate    DateTime
+  endDate      DateTime? // null = active couple
+  // The club(s) the couple represents — chosen when the couple is formed;
+  // partners from two clubs may represent both.
+  clubId       String?
+  secondClubId String?
 
   leader         Athlete        @relation("leader", fields: [leaderId], references: [id])
   follower       Athlete        @relation("follower", fields: [followerId], references: [id])
+  club           Club?          @relation("partnershipClub", fields: [clubId], references: [id])
+  secondClub     Club?          @relation("partnershipSecondClub", fields: [secondClubId], references: [id])
   entries        Entry[]
   rankingEntries RankingEntry[]
 
@@ -197,7 +223,7 @@ model CompEvent {
   ageCategory    AgeCategory
   discipline     Discipline
   format         Format
-  danceClass     DanceClass?     // SOLO only — required for scoring at result-commit time
+  danceClass     DanceClass? // SOLO only — required for scoring at result-commit time
   coupleCategory CoupleCategory? // COUPLE only — required for scoring at result-commit time
 
   competition Competition @relation(fields: [competitionId], references: [id])
@@ -246,7 +272,7 @@ model RankingPoint {
   id         String   @id @default(uuid())
   resultId   String
   athleteId  String
-  points     Int
+  points     Float
   earnedAt   DateTime
   validUntil DateTime
 
@@ -265,7 +291,7 @@ model RankingEntry {
   format        Format
   athleteId     String? // solo leaderboards
   partnershipId String? // couple leaderboards (rank shown per active couple)
-  totalPoints   Int
+  totalPoints   Float
   position      Int
   prevPosition  Int?
   computedAt    DateTime    @default(now())
@@ -299,6 +325,7 @@ model User {
   requestedTransfers  ClubTransferRequest[]
   athleteEditRequests AthleteEditRequest[]
   reviewedClubSignups ClubRegistration[]
+  authTokens          AuthToken[]
 }
 
 model News {
@@ -405,8 +432,8 @@ model AthleteRegistration {
   phone          String?
   clubId         String?
 
-  profilePictureUrl String?
-  idDocumentUrl     String?
+  profilePictureUrl  String?
+  idDocumentUrl      String?
   signedAgreementUrl String?
 
   isParentConsentRequired Boolean  @default(false)
@@ -427,22 +454,23 @@ model AthleteRegistration {
 // that same passwordHash, so no separate "temporary password" step is
 // needed. Rejecting/leaving PENDING creates nothing.
 model ClubRegistration {
-  id             String             @id @default(uuid())
-  status         RegistrationStatus @default(PENDING)
-  name           String
-  nameEn         String?
-  city           String
-  address        String?
-  phone          String?
-  contactName    String
-  email          String             @unique
-  passwordHash   String
-  createdAt      DateTime           @default(now())
-  reviewedAt     DateTime?
-  reviewedById   String?
-  createdClubId  String? // set once approved
+  id            String             @id @default(uuid())
+  status        RegistrationStatus @default(PENDING)
+  name          String
+  nameEn        String?
+  city          String
+  address       String?
+  phone         String?
+  contactName   String
+  email         String             @unique
+  passwordHash  String
+  createdAt     DateTime           @default(now())
+  reviewedAt    DateTime?
+  reviewedById  String?
+  createdClubId String? // set once approved
+  rejectReason  String?
 
-  reviewedBy User? @relation(fields: [reviewedById], references: [id])
+  reviewedBy  User? @relation(fields: [reviewedById], references: [id])
   createdClub Club? @relation(fields: [createdClubId], references: [id])
 }
 
@@ -477,4 +505,20 @@ model AthleteEditRequest {
 
   athlete     Athlete @relation(fields: [athleteId], references: [id])
   requestedBy User    @relation(fields: [requestedById], references: [id])
+}
+
+// One-time links e-mailed to users: cabinet invite (set your password)
+// and password reset. Only a SHA-256 hash of the token is stored.
+model AuthToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  purpose   String // "INVITE" | "RESET"
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

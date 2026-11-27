@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireCapability } from "@/lib/permissions";
+import { clubApproved, clubRejected } from "@/lib/notify";
 
 // Approving a studio signup does two things in one transaction: creates
 // the Club (from the applicant's submitted details) and a CLUB_MANAGER
@@ -60,6 +61,8 @@ export async function approveClubRegistration(formData: FormData) {
     });
   });
 
+  await clubApproved(reg.email, reg.name);
+
   revalidatePath("/portal/club-registrations");
   revalidatePath("/portal/clubs");
   revalidatePath("/clubs");
@@ -70,12 +73,14 @@ export async function rejectClubRegistration(formData: FormData) {
   const admin = await requireCapability("CLUB_SIGNUP_REVIEW");
   const id = String(formData.get("id") ?? "");
 
+  const reason = String(formData.get("reason") ?? "").trim().slice(0, 1000) || null;
+
   const reg = await db.clubRegistration.findUniqueOrThrow({ where: { id } });
   if (reg.status !== "PENDING") redirect("/portal/club-registrations");
 
   await db.clubRegistration.update({
     where: { id },
-    data: { status: "REJECTED", reviewedAt: new Date(), reviewedById: admin.id },
+    data: { status: "REJECTED", reviewedAt: new Date(), reviewedById: admin.id, rejectReason: reason },
   });
 
   await db.auditLog.create({
@@ -84,9 +89,11 @@ export async function rejectClubRegistration(formData: FormData) {
       action: "CLUB_SIGNUP_REJECT",
       entity: "ClubRegistration",
       entityId: id,
-      detail: `${reg.name} (${reg.email})`,
+      detail: `${reg.name} (${reg.email})${reason ? ` — ${reason}` : ""}`,
     },
   });
+
+  await clubRejected(reg.email, reg.name, reason);
 
   revalidatePath("/portal/club-registrations");
   redirect("/portal/club-registrations?ok=rejected");

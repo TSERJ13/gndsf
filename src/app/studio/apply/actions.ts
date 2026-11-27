@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { clubApplicationReceived, federationNewApplication } from "@/lib/notify";
 
 // Public action — no auth required. Applicant sets their own email +
 // password now; the password is hashed immediately and only the hash is
@@ -47,6 +48,13 @@ export async function submitClubRegistration(formData: FormData) {
       status: "PENDING",
     },
   });
+
+  await clubApplicationReceived(email, name);
+  await federationNewApplication(
+    "club",
+    name,
+    `სტუდია: ${name}\nქალაქი: ${city}\nხელმძღვანელი: ${contactName}\nელფოსტა: ${email}${phone ? `\nტელეფონი: ${phone}` : ""}`,
+  );
 
   redirect("/studio/apply?ok=submitted");
 }

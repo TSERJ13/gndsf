@@ -9,13 +9,13 @@ export const metadata = { title: "შესვლა" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; set?: string }>;
 }) {
   const session = await auth();
   if (session?.user) {
     redirect((session.user as { role?: string }).role === "ATHLETE" ? "/cabinet" : "/portal");
   }
-  const { error } = await searchParams;
+  const { error, set } = await searchParams;
 
   async function login(formData: FormData) {
     "use server";
@@ -39,8 +39,13 @@ export default async function LoginPage({
           <h1 className="heading-display text-3xl">ადმინისტრირება</h1>
         </div>
         <p className="mt-4 text-center text-sm font-medium text-smoke">
-          შედით ფედერაციის ან კლუბის ანგარიშით.
+          შედით ფედერაციის, კლუბის ან ათლეტის ანგარიშით.
         </p>
+        {set && (
+          <p className="mt-6 rounded-lg border border-green-600/30 bg-green-600/10 px-4 py-3 text-center text-sm font-semibold text-green-700">
+            პაროლი შენახულია. შედით ახალი პაროლით.
+          </p>
+        )}
         {error && (
           <p className="mt-6 rounded-lg border border-wine/40 bg-wine/10 px-4 py-3 text-center text-sm font-semibold text-flame">
             ელფოსტა ან პაროლი არასწორია. სცადეთ ხელახლა.
@@ -78,6 +83,11 @@ export default async function LoginPage({
           </button>
         </form>
         <p className="mt-6 text-center text-xs text-smoke">
+          <Link href="/forgot-password" className="font-semibold underline underline-offset-2">
+            დაგავიწყდათ პაროლი?
+          </Link>
+        </p>
+        <p className="mt-3 text-center text-xs text-smoke">
           ჯერ არ ხართ დარეგისტრირებული სტუდია?{" "}
           <Link href="/studio/apply" className="font-semibold underline underline-offset-2">
             დარეგისტრირდით აქ

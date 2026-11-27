@@ -37,10 +37,15 @@ export default async function AdminPartnerships({
     clubMemberships: { some: { clubId: scope.clubId, endDate: null } }
   } : {};
 
+  const canAnyCouple = can(user, "PARTNERSHIP_MANAGE_ALL");
+  const allClubs = canAnyCouple
+    ? await db.club.findMany({ where: { isActive: true }, orderBy: { name: "asc" }, select: { id: true, name: true } })
+    : [];
+
   const [active, past, freeMales, freeFemales] = await Promise.all([
     db.partnership.findMany({
       where: { endDate: null, ...clubFilter },
-      include: { leader: true, follower: true },
+      include: { leader: true, follower: true, club: true, secondClub: true },
       orderBy: { startDate: "desc" },
     }),
     db.partnership.findMany({
@@ -51,7 +56,7 @@ export default async function AdminPartnerships({
     }),
     db.athlete.findMany({
       where: {
-        isActive: true, gender: "MALE",
+        isActive: true, status: "APPROVED", gender: "MALE",
         ...athleteFilter,
         asLeader: { none: { endDate: null } },
         asFollower: { none: { endDate: null } },
@@ -60,7 +65,7 @@ export default async function AdminPartnerships({
     }),
     db.athlete.findMany({
       where: {
-        isActive: true, gender: "FEMALE",
+        isActive: true, status: "APPROVED", gender: "FEMALE",
         ...athleteFilter,
         asLeader: { none: { endDate: null } },
         asFollower: { none: { endDate: null } },
@@ -87,8 +92,10 @@ export default async function AdminPartnerships({
       {error && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           {error === "busy"
-            ? "ერთ-ერთ სპორტსმენს უკვე ჰყავს მოქმედი პარტნიორი — ჯერ არსებული წყვილი დაშალეთ."
-            : "აირჩიეთ ორი განსხვავებული სპორტსმენი."}
+            ? "ერთ-ერთ ათლეტს უკვე ჰყავს მოქმედი პარტნიორი — ჯერ არსებული წყვილი დაშალეთ."
+            : error === "notapproved"
+              ? "წყვილის შექმნა შეიძლება მხოლოდ ფედერაციის მიერ დამტკიცებული ათლეტებით."
+              : "აირჩიეთ ორი განსხვავებული ათლეტი."}
         </p>
       )}
 
@@ -185,7 +192,7 @@ export default async function AdminPartnerships({
           <form action={formPartnership} className="h-fit rounded-lg border border-neutral-200 bg-white p-5">
             <h2 className="font-semibold">ახალი წყვილი</h2>
             <p className="mt-1 text-xs text-neutral-500">
-              სიაში მხოლოდ თავისუფალი სპორტსმენები ჩანან.
+              სიაში მხოლოდ თავისუფალი, დამტკიცებული ათლეტები ჩანან. ათლეტს ერთდროულად ერთი პარტნიორი ჰყავს.
             </p>
             <div className="mt-4 space-y-3">
               <div>
@@ -204,6 +211,28 @@ export default async function AdminPartnerships({
                   <SearchableAthleteSelect name="followerId" options={freeFemales} placeholder="აირჩიეთ ქალი პარტნიორი..." />
                 </div>
               </div>
+              {canAnyCouple && (
+                <>
+                  <div>
+                    <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="clubId">
+                      წარმოადგენს კლუბს
+                    </label>
+                    <select id="clubId" name="clubId" className={input}>
+                      <option value="">პარტნიორის კლუბი (ავტომატურად)</option>
+                      {allClubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase tracking-wider text-neutral-500" htmlFor="secondClubId">
+                      მეორე კლუბი (თუ პარტნიორები სხვადასხვა კლუბიდან არიან)
+                    </label>
+                    <select id="secondClubId" name="secondClubId" className={input}>
+                      <option value="">—</option>
+                      {allClubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
               <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-700">
                 წყვილის შექმნა
               </button>

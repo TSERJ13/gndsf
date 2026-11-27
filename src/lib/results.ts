@@ -2,7 +2,7 @@
 // One transaction: results + points + ranking rebuild + audit.
 // Re-committing an event replaces its results cleanly (idempotent).
 import { db } from "./db";
-import { getSoloScore, getCoupleScore, validUntilFrom, type CoupleCategoryKey } from "./points";
+import { getSoloScore, getCoupleScore, coupleColumnFor, validUntilFrom } from "./points";
 import { recomputeRankings } from "./rankings";
 
 export async function commitEventResults(
@@ -17,7 +17,12 @@ export async function commitEventResults(
       include: { competition: true, entries: { include: { partnership: true } } },
     });
     const byId = new Map(event.entries.map((e) => [e.id, e]));
-    const participants = event.entries.length;
+    // Field size = registered entries, but never smaller than the worst
+    // placement being committed (e.g. a late entry added at the venue).
+    const participants = Math.max(
+      event.entries.length,
+      ...placements.map((p) => p.placement),
+    );
 
     // wipe previous results for this event (points cascade via resultId)
     const oldResults = await tx.result.findMany({
@@ -45,24 +50,10 @@ export async function commitEventResults(
         },
       });
 
-      let pts: number;
-      if (event.format === "SOLO") {
-        if (!event.danceClass) {
-          throw new Error(
-            `ივენთს ("${event.ageCategory}") არ აქვს მითითებული ცეკვის კლასი (A/B/C/D) — ` +
-              `ქულების დათვლა ვერ მოხერხდება. დაარედაქტირეთ ივენთი და აირჩიეთ კლასი.`,
-          );
-        }
-        pts = getSoloScore(participants, event.ageCategory, event.danceClass, placement);
-      } else {
-        if (!event.coupleCategory) {
-          throw new Error(
-            `ივენთს ("${event.ageCategory}") არ აქვს მითითებული წყვილების კატეგორია — ` +
-              `ქულების დათვლა ვერ მოხერხდება. დაარედაქტირეთ ივენთი და აირჩიეთ კატეგორია.`,
-          );
-        }
-        pts = getCoupleScore(event.coupleCategory as CoupleCategoryKey, placement);
-      }
+      const pts =
+        event.format === "SOLO"
+          ? getSoloScore(participants, placement)
+          : getCoupleScore(coupleColumnFor(event), placement);
 
       const athleteIds = entry.partnership
         ? [entry.partnership.leaderId, entry.partnership.followerId]
@@ -96,4 +87,30 @@ export async function commitEventResults(
       },
     });
   }, { timeout: 30000 });
+}
+
+// Re-scores every committed result with the current points rules and
+// rebuilds the rankings once. Used after a rules change.
+export async function rescoreAll(userId: string | null) {
+  const events = await db.compEvent.findMany({
+    where: { entries: { some: { result: { isNot: null } } } },
+    select: { id: true, entries: { select: { id: true, result: true } } },
+  });
+  let count = 0;
+  for (const ev of events) {
+    const placements = ev.entries
+      .filter((e) => e.result)
+      .map((e) => ({
+        entryId: e.id,
+        placement: e.result!.placement,
+        roundsReached: e.result!.roundsReached ?? undefined,
+      }));
+    await commitEventResults(ev.id, placements, userId, false);
+    count += placements.length;
+  }
+  await db.$transaction((tx) => recomputeRankings(tx), { timeout: 60000 });
+  await db.auditLog.create({
+    data: { userId, action: "RESCORE_ALL", entity: "CompEvent", detail: `${events.length} ივენთი, ${count} შედეგი გადაითვალა` },
+  });
+  return { events: events.length, results: count };
 }

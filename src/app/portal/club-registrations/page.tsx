@@ -55,20 +55,29 @@ export default async function ClubRegistrationsPage({
               {r.phone && <div><span className="text-neutral-400">ტელეფონი:</span> {r.phone}</div>}
               <div className="tabular-nums text-neutral-400">{fmtDate(r.createdAt)}</div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <form action={approveClubRegistration} className="flex-1">
+            <form action={approveClubRegistration} className="mt-4">
+              <input type="hidden" name="id" value={r.id} />
+              <button className="w-full rounded bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700">
+                დამტკიცება
+              </button>
+            </form>
+            <details className="mt-2">
+              <summary className="cursor-pointer rounded bg-red-50 py-2 text-center text-sm font-semibold text-red-700 transition hover:bg-red-100">
+                უარყოფა
+              </summary>
+              <form action={rejectClubRegistration} className="mt-2 space-y-2">
                 <input type="hidden" name="id" value={r.id} />
-                <button className="w-full rounded bg-neutral-900 py-2 text-sm font-medium text-white transition hover:bg-neutral-700">
-                  დამტკიცება
+                <textarea
+                  name="reason"
+                  rows={2}
+                  placeholder="მიზეზი (გაეგზავნება სტუდიას)"
+                  className="w-full rounded border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+                />
+                <button className="w-full rounded bg-red-700 py-2 text-sm font-semibold text-white transition hover:bg-red-800">
+                  უარყოფის დადასტურება
                 </button>
               </form>
-              <form action={rejectClubRegistration} className="flex-1">
-                <input type="hidden" name="id" value={r.id} />
-                <button className="w-full rounded bg-red-50 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100">
-                  უარყოფა
-                </button>
-              </form>
-            </div>
+            </details>
           </div>
         ))}
         {pending.length === 0 && (
@@ -99,7 +108,9 @@ export default async function ClubRegistrationsPage({
                   {r.status === "APPROVED" ? (
                     <span className="text-green-700">დამტკიცებული</span>
                   ) : (
-                    <span className="text-red-700">უარყოფილი</span>
+                    <span className="text-red-700" title={r.rejectReason ?? undefined}>
+                      უარყოფილი{r.rejectReason ? ` — ${r.rejectReason}` : ""}
+                    </span>
                   )}
                 </td>
                 <td className="px-4 py-2 text-neutral-500">{r.reviewedBy?.name ?? "—"}</td>
