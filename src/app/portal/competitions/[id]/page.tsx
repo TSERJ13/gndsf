@@ -6,10 +6,6 @@ import {
   CATEGORY_LABELS,
   DISCIPLINE_LABELS,
   FORMAT_LABELS,
-  DANCE_CLASSES,
-  DANCE_CLASS_LABELS,
-  COUPLE_CATEGORIES,
-  COUPLE_CATEGORY_LABELS,
   fmtDate,
 } from "@/lib/labels";
 import { addEvent, addEntry, commitResults, publishCompetition } from "./actions";
@@ -92,7 +88,7 @@ export default async function CompetitionAdmin({
       )}
       {error === "scoring" && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
-          ქულების დათვლა ვერ მოხერხდა: {detail || "დარწმუნდით, რომ ივენთს აქვს კლასი/კატეგორია მითითებული."}
+          ქულების დათვლა ვერ მოხერხდა: {detail || "შეამოწმეთ ადგილები."}
         </p>
       )}
 
@@ -124,28 +120,10 @@ export default async function CompetitionAdmin({
               <option value="SOLO">სოლო</option>
             </select>
           </div>
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-500">
-              კლასი <span className="normal-case text-neutral-400">(სოლოსთვის)</span>
-            </label>
-            <select name="danceClass" className={`${input} mt-1`}>
-              <option value="">—</option>
-              {DANCE_CLASSES.map((c) => (
-                <option key={c} value={c}>{DANCE_CLASS_LABELS[c]}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-500">
-              კატეგორია <span className="normal-case text-neutral-400">(წყვილებისთვის)</span>
-            </label>
-            <select name="coupleCategory" className={`${input} mt-1`}>
-              <option value="">—</option>
-              {COUPLE_CATEGORIES.map((c) => (
-                <option key={c} value={c}>{COUPLE_CATEGORY_LABELS[c]}</option>
-              ))}
-            </select>
-          </div>
+          <label className="flex items-center gap-2 pb-2 text-sm text-neutral-700">
+            <input type="checkbox" name="sixDance" />
+            6 ცეკვა <span className="text-neutral-400">(წყვილები)</span>
+          </label>
           <button className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">
             ივენთის დამატება
           </button>
@@ -159,15 +137,8 @@ export default async function CompetitionAdmin({
               <h2 className="font-semibold">
                 {CATEGORY_LABELS[ev.ageCategory]} · {DISCIPLINE_LABELS[ev.discipline]} ·{" "}
                 {FORMAT_LABELS[ev.format]}
-                {ev.format === "SOLO" && (
-                  <span className={ev.danceClass ? "text-neutral-500" : "text-red-600"}>
-                    {" "}· {ev.danceClass ? DANCE_CLASS_LABELS[ev.danceClass] : "კლასი არ არის მითითებული!"}
-                  </span>
-                )}
-                {ev.format === "COUPLE" && (
-                  <span className={ev.coupleCategory ? "text-neutral-500" : "text-red-600"}>
-                    {" "}· {ev.coupleCategory ? COUPLE_CATEGORY_LABELS[ev.coupleCategory] : "კატეგორია არ არის მითითებული!"}
-                  </span>
+                {ev.coupleCategory === "SIX_DANCE" && (
+                  <span className="text-neutral-500"> · 6 ცეკვა</span>
                 )}
               </h2>
               {canManage && (

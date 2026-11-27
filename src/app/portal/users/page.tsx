@@ -36,7 +36,7 @@ export default async function AdminUsers({
 }: {
   searchParams: Promise<{ tab?: string; ok?: string; error?: string }>;
 }) {
-  await requireRole(["SUPER_ADMIN"]);
+  await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
   const { tab = "admin", ok, error } = await searchParams;
 
   const [users, clubs] = await Promise.all([

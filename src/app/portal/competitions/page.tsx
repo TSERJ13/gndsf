@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { requireRole, REGISTRY_ADMINS } from "@/lib/rbac";
+import { requireRole, REGISTRY_ADMINS, can } from "@/lib/rbac";
 import { fmtDate } from "@/lib/labels";
 import { createCompetition } from "./actions";
 
@@ -15,7 +15,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default async function AdminCompetitions() {
   const user = await requireRole(REGISTRY_ADMINS);
-  const canManage = user.role === "SUPER_ADMIN" || user.role === "GENERAL_SECRETARY";
+  const canManage = can(user, "COMPETITION_RESULT_MANAGE");
 
   const comps = await db.competition.findMany({
     orderBy: { startDate: "desc" },

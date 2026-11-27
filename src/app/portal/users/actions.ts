@@ -20,7 +20,7 @@ async function audit(userId: string, action: string, entityId: string, detail: s
 }
 
 export async function createStaffUser(formData: FormData) {
-  const admin = await requireRole(["SUPER_ADMIN"]);
+  const admin = await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const role = String(formData.get("role") ?? "") as Role;
@@ -52,7 +52,7 @@ export async function createStaffUser(formData: FormData) {
 }
 
 export async function toggleUserActive(formData: FormData) {
-  const admin = await requireRole(["SUPER_ADMIN"]);
+  const admin = await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
   const id = String(formData.get("id"));
   if (id === admin.id) redirect("/portal/users?error=self");
 
@@ -75,7 +75,7 @@ export async function toggleUserActive(formData: FormData) {
 }
 
 export async function resetUserPassword(formData: FormData) {
-  const admin = await requireRole(["SUPER_ADMIN"]);
+  const admin = await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
   const id = String(formData.get("id"));
   const password = String(formData.get("password") ?? "");
   if (password.length < 8) redirect("/portal/users?error=shortpass");

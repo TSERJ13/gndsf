@@ -42,100 +42,68 @@ export const TYPE_COEFFICIENTS: Record<string, number> = {
 };
 
 // ─────────────────────────── Solo scoring ───────────────────────────
+//
+// Source: "axali soloebi.pdf", page 1 (the federation's table).
+// The A/B/C/D blocks in that PDF are NOT dancer classes: a big solo field
+// is danced as consecutive finals of 6 (A = places 1-6, B = 7-12,
+// C = 13-18, D = 19-24). Read that way the table is simply
+// "overall place × number of participants", and every column decreases
+// monotonically. Age does not matter (the age columns are identical).
+//
+// Participant ranges: 1-6, 7-12, 13-24 (24 = a full quarter-final, still
+// in this column), 25+. In the 25+ column, after D6 the PDF continues
+// with 25th = 3, then 26th-30th = 2, 1, 1, 1, 1, and 0.5 for everyone
+// below that.
 
-const SOLO_PARTICIPANT_RANGES = [
-  { key: "0-6", min: 0, max: 6 },
-  { key: "7-12", min: 7, max: 12 },
-  { key: "13-24", min: 13, max: 24 },
-  { key: "24+", min: 25, max: Infinity },
-] as const;
-
-type SoloRangeKey = (typeof SOLO_PARTICIPANT_RANGES)[number]["key"];
-type DanceClassKey = "A" | "B" | "C" | "D";
-
-const SOLO_POINTS: Record<DanceClassKey, Partial<Record<SoloRangeKey, Record<number, number>>>> = {
-  A: {
-    "0-6": { 1: 45, 2: 40, 3: 35, 4: 30, 5: 28, 6: 25 },
-    "7-12": { 1: 55, 2: 45, 3: 40, 4: 35, 5: 30, 6: 28 },
-    "13-24": { 1: 60, 2: 55, 3: 45, 4: 40, 5: 35, 6: 30 },
-    "24+": { 1: 70, 2: 60, 3: 55, 4: 45, 5: 40, 6: 35 },
+const SOLO_TABLE: { maxParticipants: number; points: number[]; rest: number | null }[] = [
+  { maxParticipants: 6, points: [45, 40, 35, 30, 28, 25], rest: null },
+  {
+    maxParticipants: 12,
+    points: [55, 45, 40, 35, 30, 28, 25, 22, 20, 18, 17, 16],
+    rest: null,
   },
-  B: {
-    // 0-6 range: class B is not defined in the source table.
-    "7-12": { 1: 25, 2: 22, 3: 20, 4: 18, 5: 17, 6: 16 },
-    "13-24": { 1: 28, 2: 25, 3: 22, 4: 20, 5: 18, 6: 17 },
-    "24+": { 1: 30, 2: 28, 3: 25, 4: 22, 5: 20, 6: 18 },
+  {
+    maxParticipants: 24,
+    points: [
+      60, 55, 45, 40, 35, 30, // A
+      28, 25, 22, 20, 18, 17, // B
+      16, 13, 12, 11, 10, 9, // C
+      7, 6, 5, 4, 3, 2, // D
+    ],
+    rest: null,
   },
-  C: {
-    // 0-6 and 7-12 ranges: class C is not defined in the source table.
-    "13-24": { 1: 16, 2: 13, 3: 12, 4: 11, 5: 10, 6: 9 },
-    "24+": { 1: 17, 2: 16, 3: 13, 4: 12, 5: 11, 6: 10 },
+  {
+    maxParticipants: Infinity,
+    points: [
+      70, 60, 55, 45, 40, 35, // A
+      30, 28, 25, 22, 20, 18, // B
+      17, 16, 13, 12, 11, 10, // C
+      9, 8, 7, 6, 5, 4, // D
+      3, // 25th
+      2, 1, 1, 1, 1, // 26th-30th
+    ],
+    rest: 0.5,
   },
-  D: {
-    // 0-6 and 7-12 ranges: class D is not defined in the source table.
-    "13-24": { 1: 7, 2: 6, 3: 5, 4: 4, 5: 3, 6: 2 },
-    "24+": { 1: 9, 2: 8, 3: 7, 4: 6, 5: 5, 6: 4 },
-  },
-};
-
-function resolveSoloRange(participants: number): SoloRangeKey | null {
-  for (const r of SOLO_PARTICIPANT_RANGES) {
-    if (participants >= r.min && participants <= r.max) return r.key;
-  }
-  return null;
-}
+];
 
 /**
- * Solo score, per the federation's confirmed points table.
- * @param participants number of entries in this event (the whole field)
- * @param ageCategory  accepted for validation / future differentiation —
- *                     the confirmed table does not vary by age category
- * @param danceClass   "A" | "B" | "C" | "D"
- * @param place        placement (1-based)
+ * Solo score, per the federation's table.
+ * @param participants number of soloists in the event (whole field)
+ * @param place        overall placement (1-based) as TopTurnier reports it
  */
-export function getSoloScore(
-  participants: number,
-  ageCategory: string,
-  danceClass: DanceClassKey,
-  place: number,
-): number {
-  if (!Number.isInteger(participants) || participants < 0) {
+export function getSoloScore(participants: number, place: number): number {
+  if (!Number.isInteger(participants) || participants < 1) {
     throw new Error(`getSoloScore: მონაწილეთა რაოდენობა არასწორია: ${participants}`);
   }
-  if (!ageCategory) {
-    throw new Error("getSoloScore: ასაკობრივი კატეგორია არ არის მითითებული.");
+  if (!Number.isInteger(place) || place < 1 || place > participants) {
+    throw new Error(`getSoloScore: ადგილი (${place}) არასწორია ${participants} მონაწილისთვის.`);
   }
-  if (!Number.isInteger(place) || place < 1) {
-    throw new Error(`getSoloScore: ადგილი არასწორია: ${place}`);
-  }
-
-  const range = resolveSoloRange(participants);
-  if (!range) {
-    throw new Error(`getSoloScore: მონაწილეთა რაოდენობისთვის (${participants}) რეინჯი ვერ მოიძებნა.`);
-  }
-
-  // 24+ range: every place from 7 down is a flat 0.5.
-  if (range === "24+" && place >= 7) {
-    return 0.5;
-  }
-
-  const table = SOLO_POINTS[danceClass]?.[range];
-  if (!table) {
-    throw new Error(
-      `getSoloScore: კომბინაცია "კლასი ${danceClass} + მონაწილეები ${range}" ცხრილში არ არსებობს ` +
-        `(ეს კლასი ამ მონაწილეთა რაოდენობისთვის ცხრილში საერთოდ არაა განსაზღვრული).`,
-    );
-  }
-
-  const score = table[place];
-  if (score === undefined) {
-    throw new Error(
-      `getSoloScore: "კლასი ${danceClass} + მონაწილეები ${range}"-სთვის ${place}-ე ადგილი ცხრილში არ არსებობს ` +
-        `(მხოლოდ 1-6 ადგილია განსაზღვრული ამ რეინჯში).`,
-    );
-  }
-
-  return score;
+  const column = SOLO_TABLE.find((c) => participants <= c.maxParticipants)!;
+  const pts = column.points[place - 1];
+  if (pts !== undefined) return pts;
+  if (column.rest !== null) return column.rest;
+  // Unreachable: each column covers every place up to its max field size.
+  throw new Error(`getSoloScore: ${place}-ე ადგილი ცხრილში არ არსებობს.`);
 }
 
 // ─────────────────────────── Couple scoring ───────────────────────────
@@ -203,4 +171,29 @@ export function getCoupleScore(category: CoupleCategoryKey, place: number): numb
   }
 
   return COUPLE_POINTS[category][rangeKey];
+}
+
+// Which column of the couple table an event uses: the "6 dance" column
+// when the event is flagged as the 6-dance programme, otherwise the
+// event's age category (Juvenile I and II share one column).
+export function coupleColumnFor(event: {
+  ageCategory: string;
+  coupleCategory?: string | null;
+}): CoupleCategoryKey {
+  if (event.coupleCategory === "SIX_DANCE") return "SIX_DANCE";
+  switch (event.ageCategory) {
+    case "JUVENILE_I":
+    case "JUVENILE_II":
+      return "JUVENILE_1_2";
+    case "JUNIOR_I":
+      return "JUNIOR_1";
+    case "JUNIOR_II":
+      return "JUNIOR_2";
+    case "YOUTH":
+      return "YOUTH";
+    case "ADULT":
+      return "ADULT";
+    default:
+      throw new Error(`coupleColumnFor: უცნობი ასაკობრივი კატეგორია: ${event.ageCategory}`);
+  }
 }
