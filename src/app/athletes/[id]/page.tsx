@@ -1,3 +1,4 @@
+import { AthletePhoto } from "@/components/Photo";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -126,11 +127,8 @@ export default async function AthletePage({
         <div className="flex flex-row gap-6 md:gap-16 items-start">
           {/* Left Column: Photo Area */}
           <div className="w-[120px] sm:w-[180px] md:w-[220px] shrink-0">
-            <div className="aspect-[3/4] w-full bg-gray-100 flex items-center justify-center overflow-hidden">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+            <div className="aspect-[3/4] w-full overflow-hidden bg-gray-100">
+              <AthletePhoto athlete={athlete} />
             </div>
           </div>
 

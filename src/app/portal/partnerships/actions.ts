@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser, can, clubScope } from "@/lib/rbac";
+import { uploadPhoto } from "@/lib/image";
 
 // Forming a couple: SUPER_ADMIN/PRESIDENT/VICE_PRESIDENT may pair any two
 // free athletes. A CLUB_MANAGER may pair two, but ONLY if both are
@@ -128,4 +129,26 @@ export async function splitPartnership(formData: FormData) {
 
   revalidatePath("/portal/partnerships");
   redirect("/portal/partnerships?ok=split");
+}
+
+// Couple photo: the club the couple represents, or the federation.
+export async function uploadCouplePhoto(formData: FormData) {
+  const user = await requireUser();
+  const id = String(formData.get("id") ?? "");
+  const p = await db.partnership.findUniqueOrThrow({
+    where: { id },
+    include: { leader: { include: { clubMemberships: { where: { endDate: null } } } } },
+  });
+  const clubIds = [p.clubId, p.secondClubId, ...p.leader.clubMemberships.map((m) => m.clubId)];
+  const allowed =
+    can(user, "PARTNERSHIP_MANAGE_ALL") ||
+    (can(user, "PARTNERSHIP_MANAGE_OWN_CLUB") && !!user.clubId && clubIds.includes(user.clubId));
+  if (!allowed) redirect("/portal/partnerships?error=unauthorized");
+
+  const url = await uploadPhoto(formData.get("photo"), `couples/${id}`);
+  if (!url) redirect("/portal/partnerships?error=photo");
+  await db.partnership.update({ where: { id }, data: { photoUrl: url } });
+  revalidatePath("/portal/partnerships");
+  revalidatePath(`/couples/${id}`);
+  redirect("/portal/partnerships?ok=photo");
 }

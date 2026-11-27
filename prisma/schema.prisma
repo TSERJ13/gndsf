@@ -185,6 +185,7 @@ model Partnership {
   // partners from two clubs may represent both.
   clubId       String?
   secondClubId String?
+  photoUrl     String? // couple photo (resized to medium on upload)
 
   leader         Athlete        @relation("leader", fields: [leaderId], references: [id])
   follower       Athlete        @relation("follower", fields: [followerId], references: [id])
