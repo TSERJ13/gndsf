@@ -1,47 +1,42 @@
-import { NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { NextResponse } from "next/server";
+import { putUpload, type UploadKind } from "@/lib/storage";
 
-const s3Client = new S3Client({
-  region: 'auto',
-  endpoint: process.env.R2_ENDPOINT!,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
+// Public endpoint (used by the e-card application wizard). Only accept the
+// document/photo formats the form asks for: an open bucket must never serve
+// HTML/SVG/JS uploaded by strangers.
+const MAX_BYTES = 10 * 1024 * 1024;
+const PHOTO_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+};
+const DOCUMENT_TYPES: Record<string, string> = { ...PHOTO_TYPES, "application/pdf": "pdf" };
 
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    
-    if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    const file = formData.get("file");
+    const kind: UploadKind = formData.get("kind") === "photo" ? "photo" : "document";
+
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+    const ext = (kind === "photo" ? PHOTO_TYPES : DOCUMENT_TYPES)[file.type];
+    if (!ext) {
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 415 });
+    }
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json({ error: "File too large" }, { status: 413 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Create a unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const filename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const savedName = `${uniqueSuffix}-${filename}`;
-
-    // Upload to Cloudflare R2
-    const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME!,
-      Key: savedName,
-      Body: buffer,
-      ContentType: file.type || 'application/octet-stream',
-    });
-
-    await s3Client.send(command);
-
-    // Return the public URL path
-    const url = `${process.env.R2_PUBLIC_URL}/${savedName}`;
+    // Unguessable name; extension derived from the verified content type.
+    const key = `${kind === "photo" ? "photos" : "documents"}/${crypto.randomUUID()}.${ext}`;
+    const url = await putUpload(kind, key, Buffer.from(await file.arrayBuffer()), file.type);
     return NextResponse.json({ url });
   } catch (error) {
-    console.error('Error uploading file:', error);
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+    console.error("Error uploading file:", error);
+    return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
   }
 }

@@ -189,7 +189,10 @@ async function main() {
   });
 
   // ── Users: one per role tier for testing RBAC ──
-  const hash = await bcrypt.hash("gndsf2026!", 10);
+  // Local/dev seed only. Password comes from SEED_PASSWORD (never commit one).
+  const seedPassword = process.env.SEED_PASSWORD;
+  if (!seedPassword) throw new Error("Set SEED_PASSWORD to seed demo users.");
+  const hash = await bcrypt.hash(seedPassword, 10);
   await db.user.createMany({
     data: [
       { email: "admin@gndsf.ge", passwordHash: hash, name: "სუპერ ადმინი", role: "SUPER_ADMIN" },
@@ -202,7 +205,7 @@ async function main() {
     ],
   });
 
-  console.log("Seed complete. Users: admin@gndsf.ge / president@gndsf.ge / secretary@gndsf.ge / ritmi@gndsf.ge — password: gndsf2026!");
+  console.log("Seed complete. Users: admin@gndsf.ge / president@gndsf.ge / secretary@gndsf.ge / ritmi@gndsf.ge — password: $SEED_PASSWORD");
 }
 
 // Derived leaderboards: truncate + rebuild. Idempotent by design.

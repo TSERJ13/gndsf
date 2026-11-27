@@ -1,0 +1,28 @@
+-- MIGRATION: lock down Supabase's auto-generated REST API (PostgREST).
+-- Without RLS, anyone holding the public anon key could read/modify every
+-- row (incl. User.passwordHash). The app connects via Prisma as the
+-- "postgres" role, which has BYPASSRLS, so the site is unaffected.
+-- No policies are added on purpose: the REST API is not used by the app.
+-- Idempotent. Applied to production 2026-11-26.
+ALTER TABLE "Athlete" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Club" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ClubMembership" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Partnership" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Competition" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CompEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Entry" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Result" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "RankingPoint" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "RankingEntry" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "News" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CalendarEvent" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Document" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AuditLog" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AthleteRegistration" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ClubTransferRequest" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AthleteEditRequest" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "ClubRegistration" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "MailAccount" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AthleteDocument" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "AdminTask" ENABLE ROW LEVEL SECURITY;

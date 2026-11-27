@@ -76,9 +76,10 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
   const handleNext = () => setStep((s) => s + 1);
   const handlePrev = () => setStep((s) => s - 1);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, kind: "photo" | "document") => {
     const data = new FormData();
     data.append("file", file);
+    data.append("kind", kind);
     const res = await fetch("/api/upload", { method: "POST", body: data });
     if (!res.ok) throw new Error("Upload failed");
     const json = await res.json();
@@ -101,10 +102,10 @@ export default function ApplyWizard({ clubs }: { clubs: Club[] }) {
       let parentIdUrl = formData.parentIdDocumentUrl;
 
       // Upload if files selected
-      if (profileFile) profileUrl = await uploadFile(profileFile);
-      if (idFile) idUrl = await uploadFile(idFile);
-      if (agreementFile) agreementUrl = await uploadFile(agreementFile);
-      if (parentIdFile) parentIdUrl = await uploadFile(parentIdFile);
+      if (profileFile) profileUrl = await uploadFile(profileFile, "photo");
+      if (idFile) idUrl = await uploadFile(idFile, "document");
+      if (agreementFile) agreementUrl = await uploadFile(agreementFile, "document");
+      if (parentIdFile) parentIdUrl = await uploadFile(parentIdFile, "document");
 
       if (!profileUrl || !idUrl || !agreementUrl) {
         setErrorMsg("ფოტოს, პირადობის და ხელმოწერილი დოკუმენტის ატვირთვა აუცილებელია.");

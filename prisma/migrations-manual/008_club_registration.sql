@@ -18,3 +18,7 @@ CREATE TABLE IF NOT EXISTS "ClubRegistration" (
 );
 
 CREATE INDEX IF NOT EXISTS "ClubRegistration_status_idx" ON "ClubRegistration"("status");
+
+-- Supabase exposes "public" over PostgREST; the app uses Prisma as the
+-- postgres role (bypasses RLS), so RLS with no policies = API locked down.
+ALTER TABLE "ClubRegistration" ENABLE ROW LEVEL SECURITY;
