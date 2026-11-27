@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireRole, REGISTRY_ADMINS } from "@/lib/rbac";
-import { createClub, transferAthlete } from "./actions";
+import { createClub, transferAthlete, bulkCreateClubs } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "კლუბები · ადმინი" };
@@ -13,6 +13,7 @@ const MSG: Record<string, string> = {
 };
 const ERR: Record<string, string> = {
   fields: "სახელი და ქალაქი სავალდებულოა.",
+  email: "მენეჯერის ელფოსტა არასწორია.",
   transfer: "აირჩიეთ სპორტსმენი და კლუბი.",
   sameclub: "სპორტსმენი უკვე ამ კლუბშია.",
 };
@@ -20,10 +21,10 @@ const ERR: Record<string, string> = {
 export default async function AdminClubs({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; created?: string; sent?: string; bad?: string }>;
 }) {
   await requireRole(REGISTRY_ADMINS);
-  const { ok, error } = await searchParams;
+  const { ok, error, created, sent, bad } = await searchParams;
 
   const [clubs, athletes] = await Promise.all([
     db.club.findMany({
@@ -48,6 +49,12 @@ export default async function AdminClubs({
       <h1 className="text-2xl font-semibold">კლუბები</h1>
       {ok && MSG[ok] && (
         <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">{MSG[ok]}</p>
+      )}
+      {ok === "bulk" && (
+        <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          ახალი სტუდია: {created ?? 0} · მოსაწვევი გაიგზავნა: {sent ?? 0}
+          {bad && <span className="block text-red-700">ვერ დამუშავდა სტრიქონ(ებ)ი: {bad} — შეამოწმეთ ფორმატი ან ელფოსტა.</span>}
+        </p>
       )}
       {error && ERR[error] && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">{ERR[error]}</p>
@@ -104,13 +111,36 @@ export default async function AdminClubs({
                 <input id="c-city" name="city" required className={input} />
               </div>
               <div>
-                <label className={label} htmlFor="c-email">ელფოსტა</label>
-                <input id="c-email" name="email" type="email" className={input} />
+                <label className={label} htmlFor="c-mname">მენეჯერის სახელი</label>
+                <input id="c-mname" name="managerName" className={input} />
+              </div>
+              <div>
+                <label className={label} htmlFor="c-memail">მენეჯერის ელფოსტა</label>
+                <input id="c-memail" name="managerEmail" type="email" className={input} />
+                <p className="mt-1 text-xs text-neutral-500">შეიქმნება კლუბის პანელი და გაიგზავნება პაროლის დასაყენებელი ბმული.</p>
               </div>
               <button className="w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">
                 დამატება
               </button>
             </div>
+          </form>
+
+          <form action={bulkCreateClubs} className="rounded-lg border border-neutral-200 bg-white p-5">
+            <h2 className="font-semibold">რამდენიმე სტუდია ერთად</h2>
+            <p className="mt-1 text-xs text-neutral-500">
+              ერთი სტრიქონი = ერთი სტუდია: <b>სახელი; ქალაქი; ელფოსტა; მენეჯერი</b>. შეიძლება Excel-იდან ჩასმა.
+              თითოეულს მიუვა წერილი პაროლის დასაყენებლად.
+            </p>
+            <textarea
+              name="list"
+              required
+              rows={6}
+              placeholder={"სტუდია ელეგანსი; თბილისი; info@elegance.ge; ნინო ბერიძე\nდანს არტი; ბათუმი; danceart@gmail.com"}
+              className={`${input} font-mono text-xs`}
+            />
+            <button className="mt-3 w-full rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">
+              რეგისტრაცია და მოსაწვევები
+            </button>
           </form>
 
           <form action={transferAthlete} className="rounded-lg border border-neutral-200 bg-white p-5">
