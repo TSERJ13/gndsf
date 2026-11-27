@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { requireUser, requireRole } from "@/lib/rbac";
 import { sendMail } from "@/lib/mail";
 import { uploadPhoto } from "@/lib/image";
+import { testMailContent } from "@/lib/notify";
+import { renderEmailHtml, renderEmailText } from "@/lib/emailTemplate";
 
 // Shared by staff (/portal/settings) and athletes (/cabinet):
 // verify current password, set a new one, audit it.
@@ -40,7 +42,8 @@ export async function sendTestMail(formData: FormData) {
     await sendMail({
       to,
       subject: "GNDSF — სატესტო წერილი",
-      text: `ეს სატესტო წერილია gndsf.ge-დან.\nგაგზავნა: ${user.email}\n\nთუ ამას კითხულობთ, ავტომატური ფოსტა მუშაობს.`,
+      text: renderEmailText(testMailContent(user.email ?? "")),
+      html: renderEmailHtml(testMailContent(user.email ?? "")),
     });
   } catch (e) {
     console.error("test mail failed:", e);
