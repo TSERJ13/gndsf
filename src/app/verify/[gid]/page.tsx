@@ -20,7 +20,7 @@ export default async function VerifyPage({
       clubMemberships: { where: { endDate: null }, include: { club: true } },
     },
   });
-  if (!athlete) notFound();
+  if (!athlete || athlete.status !== "APPROVED") notFound();
 
   const club = athlete.clubMemberships[0]?.club;
 

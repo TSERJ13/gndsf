@@ -48,13 +48,11 @@ const TOP_NAV = [
 // Main Tier WDSF Navigation
 const MAIN_NAV = [
   { label: "ᲡᲘᲐᲮᲚᲔᲔᲑᲘ", href: "/news" },
-  { label: "ᲡᲞᲝᲠᲢᲡᲛᲔᲜᲔᲑᲘ", href: "/athletes" },
-  { label: "ᲬᲧᲕᲘᲚᲔᲑᲘ", href: "/couples" },
+  { label: "ᲐᲗᲚᲔᲢᲔᲑᲘ", href: "/athletes" },
   { label: "ᲠᲔᲘᲢᲘᲜᲒᲘ", href: "/rankings" },
   { label: "ᲙᲐᲚᲔᲜᲓᲐᲠᲘ", href: "/calendar" },
   { label: "ᲨᲔᲓᲔᲒᲔᲑᲘ", href: "/competitions" },
   { label: "ᲓᲝᲙᲣᲛᲔᲜᲢᲔᲑᲘ", href: "/documents" },
-  { label: "E-CARD", href: "/e-card/apply" },
 ];
 
 const NAV_FLAT = [...TOP_NAV, ...MAIN_NAV];

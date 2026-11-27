@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const results = await Promise.all([
-      db.athlete.findMany({ where: { isActive: true }, select: { id: true, updatedAt: true } }),
+      db.athlete.findMany({ where: { isActive: true, status: "APPROVED" }, select: { id: true, updatedAt: true } }),
       db.competition.findMany({ where: { isPublished: true }, select: { id: true, startDate: true } }),
       db.news.findMany({ where: { publishedAt: { not: null } }, select: { slug: true, publishedAt: true } }),
     ]);

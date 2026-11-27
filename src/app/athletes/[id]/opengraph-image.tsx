@@ -14,8 +14,8 @@ export default async function OgImage({ params }: { params: Promise<{ id: string
     readFile(path.join(process.cwd(), "src/assets/fonts/NotoSansGeorgian-Regular.ttf")),
     readFile(path.join(process.cwd(), "src/assets/fonts/NotoSansGeorgian-Bold.ttf")),
     readFile(path.join(process.cwd(), "public/brand/logo.png")),
-    db.athlete.findUnique({
-      where: { id },
+    db.athlete.findFirst({
+      where: { id, status: "APPROVED" },
       include: {
         clubMemberships: { where: { endDate: null }, include: { club: true } },
         rankingPoints: { where: { validUntil: { gte: new Date() } } },

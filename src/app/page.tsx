@@ -194,14 +194,14 @@ export default async function Home() {
             შემოუერთდი სპორტცეკვების ოჯახს
           </h2>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto mb-10 text-[15px] leading-relaxed">
-            დაარეგისტრირე შენი კლუბი, აიღე სპორტსმენის ლიცენზია და მიიღე გლობალური GID ნომერი. 
+            დაარეგისტრირე შენი სტუდია ფედერაციაში. დამტკიცების შემდეგ თქვენს ათლეტებს მიენიჭებათ GID ნომერი და E-CARD. 
             გამოცადე საერთაშორისო სპორტცეკვების სტანდარტი საქართველოში.
           </p>
           <Link
-            href="/contact"
+            href="/studio/apply"
             className="inline-block rounded-full bg-gradient-to-r from-[#8B1E0F] via-[#B83A14] to-[#4A0E05] px-10 py-4 text-[14px] font-bold uppercase tracking-widest text-white shadow-lg transition-transform hover:-translate-y-1 hover:shadow-xl"
           >
-            დაწყება
+            სტუდიის რეგისტრაცია
           </Link>
         </div>
       </section>

@@ -18,9 +18,17 @@ export default async function ClubsPage() {
   
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 pt-10 pb-24">
-      <h1 className="text-3xl md:text-4xl lg:text-[40px] font-light uppercase text-black mb-10 tracking-wide">
-        რეგისტრირებული კლუბები
-      </h1>
+      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl md:text-4xl lg:text-[40px] font-light uppercase text-black tracking-wide">
+          რეგისტრირებული კლუბები
+        </h1>
+        <Link
+          href="/studio/apply"
+          className="self-start rounded-full bg-[#B83A14] px-6 py-2.5 text-[14px] font-bold text-white shadow-sm transition-colors hover:bg-[#8B1E0F]"
+        >
+          + სტუდიის რეგისტრაცია
+        </Link>
+      </div>
 
       {/* Search Bar matching WDSF */}
       <form className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">

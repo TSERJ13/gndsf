@@ -21,7 +21,7 @@ export async function generateMetadata({
     where: { id },
     include: { clubMemberships: { where: { endDate: null }, include: { club: true } } },
   });
-  if (!a) return { title: "სპორტსმენი" };
+  if (!a || a.status !== "APPROVED") return { title: "ათლეტი" };
   const name = `${a.firstName} ${a.lastName}`;
   const club = a.clubMemberships[0]?.club.name;
   return {
@@ -82,7 +82,7 @@ export default async function AthletePage({
   } catch (err) {
     console.error("AthletePage DB error:", err);
   }
-  if (!athlete) notFound();
+  if (!athlete || athlete.status !== "APPROVED") notFound();
 
   const groupedPoints = (athlete?.rankingPoints || []).reduce((acc: Record<string, number>, rp: any) => {
     const ev = rp.result?.entry?.event;
