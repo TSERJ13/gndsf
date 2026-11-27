@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import {
-  CATEGORIES,
-  CATEGORY_LABELS,
-  DISCIPLINE_LABELS,
-  FORMAT_LABELS,
-} from "@/lib/labels";
+import { CATEGORIES, CATEGORY_LABELS, DISCIPLINE_LABELS } from "@/lib/labels";
+import { AthletePhoto, CouplePhoto } from "@/components/Photo";
 import type { AgeCategory, Discipline, Format } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -13,202 +9,177 @@ export const metadata = { title: "ეროვნული რეიტინგ
 
 type Search = { cat?: string; disc?: string; fmt?: string; view?: string };
 
-export default async function RankingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Search>;
-}) {
+const FORMATS: { key: Format; label: string }[] = [
+  { key: "COUPLE", label: "წყვილები" },
+  { key: "SOLO", label: "სოლო" },
+];
+const DISCIPLINES: Discipline[] = ["LATIN", "STANDARD"];
+
+const fmtPoints = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
+
+function Movement({ position, prev }: { position: number; prev: number | null }) {
+  if (prev === null) return <span className="text-[11px] font-bold text-[#c49a5b]">ახალი</span>;
+  const diff = prev - position;
+  if (diff > 0) return <span className="text-[12px] font-bold text-green-600">▲ {diff}</span>;
+  if (diff < 0) return <span className="text-[12px] font-bold text-red-600">▼ {-diff}</span>;
+  return <span className="text-[12px] text-gray-400">—</span>;
+}
+
+export default async function RankingsPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const cat = (sp.cat as AgeCategory) || undefined;
-  const disc = (sp.disc as Discipline) || "LATIN";
-  const fmt = (sp.fmt as Format) || "COUPLE";
+  const cat = CATEGORIES.includes(sp.cat as AgeCategory) ? (sp.cat as AgeCategory) : undefined;
+  const disc: Discipline = sp.disc === "STANDARD" ? "STANDARD" : "LATIN";
+  const fmt: Format = sp.fmt === "SOLO" ? "SOLO" : "COUPLE";
+  const showTable = sp.view === "table";
 
-  const view = sp.view || "grid";
-  const showTable = view === "table";
-
-  let rows: any[] = [];
-  try {
-    rows = await db.rankingEntry.findMany({
+  let rows: Awaited<ReturnType<typeof load>> = [];
+  async function load() {
+    return db.rankingEntry.findMany({
       where: { discipline: disc, format: fmt, ...(cat ? { ageCategory: cat } : {}) },
-      orderBy: [{ ageCategory: "asc" }, { position: "asc" }],
+      orderBy: [{ position: "asc" }],
       include: {
-        athlete: true,
-        partnership: { include: { leader: true, follower: true } },
+        athlete: { include: { clubMemberships: { where: { endDate: null }, include: { club: true } } } },
+        partnership: { include: { leader: true, follower: true, club: true, secondClub: true } },
       },
     });
+  }
+  try {
+    rows = await load();
   } catch (err) {
     console.error("RankingsPage DB error:", err);
   }
 
+  // One leaderboard per age category, in the federation's age order.
+  const groups = CATEGORIES.map((c) => ({ cat: c, rows: rows.filter((r) => r.ageCategory === c) })).filter(
+    (g) => g.rows.length > 0,
+  );
+
   const link = (patch: Partial<Search>) => {
+    const next = { cat, disc, fmt, view: sp.view, ...patch };
     const p = new URLSearchParams();
-    const next = { cat: sp.cat, disc, fmt, view: sp.view, ...patch };
-    if (next.cat) p.set("cat", next.cat);
-    if (next.disc) p.set("disc", next.disc);
-    if (next.fmt) p.set("fmt", next.fmt);
-    if (next.view) p.set("view", next.view);
+    for (const [k, v] of Object.entries(next)) if (v) p.set(k, v);
     return `/rankings?${p.toString()}`;
   };
 
-  const WDSFSelect = ({ active, label, href }: { active: boolean; label: string; href: string }) => (
-    <Link 
-      href={href} 
-      className={`flex h-11 items-center justify-between border px-4 min-w-[140px] text-[13px] transition-colors ${
-        active ? 'border-gray-400 bg-gray-50 text-black font-bold' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-      }`}
-    >
-      <span>{label}</span>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 ml-4"><polyline points="9 18 15 12 9 6"></polyline></svg>
-    </Link>
-  );
+  const chip = (active: boolean) =>
+    `rounded-full border px-4 py-2 text-[13px] transition-colors ${
+      active ? "border-black bg-black font-bold text-white" : "border-gray-300 bg-white text-gray-600 hover:border-gray-500"
+    }`;
+
+  const nameOf = (r: (typeof rows)[number]) =>
+    r.partnership
+      ? `${r.partnership.leader.firstName} ${r.partnership.leader.lastName} / ${r.partnership.follower.firstName} ${r.partnership.follower.lastName}`
+      : `${r.athlete?.firstName ?? ""} ${r.athlete?.lastName ?? ""}`;
+  const clubOf = (r: (typeof rows)[number]) =>
+    r.partnership
+      ? [r.partnership.club?.name, r.partnership.secondClub?.name].filter(Boolean).join(" · ")
+      : r.athlete?.clubMemberships[0]?.club.name ?? "";
+  const hrefOf = (r: (typeof rows)[number]) =>
+    r.partnership ? `/couples/${r.partnershipId}` : `/athletes/${r.athleteId}`;
 
   return (
-    <div className="mx-auto max-w-[1400px] px-6 pt-10 lg:pt-16 motion-fade-up pb-24">
-      {/* Heading */}
-      <h1 className="text-3xl lg:text-[40px] font-light uppercase tracking-wide text-gray-800 mt-8 lg:mt-12">
+    <div className="mx-auto max-w-[1400px] px-4 pb-24 pt-10 md:px-6 lg:pt-16">
+      <h1 className="mt-8 text-3xl font-light uppercase tracking-wide text-gray-800 lg:mt-12 lg:text-[40px]">
         GNDSF ეროვნული რეიტინგი
       </h1>
+      <p className="mt-3 max-w-3xl text-[14px] text-gray-500">
+        ითვლება ბოლო 12 თვის ქულები. წყვილის რეიტინგში მხოლოდ ამ წყვილის ერთად მოპოვებული ქულებია.
+      </p>
 
-      {/* Filters mimicking WDSF Dropdowns */}
-      <div className="mt-10 flex flex-wrap gap-4 items-center">
-        {(["LATIN", "STANDARD"] as const).map((d) => (
-          <WDSFSelect key={d} active={disc === d} label={DISCIPLINE_LABELS[d]} href={link({ disc: d })} />
-        ))}
-        {(["COUPLE", "SOLO"] as const).map((f) => (
-          <WDSFSelect key={f} active={fmt === f} label={FORMAT_LABELS[f]} href={link({ fmt: f })} />
-        ))}
-        <WDSFSelect active={!cat} label="ყველა ასაკი" href={link({ cat: undefined })} />
-        {CATEGORIES.map((c) => (
-          <WDSFSelect key={c} active={cat === c} label={CATEGORY_LABELS[c]} href={link({ cat: c })} />
-        ))}
+      <div className="mt-8 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {FORMATS.map((f) => (
+            <Link key={f.key} href={link({ fmt: f.key })} className={chip(fmt === f.key)}>{f.label}</Link>
+          ))}
+          <span className="mx-2 hidden w-px bg-gray-200 sm:block" />
+          {DISCIPLINES.map((d) => (
+            <Link key={d} href={link({ disc: d })} className={chip(disc === d)}>{DISCIPLINE_LABELS[d]}</Link>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={link({ cat: undefined })} className={chip(!cat)}>ყველა ასაკი</Link>
+          {CATEGORIES.map((c) => (
+            <Link key={c} href={link({ cat: c })} className={chip(cat === c)}>{CATEGORY_LABELS[c]}</Link>
+          ))}
+        </div>
       </div>
 
-      {/* Toggles and Advanced Filters Row */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 pb-6">
-        <Link 
-          href={link({ view: showTable ? "grid" : "table" })} 
-          className="flex items-center gap-3 text-[14px] font-bold text-gray-800 hover:text-black cursor-pointer"
-        >
-          <div className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${showTable ? 'border-[#c49a5b] bg-[#c49a5b]' : 'border-gray-300 bg-white'}`}>
-            {showTable && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-          </div>
-          Show as table
+      <div className="mt-6 flex items-center justify-end border-b border-gray-100 pb-4">
+        <Link href={link({ view: showTable ? undefined : "table" })} className="flex items-center gap-3 text-[14px] font-bold text-gray-800 hover:text-black">
+          <span className={`flex h-[18px] w-[18px] items-center justify-center rounded-[3px] border ${showTable ? "border-[#c49a5b] bg-[#c49a5b]" : "border-gray-300 bg-white"}`}>
+            {showTable && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            )}
+          </span>
+          ცხრილად ჩვენება
         </Link>
-        <button className="flex items-center gap-2 text-[14px] font-bold text-gray-800 hover:text-black">
-          Advanced filter
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
       </div>
 
-      {rows.length === 0 && (
-        <div className="mt-16 text-center text-gray-500 py-12 border border-gray-100 rounded-xl bg-gray-50">
+      {groups.length === 0 && (
+        <div className="mt-16 rounded-xl border border-gray-100 bg-gray-50 py-12 text-center text-gray-500">
           ამ ფილტრით რეიტინგი ცარიელია — შედეგები ჯერ არ არის შეყვანილი.
         </div>
       )}
 
-      {/* Grid View */}
-      {!showTable && rows.length > 0 && (
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {rows.map((r) => {
-            const href = r.partnership ? `/couples/${r.partnershipId}` : `/athletes/${r.athleteId}`;
-            return (
-              <Link key={r.id} href={href} className="rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-shadow p-5 flex flex-col h-full cursor-pointer">
-                {/* Images */}
-                {r.partnership ? (
-                <div className="flex gap-2 mb-5">
-                  <div className="flex-1 aspect-[3/4] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center relative border border-gray-100">
-                    <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                      <path d="M 20 26 C 20 44, 44 44, 44 26" />
-                      <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 aspect-[3/4] bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center relative border border-gray-100">
-                    <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                      <path d="M 22 32 C 22 46, 42 46, 42 32" />
-                      <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
-                    </svg>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-1/2 aspect-[3/4] bg-gray-50 rounded-xl mx-auto mb-5 overflow-hidden flex items-center justify-center relative border border-gray-100">
-                  <svg width="56" height="56" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                    <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                    {r.athlete?.gender === "FEMALE" ? (
-                      <>
-                        <path d="M 22 32 C 22 46, 42 46, 42 32" />
-                        <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
-                      </>
-                    ) : (
-                      <>
-                        <path d="M 20 26 C 20 44, 44 44, 44 26" />
-                        <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
-                      </>
-                    )}
-                  </svg>
-                </div>
-              )}
+      {groups.map((g) => (
+        <section key={g.cat} className="mt-12">
+          <h2 className="text-[22px] font-light uppercase tracking-wide text-gray-800">
+            {CATEGORY_LABELS[g.cat]} · {DISCIPLINE_LABELS[disc]} · {fmt === "COUPLE" ? "წყვილები" : "სოლო"}
+          </h2>
 
-              {/* Text */}
-              <div className="flex-1 flex flex-col">
-                <div className="font-bold text-[15px] leading-tight text-gray-900 mb-4">
-                  {r.partnership ? (
-                    <>
-                      {r.partnership.leader.firstName} {r.partnership.leader.lastName} &<br />
-                      {r.partnership.follower.firstName} {r.partnership.follower.lastName}
-                    </>
-                  ) : (
-                    <>{r.athlete?.firstName} {r.athlete?.lastName}</>
-                  )}
-                </div>
-                
-                <div className="mt-auto space-y-1">
-                  <div className="text-[13px] text-gray-500">Rank: <span className="text-gray-900">{r.position}.</span></div>
-                  <div className="text-[13px] text-gray-500">Points: <span className="text-gray-900">{r.totalPoints}</span></div>
-                  <div className="text-[13px] font-bold text-gray-900 mt-4 pt-4">Georgia (GEO)</div>
-                </div>
-              </div>
-            </Link>
-          )})}
-        </div>
-      )}
-
-      {/* Table View */}
-      {showTable && rows.length > 0 && (
-        <div className="mt-10 overflow-x-auto">
-          <table className="w-full text-left text-[14px]">
-            <thead className="border-t-[2px] border-b-[2px] border-[#c49a5b]">
-              <tr>
-                <th className="py-4 px-4 font-bold text-black w-24">Rank</th>
-                <th className="py-4 px-4 font-bold text-black w-24">Points</th>
-                <th className="py-4 px-4 font-bold text-black">Name</th>
-                <th className="py-4 px-4 font-bold text-black w-48">Country</th>
-              </tr>
-            </thead>
-            <tbody className="border-b-[2px] border-[#c49a5b]">
-              {rows.map((r, i) => (
-                <tr key={r.id} className={i % 2 === 0 ? "bg-gray-50/60" : "bg-white"}>
-                  <td className="py-4 px-4 text-gray-900">{r.position}</td>
-                  <td className="py-4 px-4 text-gray-900">{r.totalPoints}</td>
-                  <td className="py-4 px-4 font-medium">
-                    {r.partnership ? (
-                      <Link href={`/couples/${r.partnershipId}`} className="text-[#c49a5b] hover:underline">
-                        {r.partnership.leader.firstName} {r.partnership.leader.lastName} / {r.partnership.follower.firstName} {r.partnership.follower.lastName}
-                      </Link>
-                    ) : (
-                      <Link href={`/athletes/${r.athleteId}`} className="text-[#c49a5b] hover:underline">
-                        {r.athlete?.firstName} {r.athlete?.lastName}
-                      </Link>
-                    )}
-                  </td>
-                  <td className="py-4 px-4 text-gray-900">Georgia (GEO)</td>
-                </tr>
+          {!showTable ? (
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {g.rows.map((r) => (
+                <Link key={r.id} href={hrefOf(r)} className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                    {r.partnership ? <CouplePhoto couple={r.partnership} /> : r.athlete ? <AthletePhoto athlete={r.athlete} /> : null}
+                    <span className="absolute left-3 top-3 flex h-10 min-w-10 items-center justify-center rounded-full bg-white/90 px-2 text-[16px] font-black text-black shadow">
+                      {r.position}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="text-[15px] font-bold leading-tight text-gray-900">{nameOf(r)}</div>
+                    <div className="mt-1 text-[13px] text-gray-500">{clubOf(r)}</div>
+                    <div className="mt-auto flex items-end justify-between pt-4">
+                      <div className="text-[13px] text-gray-500">
+                        ქულა: <span className="text-[15px] font-bold text-gray-900">{fmtPoints(r.totalPoints)}</span>
+                      </div>
+                      <Movement position={r.position} prev={r.prevPosition} />
+                    </div>
+                  </div>
+                </Link>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+          ) : (
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-left text-[14px]">
+                <thead className="border-b-[2px] border-t-[2px] border-[#c49a5b]">
+                  <tr>
+                    <th className="w-20 px-4 py-4 font-bold">ადგილი</th>
+                    <th className="w-20 px-4 py-4 font-bold">ცვლ.</th>
+                    <th className="px-4 py-4 font-bold">{fmt === "COUPLE" ? "წყვილი" : "ათლეტი"}</th>
+                    <th className="px-4 py-4 font-bold">კლუბი</th>
+                    <th className="w-24 px-4 py-4 text-right font-bold">ქულა</th>
+                  </tr>
+                </thead>
+                <tbody className="border-b-[2px] border-[#c49a5b]">
+                  {g.rows.map((r, i) => (
+                    <tr key={r.id} className={i % 2 === 0 ? "bg-gray-50/60" : "bg-white"}>
+                      <td className="px-4 py-3 font-bold tabular-nums">{r.position}</td>
+                      <td className="px-4 py-3"><Movement position={r.position} prev={r.prevPosition} /></td>
+                      <td className="px-4 py-3 font-medium">
+                        <Link href={hrefOf(r)} className="text-[#a27a3f] hover:underline">{nameOf(r)}</Link>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{clubOf(r)}</td>
+                      <td className="px-4 py-3 text-right font-bold tabular-nums">{fmtPoints(r.totalPoints)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      ))}
     </div>
   );
 }

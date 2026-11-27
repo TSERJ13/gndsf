@@ -1,3 +1,4 @@
+import PhotoInput from "@/components/PhotoInput";
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -127,13 +128,7 @@ export default async function CabinetPage({
               </Link>
             </div>
             <form action={uploadPhoto} className="mt-4 flex flex-wrap items-center gap-3">
-              <input
-                type="file"
-                name="photo"
-                accept="image/jpeg,image/png,image/webp"
-                required
-                className="text-sm text-smoke file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-line file:bg-transparent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-silver hover:file:border-[#005eb8]"
-              />
+              <PhotoInput className="text-sm text-smoke file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-line file:bg-transparent file:px-4 file:py-2 file:text-sm file:font-semibold file:text-silver hover:file:border-[#005eb8]" />
               <button className="rounded-full bg-coal border border-line px-5 py-2 text-[14px] font-bold text-silver transition-colors hover:border-[#005eb8] hover:text-[#005eb8]">
                 ფოტოს ატვირთვა
               </button>

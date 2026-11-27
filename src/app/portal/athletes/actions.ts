@@ -7,28 +7,14 @@ import { requireUser, can } from "@/lib/rbac";
 import type { Gender } from "@prisma/client";
 import { isMinor, approveAthlete, returnAthlete, inviteAthlete } from "@/lib/athleteRegistration";
 import { federationNewApplication } from "@/lib/notify";
-
-const PHOTO_TYPES: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-};
-const MAX_PHOTO = 4 * 1024 * 1024;
+import { uploadPhoto } from "@/lib/image";
 
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 const opt = (fd: FormData, k: string) => text(fd, k) || null;
 
 async function savePhoto(file: FormDataEntryValue | null, gid: string): Promise<string | null> {
-  if (!(file instanceof File) || file.size === 0) return null;
-  if (!PHOTO_TYPES[file.type] || file.size > MAX_PHOTO) return null;
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
   try {
-    const { put } = await import("@vercel/blob");
-    const blob = await put(`athletes/${gid}${PHOTO_TYPES[file.type]}`, file, {
-      access: "public",
-      addRandomSuffix: true,
-    });
-    return blob.url;
+    return await uploadPhoto(file, `athletes/${gid}`);
   } catch (e) {
     console.error("athlete photo upload failed:", e);
     return null;
@@ -222,4 +208,21 @@ export async function sendInviteAction(formData: FormData) {
     data: { userId: user.id, action: "ATHLETE_INVITE", entity: "Athlete", entityId: id, detail: `${athlete.gid}: ${result}` },
   });
   redirect(`/portal/athletes/${id}?invite=${result}`);
+}
+
+// Club (own athletes) or federation: replace an athlete's photo.
+export async function uploadAthletePhotoAction(formData: FormData) {
+  const user = await requireUser();
+  const id = text(formData, "id");
+  const athlete = await db.athlete.findUniqueOrThrow({
+    where: { id },
+    include: { clubMemberships: { where: { endDate: null } } },
+  });
+  const ownClub = athlete.clubMemberships.some((m) => m.clubId === user.clubId);
+  if (!(can(user, "ATHLETE_MANAGE_ALL") || (can(user, "ATHLETE_MANAGE_OWN_CLUB") && ownClub))) redirect("/portal");
+  const url = await savePhoto(formData.get("photo"), athlete.gid);
+  if (!url) redirect(`/portal/athletes/${id}?photo=bad`);
+  await db.athlete.update({ where: { id }, data: { photoUrl: url } });
+  revalidatePath(`/athletes/${id}`);
+  redirect(`/portal/athletes/${id}?photo=ok`);
 }

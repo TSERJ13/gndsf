@@ -2,7 +2,9 @@ import { db } from "@/lib/db";
 import { requireUser, clubScope, can, REGISTRY_ADMINS } from "@/lib/rbac";
 import { redirect } from "next/navigation";
 import { fmtDate } from "@/lib/labels";
-import { formPartnership, splitPartnership } from "./actions";
+import { formPartnership, splitPartnership, uploadCouplePhoto } from "./actions";
+import { CouplePhoto } from "@/components/Photo";
+import PhotoInput from "@/components/PhotoInput";
 import SearchableAthleteSelect from "./SearchableAthleteSelect";
 
 export const dynamic = "force-dynamic";
@@ -86,14 +88,16 @@ export default async function AdminPartnerships({
       </p>
       {ok && (
         <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
-          {ok === "formed" ? "წყვილი შეიქმნა." : "წყვილი დაიშალა — ისტორია შენარჩუნებულია."}
+          {ok === "formed" ? "წყვილი შეიქმნა." : ok === "photo" ? "ფოტო აიტვირთა." : "წყვილი დაიშალა — ისტორია შენარჩუნებულია."}
         </p>
       )}
       {error && (
         <p className="mt-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
           {error === "busy"
             ? "ერთ-ერთ ათლეტს უკვე ჰყავს მოქმედი პარტნიორი — ჯერ არსებული წყვილი დაშალეთ."
-            : error === "notapproved"
+            : error === "photo"
+              ? "ფოტო ვერ აიტვირთა — აირჩიეთ სურათის ფაილი."
+              : error === "notapproved"
               ? "წყვილის შექმნა შეიძლება მხოლოდ ფედერაციის მიერ დამტკიცებული ათლეტებით."
               : "აირჩიეთ ორი განსხვავებული ათლეტი."}
         </p>
@@ -107,19 +111,8 @@ export default async function AdminPartnerships({
           <div className="mt-3 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {active.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col relative transition-transform hover:-translate-y-1">
-                <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center relative">
-                  <div className="flex items-center justify-center gap-4">
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                      <path d="M 20 26 C 20 44, 44 44, 44 26" />
-                      <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
-                    </svg>
-                    <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                      <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                      <path d="M 22 32 C 22 46, 42 46, 42 32" />
-                      <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
-                    </svg>
-                  </div>
+                <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                  <CouplePhoto couple={p} />
                   <span className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded px-2 py-1 text-[10px] font-bold text-green-700 uppercase tracking-wider border border-green-200">
                     აქტიური
                   </span>
@@ -129,10 +122,17 @@ export default async function AdminPartnerships({
                     {p.leader.lastName} & {p.follower.lastName}
                   </div>
                   <div className="text-[13px] text-gray-500 mb-4 tabular-nums">
-                    Joined: {fmtDate(p.startDate)}
+                    {[p.club?.name, p.secondClub?.name].filter(Boolean).join(" · ") || "—"} · {fmtDate(p.startDate)}-დან
                   </div>
                   {canManageCouples && (
-                    <div className="mt-auto pt-4 border-t border-gray-100">
+                    <div className="mt-auto space-y-3 pt-4 border-t border-gray-100">
+                      <form action={uploadCouplePhoto} className="space-y-2">
+                        <input type="hidden" name="id" value={p.id} />
+                        <PhotoInput className="w-full text-xs" />
+                        <button className="w-full rounded border border-neutral-300 py-2 text-[13px] font-medium hover:border-neutral-900">
+                          {p.photoUrl ? "ფოტოს შეცვლა" : "წყვილის ფოტოს ატვირთვა"}
+                        </button>
+                      </form>
                       <form action={splitPartnership} className="w-full">
                         <input type="hidden" name="id" value={p.id} />
                         <button className="w-full rounded bg-red-50 py-2.5 text-center text-[13px] font-semibold text-red-700 transition hover:bg-red-100">

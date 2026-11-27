@@ -1,3 +1,4 @@
+import PhotoInput from "@/components/PhotoInput";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireUser, clubScope, can } from "@/lib/rbac";
@@ -197,7 +198,7 @@ export default async function AdminAthletes({
               </div>
               <div>
                 <label className={label} htmlFor="photo">ფოტო</label>
-                <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" className="mt-1 w-full text-sm" />
+                <PhotoInput id="photo" />
               </div>
               <fieldset className="space-y-2 rounded border border-neutral-200 p-3">
                 <legend className="px-1 text-xs text-neutral-500">ათლეტის კონტაქტი (18+ — სავალდებულო)</legend>

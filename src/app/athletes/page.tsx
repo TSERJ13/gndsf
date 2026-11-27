@@ -1,3 +1,4 @@
+import { AthletePhoto, CouplePhoto } from "@/components/Photo";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { CATEGORIES, CATEGORY_LABELS, categoryFor } from "@/lib/labels";
@@ -112,36 +113,28 @@ export default async function AthletesPage({
           />
           <div className="flex items-center gap-2">
             <button className="rounded-full bg-[#B83A14] hover:bg-[#8B1E0F] transition-colors px-6 py-2.5 text-[14px] font-bold text-white shadow-sm">
-              Go
+              ძებნა
             </button>
             <Link href="/athletes" className="rounded-full bg-[#B83A14] hover:bg-[#8B1E0F] transition-colors px-6 py-2.5 text-[14px] font-bold text-white shadow-sm inline-block">
-              Clear
+              გასუფთავება
             </Link>
           </div>
         </div>
         
-        <div className="flex items-center gap-6 self-start md:self-auto">
-          <label className="flex items-center gap-2 cursor-pointer text-[14px] font-bold text-black">
-            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[#B83A14] focus:ring-[#B83A14]" />
-            Show as table
-          </label>
-          <button type="button" className="text-[14px] font-medium text-black flex items-center gap-1 hover:text-[#B83A14]">
-            Advanced filter
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </div>
       </form>
 
       {tab === "couples" && (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {couples.map((p) => (
             <Link
               key={p.id}
               href={`/couples/${p.id}`}
-              className="block rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] transition-transform hover:-translate-y-1"
+              className="block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_4px_20px_rgb(0,0,0,0.05)] transition-transform hover:-translate-y-1"
             >
+              <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                <CouplePhoto couple={p} />
+              </div>
+              <div className="p-5">
               <div className="text-[16px] font-bold text-black">
                 {p.leader.firstName} {p.leader.lastName}
               </div>
@@ -153,6 +146,7 @@ export default async function AthletesPage({
               </div>
               <div className="mt-4 text-[14px] font-bold text-black">
                 {[p.club?.name, p.secondClub?.name].filter(Boolean).join(" · ") || "Georgia (GEO)"}
+              </div>
               </div>
             </Link>
           ))}
@@ -166,30 +160,18 @@ export default async function AthletesPage({
       {tab !== "couples" && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filtered.map((a) => (
           <Link key={a.id} href={`/athletes/${a.id}`} className="block bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 transition-transform hover:-translate-y-1">
-            <div className="aspect-square bg-gray-100 flex items-center justify-center">
-              {a.gender === "FEMALE" ? (
-                <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                  <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                  <path d="M 22 32 C 22 46, 42 46, 42 32" />
-                  <path d="M 16 46 L 22 40 C 20 30, 28 22, 32 18 C 36 22, 44 30, 42 40 L 48 46 L 46 24 C 46 4, 18 4, 18 24 Z" />
-                </svg>
-              ) : (
-                <svg width="48" height="48" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                  <path d="M 10 60 Q 10 46, 24 46 Q 32 54, 40 46 Q 54 46, 54 60" />
-                  <path d="M 20 26 C 20 44, 44 44, 44 26" />
-                  <path d="M 20 26 C 24 18, 28 26, 32 22 C 36 18, 40 24, 44 26 C 44 6, 20 6, 20 26 Z" />
-                </svg>
-              )}
+            <div className="aspect-square overflow-hidden bg-gray-100">
+              <AthletePhoto athlete={a} />
             </div>
             <div className="p-5">
               <div className="font-bold text-[16px] text-black mb-1">
                 {a.firstName} {a.lastName}
               </div>
               <div className="text-[13px] text-gray-500 mb-6">
-                Age group: {CATEGORY_LABELS[categoryFor(a.birthDate)]}
+                {CATEGORY_LABELS[categoryFor(a.birthDate)]}
               </div>
               <div className="text-[14px] font-bold text-black">
-                Georgia (GEO)
+                {a.clubMemberships[0]?.club.name ?? "Georgia (GEO)"}
               </div>
             </div>
           </Link>

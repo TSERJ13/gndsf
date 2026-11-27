@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { requireUser, requireRole } from "@/lib/rbac";
 import { sendMail } from "@/lib/mail";
+import { uploadPhoto } from "@/lib/image";
 
 // Shared by staff (/portal/settings) and athletes (/cabinet):
 // verify current password, set a new one, audit it.
@@ -59,12 +60,9 @@ export async function updateOwnClub(formData: FormData) {
   let logoUrl: string | undefined;
   const logo = formData.get("logo");
   if (logo instanceof File && logo.size > 0) {
-    const ext = ({ "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp" } as Record<string, string>)[logo.type];
-    if (!ext || logo.size > 2 * 1024 * 1024 || !process.env.BLOB_READ_WRITE_TOKEN) {
-      redirect("/portal/settings?club=logo");
-    }
-    const { put } = await import("@vercel/blob");
-    logoUrl = (await put(`clubs/${user.clubId}${ext}`, logo, { access: "public", addRandomSuffix: true })).url;
+    const url = await uploadPhoto(logo, `clubs/${user.clubId}`, "logo");
+    if (!url) redirect("/portal/settings?club=logo");
+    logoUrl = url;
   }
 
   await db.club.update({

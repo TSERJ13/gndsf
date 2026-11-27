@@ -1,3 +1,4 @@
+import PhotoInput from "@/components/PhotoInput";
 import Link from "next/link";
 import type { Athlete } from "@prisma/client";
 import { fmtDate } from "@/lib/labels";
@@ -7,6 +8,7 @@ import {
   returnAthleteAction,
   updatePendingAthlete,
   sendInviteAction,
+  uploadAthletePhotoAction,
 } from "../actions";
 
 const MESSAGES: Record<string, { text: string; ok: boolean }> = {
@@ -22,6 +24,8 @@ const MESSAGES: Record<string, { text: string; ok: boolean }> = {
   "invite=sent": { text: "მოსაწვევი გაიგზავნა.", ok: true },
   "invite=no-email": { text: "ელფოსტა არ არის მითითებული.", ok: false },
   "invite=email-taken": { text: "ეს ელფოსტა სხვა ანგარიშს ეკუთვნის.", ok: false },
+  "photo=ok": { text: "ფოტო განახლდა.", ok: true },
+  "photo=bad": { text: "ფოტო ვერ აიტვირთა — აირჩიეთ სურათის ფაილი.", ok: false },
   "error=note": { text: "დაბრუნებისას კომენტარი სავალდებულოა.", ok: false },
   "error=contact": { text: "არასრულწლოვნისთვის საჭიროა მშობლის სახელი და ელფოსტა, სრულწლოვნისთვის — ათლეტის ელფოსტა.", ok: false },
   "error=exists": { text: "ამ პირადი ნომრით სხვა ათლეტი უკვე რეგისტრირებულია.", ok: false },
@@ -111,10 +115,24 @@ export default function RegistrationPanel({
             <div><label className={label}>მშობელი {minor ? "*" : ""}</label><input name="parentName" defaultValue={athlete.parentName ?? ""} className={input} /></div>
             <div><label className={label}>მშობლის ელფოსტა {minor ? "*" : ""}</label><input name="parentEmail" type="email" defaultValue={athlete.parentEmail ?? ""} className={input} /></div>
             <div><label className={label}>მშობლის ტელეფონი</label><input name="parentPhone" defaultValue={athlete.parentPhone ?? ""} className={input} /></div>
-            <div><label className={label}>ახალი ფოტო</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp" className="mt-1 w-full text-sm" /></div>
+            <div><label className={label}>ახალი ფოტო</label><PhotoInput /></div>
           </div>
           <button className="mt-4 w-full rounded bg-neutral-900 py-2 text-sm font-medium text-white hover:bg-neutral-700">
             შენახვა და ფედერაციაში გაგზავნა
+          </button>
+        </form>
+      )}
+
+      {athlete.status === "APPROVED" && canEditPending && (
+        <form action={uploadAthletePhotoAction} className="flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-5">
+          <input type="hidden" name="id" value={athlete.id} />
+          <div className="flex-1">
+            <div className="font-semibold">ფოტო</div>
+            <p className="text-xs text-neutral-500">ავტომატურად შემცირდება საშუალო ზომამდე.</p>
+            <PhotoInput />
+          </div>
+          <button className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700">
+            {athlete.photoUrl ? "ფოტოს შეცვლა" : "ფოტოს ატვირთვა"}
           </button>
         </form>
       )}
