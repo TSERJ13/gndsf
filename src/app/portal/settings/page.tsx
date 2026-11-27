@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/rbac";
-import { changeOwnPassword, sendTestMail } from "./actions";
+import { changeOwnPassword, sendTestMail, updateOwnClub } from "./actions";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "პარამეტრები · ადმინი" };
@@ -7,10 +8,11 @@ export const metadata = { title: "პარამეტრები · ადმ
 export default async function AdminSettings({
   searchParams,
 }: {
-  searchParams: Promise<{ pok?: string; perror?: string; mail?: string }>;
+  searchParams: Promise<{ pok?: string; perror?: string; mail?: string; club?: string }>;
 }) {
   const user = await requireStaff();
-  const { pok, perror, mail } = await searchParams;
+  const { pok, perror, mail, club: clubMsg } = await searchParams;
+  const club = user.role === "CLUB_MANAGER" && user.clubId ? await db.club.findUnique({ where: { id: user.clubId } }) : null;
   const canTestMail = user.role === "SUPER_ADMIN" || user.role === "PRESIDENT";
 
   const input =
@@ -47,6 +49,22 @@ export default async function AdminSettings({
           შეცვლა
         </button>
       </form>
+
+      {club && (
+        <form action={updateOwnClub} className="mt-6 space-y-4 rounded-lg border border-neutral-200 bg-white p-5">
+          <h2 className="font-semibold">კლუბის მონაცემები — {club.name}</h2>
+          {clubMsg === "ok" && <p className="rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">შენახულია.</p>}
+          {clubMsg === "logo" && <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">ლოგო: PNG/JPG/WebP, მაქს. 2 MB.</p>}
+          {clubMsg === "fields" && <p className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">ქალაქი სავალდებულოა.</p>}
+          <div><label className={label} htmlFor="c-nameEn">დასახელება (ENG)</label><input id="c-nameEn" name="nameEn" defaultValue={club.nameEn ?? ""} className={input} /></div>
+          <div><label className={label} htmlFor="c-city">ქალაქი</label><input id="c-city" name="city" required defaultValue={club.city} className={input} /></div>
+          <div><label className={label} htmlFor="c-address">მისამართი</label><input id="c-address" name="address" defaultValue={club.address ?? ""} className={input} /></div>
+          <div><label className={label} htmlFor="c-phone">ტელეფონი</label><input id="c-phone" name="phone" defaultValue={club.phone ?? ""} className={input} /></div>
+          <div><label className={label} htmlFor="c-email">ელფოსტა</label><input id="c-email" name="email" type="email" defaultValue={club.email ?? ""} className={input} /></div>
+          <div><label className={label} htmlFor="c-logo">ლოგო</label><input id="c-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1 w-full text-sm" /></div>
+          <button className="rounded bg-neutral-900 px-5 py-2 text-sm font-medium text-white hover:bg-neutral-700">შენახვა</button>
+        </form>
+      )}
 
       {canTestMail && (
         <form action={sendTestMail} className="mt-6 space-y-4 rounded-lg border border-neutral-200 bg-white p-5">

@@ -88,3 +88,29 @@ export async function commitEventResults(
     });
   }, { timeout: 30000 });
 }
+
+// Re-scores every committed result with the current points rules and
+// rebuilds the rankings once. Used after a rules change.
+export async function rescoreAll(userId: string | null) {
+  const events = await db.compEvent.findMany({
+    where: { entries: { some: { result: { isNot: null } } } },
+    select: { id: true, entries: { select: { id: true, result: true } } },
+  });
+  let count = 0;
+  for (const ev of events) {
+    const placements = ev.entries
+      .filter((e) => e.result)
+      .map((e) => ({
+        entryId: e.id,
+        placement: e.result!.placement,
+        roundsReached: e.result!.roundsReached ?? undefined,
+      }));
+    await commitEventResults(ev.id, placements, userId, false);
+    count += placements.length;
+  }
+  await db.$transaction((tx) => recomputeRankings(tx), { timeout: 60000 });
+  await db.auditLog.create({
+    data: { userId, action: "RESCORE_ALL", entity: "CompEvent", detail: `${events.length} ივენთი, ${count} შედეგი გადაითვალა` },
+  });
+  return { events: events.length, results: count };
+}

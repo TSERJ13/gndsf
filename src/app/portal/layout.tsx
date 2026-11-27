@@ -5,7 +5,7 @@ import FloatingCalculator from "@/components/portal/FloatingCalculator";
 import { getExchangeRates } from "@/lib/nbg";
 
 const ROLE_LABELS: Record<string, string> = {
-  ATHLETE: "სპორტსმენი",
+  ATHLETE: "ათლეტი",
   SUPER_ADMIN: "სუპერადმინი",
   PRESIDENT: "პრეზიდენტი",
   VICE_PRESIDENT: "ვიცე-პრეზიდენტი",
@@ -27,6 +27,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
   }
 
+  let pendingAthletes = 0;
+  if (can(user, "ATHLETE_APPROVE") || user.role === "CLUB_MANAGER") {
+    try {
+      pendingAthletes = await db.athlete.count({
+        where: {
+          status: "PENDING",
+          ...(user.role === "CLUB_MANAGER" && user.clubId
+            ? { clubMemberships: { some: { clubId: user.clubId, endDate: null } } }
+            : {}),
+        },
+      });
+    } catch (err) {
+      console.error("Failed to count pending athletes:", err);
+    }
+  }
+
   // Moved "ფოსტა" higher up below the main dashboard
   const nav = [
     { href: "/portal", label: "დაფა", show: true },
@@ -38,7 +54,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       label: pendingSignups > 0 ? `სტუდიის მოთხოვნები (${pendingSignups})` : "სტუდიის მოთხოვნები",
       show: canReviewSignups,
     },
-    { href: "/portal/athletes", label: "სპორტსმენები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
+    {
+      href: pendingAthletes > 0 ? "/portal/athletes?status=PENDING" : "/portal/athletes",
+      label: pendingAthletes > 0 ? `ათლეტები (${pendingAthletes} განხილვაში)` : "ათლეტები",
+      show: isRegistryAdmin || user.role === "CLUB_MANAGER",
+    },
     { href: "/portal/partnerships", label: "წყვილები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/transfers", label: "ტრანსფერები", show: isRegistryAdmin || user.role === "CLUB_MANAGER" },
     { href: "/portal/edit-requests", label: "პროფილის მოთხოვნები", show: can(user, "ATHLETE_EDIT_REVIEW") },

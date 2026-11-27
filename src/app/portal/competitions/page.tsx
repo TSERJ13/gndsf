@@ -2,7 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireRole, REGISTRY_ADMINS, can } from "@/lib/rbac";
 import { fmtDate } from "@/lib/labels";
-import { createCompetition } from "./actions";
+import { createCompetition, rescoreAllAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "შეჯიბრებები · ადმინი" };
@@ -13,7 +13,12 @@ const TYPE_LABELS: Record<string, string> = {
   INTERNATIONAL: "საერთაშორისო (×1.5)",
 };
 
-export default async function AdminCompetitions() {
+export default async function AdminCompetitions({
+  searchParams,
+}: {
+  searchParams: Promise<{ rescored?: string }>;
+}) {
+  const { rescored } = await searchParams;
   const user = await requireRole(REGISTRY_ADMINS);
   const canManage = can(user, "COMPETITION_RESULT_MANAGE");
 
@@ -28,7 +33,21 @@ export default async function AdminCompetitions() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">შეჯიბრებები</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">შეჯიბრებები</h1>
+        {(user.role === "SUPER_ADMIN" || user.role === "PRESIDENT") && (
+          <form action={rescoreAllAction}>
+            <button className="rounded border border-neutral-300 px-4 py-2 text-sm hover:border-neutral-900">
+              ყველა ქულის გადათვლა
+            </button>
+          </form>
+        )}
+      </div>
+      {rescored && (
+        <p className="mt-4 rounded border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-800">
+          გადაითვალა: {rescored.split("-")[0]} ივენთი, {rescored.split("-")[1]} შედეგი. რეიტინგი განახლდა.
+        </p>
+      )}
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
         <ul className="h-fit divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white">
           {comps.map((c) => (

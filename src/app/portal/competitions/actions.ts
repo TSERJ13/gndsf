@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireRole, RESULT_ADMINS } from "@/lib/rbac";
 import { TYPE_COEFFICIENTS } from "@/lib/points";
+import { rescoreAll } from "@/lib/results";
 import type { CompetitionType } from "@prisma/client";
 
 export async function createCompetition(formData: FormData) {
@@ -35,4 +36,11 @@ export async function createCompetition(formData: FormData) {
   });
   revalidatePath("/portal/competitions");
   redirect(`/portal/competitions/${comp.id}`);
+}
+
+export async function rescoreAllAction() {
+  const user = await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
+  const { events, results } = await rescoreAll(user.id);
+  revalidatePath("/rankings");
+  redirect(`/portal/competitions?rescored=${events}-${results}`);
 }

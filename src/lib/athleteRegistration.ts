@@ -5,6 +5,7 @@ import type { Athlete } from "@prisma/client";
 import { db } from "./db";
 import { issueToken, unusablePassword } from "./tokens";
 import { athleteApprovedToClub, athleteReturnedToClub, athleteWelcome } from "./notify";
+import { mailConfigured } from "./mail";
 
 export function isMinor(birthDate: Date, at = new Date()) {
   const adult = new Date(birthDate);
@@ -30,7 +31,7 @@ async function clubManagerEmails(athleteId: string) {
   return managers.map((m) => m.email);
 }
 
-export type InviteResult = "sent" | "no-email" | "email-taken";
+export type InviteResult = "sent" | "no-email" | "email-taken" | "mail-off";
 
 // Creates the athlete's cabinet account if needed and e-mails a
 // "set your password" link. Safe to call again to re-send the invite.
@@ -55,6 +56,7 @@ export async function inviteAthlete(athleteId: string, emailOverride?: string): 
   }
 
   const link = await issueToken(user.id, "INVITE");
+  if (!mailConfigured()) return "mail-off";
   await athleteWelcome(user.email, `${athlete.firstName} ${athlete.lastName}`, athlete.gid, link);
   return "sent";
 }
