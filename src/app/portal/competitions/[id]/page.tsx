@@ -51,7 +51,7 @@ export default async function CompetitionAdmin({
       include: { leader: true, follower: true },
       orderBy: { startDate: "desc" },
     }),
-    db.athlete.findMany({ where: { isActive: true }, orderBy: { lastName: "asc" } }),
+    db.athlete.findMany({ where: { isActive: true, status: "APPROVED" }, orderBy: { lastName: "asc" } }),
   ]);
 
   const input =

@@ -35,6 +35,22 @@ export async function formPartnership(formData: FormData) {
     }
   }
 
+  // Only federation-approved athletes can form a couple.
+  const approved = await db.athlete.findMany({
+    where: { id: { in: [leaderId, followerId] }, status: "APPROVED", isActive: true },
+    include: { clubMemberships: { where: { endDate: null } } },
+  });
+  if (approved.length !== 2) redirect("/portal/partnerships?error=notapproved");
+
+  // Which club(s) the couple represents: chosen when forming. A club
+  // manager's couple always represents their own club.
+  const partnerClubs = new Set(approved.flatMap((a) => a.clubMemberships.map((m) => m.clubId)));
+  let clubId = canAny ? String(formData.get("clubId") ?? "") || null : clubScope(user)?.clubId ?? null;
+  let secondClubId = canAny ? String(formData.get("secondClubId") ?? "") || null : null;
+  if (clubId && !partnerClubs.has(clubId)) clubId = null;
+  if (secondClubId && (!partnerClubs.has(secondClubId) || secondClubId === clubId)) secondClubId = null;
+  if (!clubId) clubId = approved[0].clubMemberships[0]?.clubId ?? null;
+
   // Business rule: an athlete may have only ONE active partnership.
   const conflict = await db.partnership.findFirst({
     where: {
@@ -48,7 +64,7 @@ export async function formPartnership(formData: FormData) {
   if (conflict) redirect("/portal/partnerships?error=busy");
 
   const p = await db.partnership.create({
-    data: { leaderId, followerId, startDate: new Date() },
+    data: { leaderId, followerId, startDate: new Date(), clubId, secondClubId },
     include: { leader: true, follower: true },
   });
 

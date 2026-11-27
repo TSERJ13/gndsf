@@ -61,19 +61,21 @@ export async function addEntry(formData: FormData) {
     const cat = categoryFor(
       new Date(Math.min(+p.leader.birthDate, +p.follower.birthDate)),
     );
-    const leaderClub = await db.clubMembership.findFirst({
-      where: { athleteId: p.leaderId, endDate: null },
-    });
+    // The couple represents the club chosen when it was formed.
+    const leaderClub = p.clubId
+      ? null
+      : await db.clubMembership.findFirst({ where: { athleteId: p.leaderId, endDate: null } });
     await db.entry.create({
       data: {
         eventId,
         partnershipId: p.id,
         ageCategorySnapshot: cat,
-        clubIdSnapshot: leaderClub?.clubId ?? null,
+        clubIdSnapshot: p.clubId ?? leaderClub?.clubId ?? null,
       },
     });
   } else {
     const a = await db.athlete.findUniqueOrThrow({ where: { id } });
+    if (a.status !== "APPROVED") redirect(`${back}?error=pick`);
     if (event.format === "SOLO" && a.gender !== "FEMALE") {
       redirect(`${back}?error=scoring&detail=${encodeURIComponent("სოლო ფორმატში რეგისტრაცია შეუძლიათ მხოლოდ გოგონებს (FEMALE). ვაჟების სოლო აკრძალულია ფედერაციის წესებით.")}`);
     }

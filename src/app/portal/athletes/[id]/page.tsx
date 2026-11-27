@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireStaff } from "@/lib/rbac";
+import { requireStaff, can } from "@/lib/rbac";
 import { fmtDate, CATEGORY_LABELS, categoryFor } from "@/lib/labels";
 import { requestAthleteEdit, updateAthleteDirectly } from "./actions";
 import DeleteAthleteButton from "./DeleteAthleteButton";
+import RegistrationPanel from "./RegistrationPanel";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "სპორტსმენის პროფილი" };
+export const metadata = { title: "ათლეტის პროფილი" };
 
 const REGISTRY = ["SUPER_ADMIN", "PRESIDENT", "GENERAL_SECRETARY"];
 
@@ -16,16 +17,18 @@ export default async function AthleteProfile({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const user = await requireStaff();
   const { id } = await params;
-  const { ok, error } = await searchParams;
+  const sp = await searchParams;
+  const { ok, error } = sp;
 
   const athlete = await db.athlete.findUnique({
     where: { id },
     include: {
       clubMemberships: { where: { endDate: null }, include: { club: true } },
+      user: { select: { id: true } },
     },
   });
   if (!athlete) notFound();
@@ -55,8 +58,20 @@ export default async function AthleteProfile({
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-semibold">სპორტსმენის პროფილი</h1>
+        <h1 className="text-2xl font-semibold">ათლეტის პროფილი</h1>
       </div>
+
+      <RegistrationPanel
+        athlete={athlete}
+        params={sp}
+        canApprove={can(user, "ATHLETE_APPROVE")}
+        canEditPending={
+          can(user, "ATHLETE_MANAGE_ALL") ||
+          (can(user, "ATHLETE_MANAGE_OWN_CLUB") && athlete.clubMemberships.some((m) => m.clubId === user.clubId))
+        }
+        canInvite={can(user, "ATHLETE_MANAGE_ALL")}
+        hasAccount={!!athlete.user}
+      />
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
         {/* Left Column: Current Details */}
