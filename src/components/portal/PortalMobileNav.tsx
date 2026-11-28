@@ -26,7 +26,7 @@ export default function PortalMobileNav({ nav, userRole }: { nav: NavItem[]; use
   const clean = (label: string) => label.replace(/\s*\(.*\)$/, "");
 
   return (
-    <div className="sticky top-[80px] z-30 md:hidden">
+    <div className="sticky top-[80px] z-30 -mt-[20px] md:hidden">
       <div className="border-b border-neutral-200 bg-white">
         <button
           onClick={() => setOpen(!open)}
