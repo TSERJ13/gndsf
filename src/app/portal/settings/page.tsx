@@ -1,6 +1,6 @@
 import PhotoInput from "@/components/PhotoInput";
 import { requireStaff } from "@/lib/rbac";
-import { changeOwnPassword, sendTestMail, updateOwnClub } from "./actions";
+import { changeOwnPassword, sendTestMail, updateOwnClub, checkStorage } from "./actions";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -9,10 +9,10 @@ export const metadata = { title: "პარამეტრები · ადმ
 export default async function AdminSettings({
   searchParams,
 }: {
-  searchParams: Promise<{ pok?: string; perror?: string; mail?: string; club?: string }>;
+  searchParams: Promise<{ pok?: string; perror?: string; mail?: string; club?: string; photos?: string; docs?: string }>;
 }) {
   const user = await requireStaff();
-  const { pok, perror, mail, club: clubMsg } = await searchParams;
+  const { pok, perror, mail, club: clubMsg, photos, docs } = await searchParams;
   const club = user.role === "CLUB_MANAGER" && user.clubId ? await db.club.findUnique({ where: { id: user.clubId } }) : null;
   const canTestMail = user.role === "SUPER_ADMIN" || user.role === "PRESIDENT";
 
@@ -62,8 +62,25 @@ export default async function AdminSettings({
           <div><label className={label} htmlFor="c-address">მისამართი</label><input id="c-address" name="address" defaultValue={club.address ?? ""} className={input} /></div>
           <div><label className={label} htmlFor="c-phone">ტელეფონი</label><input id="c-phone" name="phone" defaultValue={club.phone ?? ""} className={input} /></div>
           <div><label className={label} htmlFor="c-email">ელფოსტა</label><input id="c-email" name="email" type="email" defaultValue={club.email ?? ""} className={input} /></div>
-          <div><label className={label} htmlFor="c-logo">ლოგო</label><PhotoInput id="c-logo" name="logo" /></div>
+          <div><label className={label} htmlFor="c-logo">ლოგო</label><PhotoInput id="c-logo" name="logo" logo /></div>
           <button className="rounded bg-neutral-900 px-5 py-2 text-sm font-medium text-white hover:bg-neutral-700">შენახვა</button>
+        </form>
+      )}
+
+      {canTestMail && (
+        <form action={checkStorage} className="mt-6 space-y-3 rounded-lg border border-neutral-200 bg-white p-5">
+          <h2 className="font-semibold">ფაილების ატვირთვის შემოწმება</h2>
+          <p className="text-sm text-neutral-500">ატვირთავს და წაშლის სატესტო ფაილს ორივე საცავში.</p>
+          {photos && (
+            <ul className="space-y-1 text-sm">
+              {[["ფოტოები და ლოგოები", photos], ["პირადობის დოკუმენტები", docs ?? "missing"]].map(([k, v]) => (
+                <li key={k} className={v === "ok" ? "text-green-700" : "text-red-700"}>
+                  {v === "ok" ? "✓" : "✗"} {k}: {v === "ok" ? "მუშაობს" : v === "missing" ? "გასაღები არ არის დაყენებული (Vercel)" : "შეცდომა — დეტალები Vercel-ის logs-შია"}
+                </li>
+              ))}
+            </ul>
+          )}
+          <button className="rounded bg-neutral-900 px-5 py-2 text-sm font-medium text-white hover:bg-neutral-700">შემოწმება</button>
         </form>
       )}
 

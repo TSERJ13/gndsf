@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PhotoInput from "@/components/PhotoInput";
 import { submitClubRegistration } from "./actions";
 
 export const metadata = { title: "სტუდიის რეგისტრაცია" };
@@ -74,6 +75,12 @@ export default async function StudioApplyPage({
         <div>
           <label className={label} htmlFor="contactName">ხელმძღვანელი{req}</label>
           <input id="contactName" name="contactName" required autoComplete="name" className={input} />
+        </div>
+        <div>
+          <label className={label} htmlFor="logo">ლოგო</label>
+          <div className="mt-1.5">
+            <PhotoInput id="logo" name="logo" logo />
+          </div>
         </div>
 
         <div className="border-t border-gray-100 pt-5">

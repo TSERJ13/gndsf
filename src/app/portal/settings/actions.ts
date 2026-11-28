@@ -84,3 +84,38 @@ export async function updateOwnClub(formData: FormData) {
   });
   redirect("/portal/settings?club=ok");
 }
+
+// Admin/President: really write (and delete) a tiny test file to both
+// stores — photos (Vercel Blob) and ID documents (Cloudflare R2) — so a
+// missing or wrong key shows up here, not on a studio's first upload.
+export async function checkStorage() {
+  await requireRole(["SUPER_ADMIN", "PRESIDENT"]);
+  const sharp = (await import("sharp")).default;
+  const png = await sharp({ create: { width: 2, height: 2, channels: 3, background: "#8B1E0F" } }).png().toBuffer();
+
+  let photos = "missing";
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const { put, del } = await import("@vercel/blob");
+      const b = await put("healthcheck/test.png", png, { access: "public", addRandomSuffix: true, contentType: "image/png" });
+      await del(b.url);
+      photos = "ok";
+    } catch (e) {
+      console.error("blob check failed:", e);
+      photos = "fail";
+    }
+  }
+
+  let docs = "missing";
+  if (process.env.R2_ENDPOINT && process.env.R2_ACCESS_KEY_ID && process.env.R2_BUCKET_NAME) {
+    try {
+      const { putUpload } = await import("@/lib/storage");
+      await putUpload("document", `healthcheck/${Date.now()}.png`, png, "image/png");
+      docs = "ok";
+    } catch (e) {
+      console.error("r2 check failed:", e);
+      docs = "fail";
+    }
+  }
+  redirect(`/portal/settings?photos=${photos}&docs=${docs}`);
+}
