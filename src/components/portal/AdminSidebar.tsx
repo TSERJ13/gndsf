@@ -29,7 +29,7 @@ export type NavItem = {
   show: boolean;
 };
 
-const ICONS: Record<string, React.ElementType> = {
+export const ICONS: Record<string, React.ElementType> = {
   "/portal": LayoutDashboard,
   "/portal/workspace": Briefcase,
   "/portal/athletes": Users,
@@ -45,6 +45,7 @@ const ICONS: Record<string, React.ElementType> = {
   "/portal/e-cards": CreditCard,
   "/portal/settings": Settings,
   "/portal/edit-requests": FileText,
+  "/portal/club-registrations": Building2,
 };
 
 export default function AdminSidebar({ 
@@ -60,26 +61,6 @@ export default function AdminSidebar({
 
   return (
     <>
-      {/* Mobile Hamburger Button (visible only on mobile when sidebar is closed) */}
-      {!isMobileOpen && (
-        <button
-          onClick={() => setIsMobileOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-wine text-white shadow-lg md:hidden"
-        >
-          <Menu size={24} />
-        </button>
-      )}
-
-      {/* Mobile Overlay */}
-      {isMobileOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-
-
       <aside 
         className={`fixed left-0 z-40 flex flex-col border-r border-neutral-200 bg-white transition-all duration-300 md:sticky md:top-[100px] lg:top-[190px] md:h-[calc(100vh-100px)] lg:h-[calc(100vh-190px)] ${
           isMobileOpen ? "translate-x-0 w-64 top-[100px] h-[calc(100vh-100px)]" : "-translate-x-full md:translate-x-0"
@@ -113,10 +94,9 @@ export default function AdminSidebar({
 
         <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
           {nav.map((n) => {
-            const Icon = ICONS[n.href] || Settings;
-            const isActive = n.href === "/portal" 
-              ? pathname === "/portal" 
-              : pathname === n.href || pathname.startsWith(n.href + "/");
+            const h = n.href.split("?")[0];
+            const Icon = ICONS[h] || Settings;
+            const isActive = h === "/portal" ? pathname === "/portal" : pathname === h || pathname.startsWith(h + "/");
             
             return (
               <Link
