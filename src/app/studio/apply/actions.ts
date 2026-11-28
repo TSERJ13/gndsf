@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { clubApplicationReceived, federationNewApplication } from "@/lib/notify";
+import { randomUUID } from "node:crypto";
+import { uploadPhoto } from "@/lib/image";
 
 // Public action — no auth required. Applicant sets their own email +
 // password now; the password is hashed immediately and only the hash is
@@ -35,8 +37,17 @@ export async function submitClubRegistration(formData: FormData) {
     redirect("/studio/apply?error=exists");
   }
 
+  // Optional logo; a bad file never blocks the application.
+  let logoUrl: string | null = null;
+  try {
+    logoUrl = await uploadPhoto(formData.get("logo"), `clubs/applications/${randomUUID()}`, "logo");
+  } catch (e) {
+    console.error("studio logo upload failed:", e);
+  }
+
   await db.clubRegistration.create({
     data: {
+      logoUrl,
       name,
       nameEn,
       city,

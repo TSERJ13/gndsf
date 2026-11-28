@@ -1,8 +1,6 @@
 import { requireStaff, REGISTRY_ADMINS, can } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import AdminSidebar from "@/components/portal/AdminSidebar";
-import FloatingCalculator from "@/components/portal/FloatingCalculator";
-import { getExchangeRates } from "@/lib/nbg";
 
 const ROLE_LABELS: Record<string, string> = {
   ATHLETE: "ათლეტი",
@@ -71,15 +69,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/portal/settings", label: "პარამეტრები", show: can(user, "SETTINGS_ACCESS") },
   ].filter((n) => n.show);
 
-  const showCalc = ["PRESIDENT", "VICE_PRESIDENT", "GENERAL_SECRETARY", "SUPER_ADMIN"].includes(user.role);
-  let rates = {};
-  if (showCalc) {
-    try {
-      rates = await getExchangeRates();
-    } catch (err) {
-      console.error("Failed to fetch exchange rates:", err);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-[#f6f5f3] text-neutral-900 flex flex-col">
@@ -96,7 +85,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </main>
       </div>
-      {showCalc && <FloatingCalculator rates={rates} />}
     </div>
   );
 }

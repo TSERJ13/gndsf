@@ -8,18 +8,21 @@ import { useRef, useState } from "react";
 
 const MAX = 1600;
 
-async function shrink(file: File): Promise<File> {
+// Logos keep transparency: shrunk to ≤ 800 px as PNG instead of JPEG
+// (JPEG would turn a transparent background black).
+async function shrink(file: File, logo: boolean): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
   try {
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
+    const scale = Math.min(1, (logo ? 800 : MAX) / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
     canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+    const type = logo ? "image/png" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, 0.85));
     if (!blob) return file;
-    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + (logo ? ".png" : ".jpg"), { type });
   } catch {
     return file; // e.g. HEIC the browser can't decode: the server handles it
   }
@@ -29,10 +32,12 @@ export default function PhotoInput({
   name = "photo",
   id,
   className = "mt-1 w-full text-sm",
+  logo = false,
 }: {
   name?: string;
   id?: string;
   className?: string;
+  logo?: boolean;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -49,7 +54,7 @@ export default function PhotoInput({
         onChange={async (e) => {
           const original = e.target.files?.[0];
           if (!original) return setPreview(null);
-          const small = await shrink(original);
+          const small = await shrink(original, logo);
           const dt = new DataTransfer();
           dt.items.add(small);
           if (ref.current) ref.current.files = dt.files;
@@ -58,7 +63,7 @@ export default function PhotoInput({
       />
       {preview && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="" className="mt-2 h-24 w-24 rounded object-cover" />
+        <img src={preview} alt="" className={`mt-2 h-24 w-24 rounded ${logo ? "object-contain bg-gray-50" : "object-cover"}`} />
       )}
     </div>
   );

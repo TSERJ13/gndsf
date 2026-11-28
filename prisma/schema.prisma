@@ -465,6 +465,7 @@ model ClubRegistration {
   contactName   String
   email         String             @unique
   passwordHash  String
+  logoUrl       String?
   createdAt     DateTime           @default(now())
   reviewedAt    DateTime?
   reviewedById  String?

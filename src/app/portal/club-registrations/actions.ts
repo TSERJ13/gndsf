@@ -27,6 +27,7 @@ export async function approveClubRegistration(formData: FormData) {
         address: reg.address,
         phone: reg.phone,
         email: reg.email,
+        logoUrl: reg.logoUrl,
       },
     });
 
