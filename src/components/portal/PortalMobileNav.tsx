@@ -26,8 +26,8 @@ export default function PortalMobileNav({ nav, userRole }: { nav: NavItem[]; use
   const clean = (label: string) => label.replace(/\s*\(.*\)$/, "");
 
   return (
-    <div className="sticky top-[100px] z-30 md:hidden">
-      <div className="border-b border-neutral-200 bg-white/95 backdrop-blur">
+    <div className="sticky top-[80px] z-30 -mt-[20px] md:hidden">
+      <div className="border-b border-neutral-200 bg-white">
         <button
           onClick={() => setOpen(!open)}
           aria-expanded={open}
@@ -49,7 +49,7 @@ export default function PortalMobileNav({ nav, userRole }: { nav: NavItem[]; use
 
       {open && (
         <>
-          <div className="fixed inset-0 top-[100px] -z-10 bg-black/30" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 top-[80px] -z-10 bg-black/30" onClick={() => setOpen(false)} />
           <nav className="max-h-[70vh] overflow-y-auto border-b border-neutral-200 bg-white p-3 shadow-lg">
             <div className="grid grid-cols-2 gap-2">
               {nav.map((n) => {
